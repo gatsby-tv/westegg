@@ -1,18 +1,16 @@
-defmodule WestEgg.Routers.Login do
+defmodule WestEgg.Routers.Logout do
   @moduledoc """
-  Router for handling login attempts.
+  Router for handling logouts.
   """
 
   use Plug.Router
-  alias WestEgg.Auth
 
-  plug Auth.Authenticate
   plug :match
   plug :dispatch
 
   post "/" do
     conn
-    |> configure_session(renew: true)
+    |> configure_session(drop: true)
     |> send_resp(:ok, "")
   end
 

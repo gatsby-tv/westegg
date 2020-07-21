@@ -17,6 +17,7 @@ defmodule WestEgg.Info do
           do_fetch(type, handle, key)
         rescue
           FunctionClauseError -> {:error, WestEgg.Info.InvalidAccessError}
+          reason -> raise reason
         end
       end
 
@@ -52,8 +53,8 @@ defmodule WestEgg.Info do
   defmacro public(type, keys) do
     quote do
       defp do_fetch(:public, handle, key) when key in unquote(keys) do
-        with {:ok, id} <- WestEgg.Repo.get(:repo, :registry, registry_id(), handle)[:id] do
-          WestEgg.Repo.get(:repo, unquote(type), id, key)
+        with {:ok, map} <- WestEgg.Repo.fetch(:repo, :registry, registry_id(), handle) do
+          WestEgg.Repo.fetch(:repo, unquote(type), map["id"], key)
         else
           error -> error
         end
@@ -64,8 +65,8 @@ defmodule WestEgg.Info do
   defmacro private(type, keys) do
     quote do
       defp do_fetch(:private, handle, key) when key in unquote(keys) do
-        with {:ok, id} <- WestEgg.Repo.get(:repo, :registry, registry_id(), handle)[:id] do
-          WestEgg.Repo.get(:repo, unquote(type), id, key)
+        with {:ok, map} <- WestEgg.Repo.fetch(:repo, :registry, registry_id(), handle) do
+          WestEgg.Repo.fetch(:repo, unquote(type), map["id"], key)
         else
           error -> error
         end
