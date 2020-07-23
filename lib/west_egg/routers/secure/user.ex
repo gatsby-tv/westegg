@@ -2,14 +2,14 @@ defmodule WestEgg.Routers.Secure.User do
   use Plug.Router
   alias WestEgg.{Auth, Info}
 
+  plug :match
   plug Auth.Authorize,
     for: :user,
     level: :verified
-  plug :match
   plug :dispatch
 
   get "/:handle/:request" do
-    content = Info.UserInfo.fetch!(:private, handle, request)
+    content = Info.UserInfo.fetch!(:private, "@#{handle}", request)
 
     with {:ok, json} <- Poison.encode(content) do
       conn
@@ -19,6 +19,4 @@ defmodule WestEgg.Routers.Secure.User do
       error -> raise error
     end
   end
-
-  match _, do: send_resp(conn, :not_found, "unknown request")
 end

@@ -14,6 +14,7 @@ defmodule WestEgg do
   def handle_errors(conn, %{reason: reason}) do
     case reason do
       %Register.RegistrationError{} -> send_resp(conn, :bad_request, reason.message)
+      %Register.PermissionError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthorizationError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthenticationError{} -> send_resp(conn, :forbidden, reason.message)
       %Repo.NotFoundError{} -> send_resp(conn, :not_found, reason.message)
@@ -40,12 +41,15 @@ defmodule WestEgg do
   forward "/login", to: Routers.Login
   forward "/logout", to: Routers.Logout
 
-  forward "/register/user", to: Routers.Register.User
-
   forward "/user", to: Routers.User
   forward "/channel", to: Routers.Channel
   forward "/show", to: Routers.Show
   forward "/video", to: Routers.Video
+
+  forward "/register/user", to: Routers.Register.User
+  forward "/register/channel", to: Routers.Register.Channel
+  forward "/register/show", to: Routers.Register.Show
+  forward "/register/video", to: Routers.Register.Video
 
   forward "/secure/user", to: Routers.Secure.User
   forward "/secure/channel", to: Routers.Secure.Channel

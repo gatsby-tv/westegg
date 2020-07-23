@@ -25,7 +25,8 @@ defmodule WestEgg.MixProject do
       {:riakc, git: "https://github.com/basho/riak-erlang-client"},
       {:plug_cowboy, "~> 2.0"},
       {:argon2_elixir, "~> 2.0"},
-      {:poison, "~> 4.0"}
+      {:poison, "~> 4.0"},
+      {:email_checker, "~> 0.1.3"}
     ]
   end
 end

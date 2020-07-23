@@ -11,7 +11,7 @@ defmodule WestEgg.Routers.Logout do
   post "/" do
     conn
     |> configure_session(drop: true)
-    |> send_resp(:ok, "")
+    |> send_resp(:ok, "ok")
   end
 
   match _, do: send_resp(conn, :not_found, "unknown request")

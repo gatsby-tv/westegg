@@ -55,6 +55,7 @@ defmodule WestEgg.Repo do
     with :ok <- :riakc_pb_socket.modify_type(pid, modify_fn, {type, bucket}, key, [:create]) do
       :ok
     else
+      {:error, :unmodified} -> :unmodified
       {:error, reason} -> raise reason
     end
   end
@@ -78,9 +79,18 @@ defmodule WestEgg.Repo do
 
   def add_element(binary), do: {:set, &:riakc_set.add_element(binary, &1)}
 
+  def add_element?(empty) when empty in [nil, ""], do: {:set, &Function.identity/1}
+  def add_element?(binary), do: add_element(binary)
+
   def add_elements(binaries), do: {:set, &:riakc_set.add_elements(binaries, &1)}
 
+  def add_elements?(empty) when empty in [nil, []], do: {:set, &Function.identity/1}
+  def add_elements?(binaries), do: add_elements(binaries)
+
   def del_element(binary), do: {:set, &:riakc_set.del_element(binary, &1)}
+
+  def del_element?(empty) when empty in [nil, ""], do: {:set, &Function.identity/1}
+  def del_element?(binary), do: del_element(binary)
 
   def enable, do: {:flag, &:riakc_flag.enable(&1)}
 
@@ -94,7 +104,13 @@ defmodule WestEgg.Repo do
 
   def set(binary), do: {:register, &:riakc_register.set(binary, &1)}
 
+  def set?(empty) when empty in [nil, ""], do: {:register, &Function.identity/1}
+  def set?(binary), do: set(binary)
+
   def update(methods), do: {:map, &update(&1, methods)}
+
+  def update?(empty) when empty in [nil, %{}], do: {:map, &Function.identity/1}
+  def update?(methods), do: update(methods)
 
   defp update(obj, methods) do
     transform =

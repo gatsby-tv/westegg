@@ -6,11 +6,8 @@ defmodule WestEgg.Routers.Register.User do
   use Plug.Router
   alias WestEgg.Register
 
-  plug Register, new: :user
   plug :match
   plug :dispatch
 
-  post "/", do: send_resp(conn, :ok, "")
-
-  match _, do: send_resp(conn, :not_found, "unknown request")
+  post "/", to: Register.User
 end

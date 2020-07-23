@@ -13,7 +13,7 @@ defmodule WestEgg.Routers.Login do
   post "/" do
     conn
     |> configure_session(renew: true)
-    |> send_resp(:ok, "")
+    |> send_resp(:ok, "ok")
   end
 
   match _, do: send_resp(conn, :not_found, "unknown request")

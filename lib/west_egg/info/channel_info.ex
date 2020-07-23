@@ -1,7 +1,7 @@
 defmodule WestEgg.Info.ChannelInfo do
-  use WestEgg.Info
-
-  registry_id :channels
+  use WestEgg.Info,
+    bucket: :channels,
+    sigil: "#"
 
   public :channels, [
     "profile",

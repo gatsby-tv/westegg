@@ -1,7 +1,7 @@
 defmodule WestEgg.Info.ShowInfo do
-  use WestEgg.Info
-
-  registry_id :shows
+  use WestEgg.Info,
+    bucket: :shows,
+    sigil: "#"
 
   public :shows, [
     "profile",

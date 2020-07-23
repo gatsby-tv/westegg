@@ -1,7 +1,7 @@
 defmodule WestEgg.Info.UserInfo do
-  use WestEgg.Info
-
-  registry_id :users
+  use WestEgg.Info,
+    bucket: :users,
+    sigil: "@"
 
   public :users, [
     "profile",

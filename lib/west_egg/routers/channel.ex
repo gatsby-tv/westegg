@@ -5,8 +5,8 @@ defmodule WestEgg.Routers.Channel do
   plug :match
   plug :dispatch
 
-  get "/:handle/:request" do
-    content = Info.ChannelInfo.fetch!(:public, handle, request)
+  def fetch(conn, key, request) do
+    content = Info.ChannelInfo.fetch!(:public, key, request)
 
     with {:ok, json} <- Poison.encode(content) do
       conn
@@ -16,6 +16,9 @@ defmodule WestEgg.Routers.Channel do
       error -> raise error
     end
   end
+
+  get "/channel_:id/:request", do: fetch(conn, "channel_#{id}", request)
+  get "/:handle/:request", do: fetch(conn, "##{handle}", request)
 
   match _, do: send_resp(conn, :not_found, "unknown request")
 end

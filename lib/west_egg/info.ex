@@ -7,22 +7,32 @@ defmodule WestEgg.Info do
     defexception message: "unknown request"
   end
 
-  defmacro __using__(_opts) do
+  defmacro __using__([bucket: bucket, sigil: sigil]) do
     quote do
       import WestEgg.Info
       @before_compile WestEgg.Info
 
-      def fetch(type, handle, key) when type in [:public, :private] do
+      @bucket unquote(bucket)
+      @sigil unquote(sigil)
+
+      def fetch(type, key, request) when type in [:public, :private] do
         try do
-          do_fetch(type, handle, key)
+          if String.starts_with?(key, @sigil) do
+            case WestEgg.Repo.fetch(:repo, :registry, @bucket, key) do
+              {:ok, %{"id" => id}} -> do_fetch(type, id, request)
+              error -> error
+            end
+          else
+            do_fetch(type, key, request)
+          end
         rescue
           FunctionClauseError -> {:error, WestEgg.Info.InvalidAccessError}
-          reason -> raise reason
+          error -> error
         end
       end
 
-      def fetch!(type, handle, key) when type in [:public, :private] do
-        case fetch(type, handle, key) do
+      def fetch!(type, key, request) when type in [:public, :private] do
+        case fetch(type, key, request) do
           {:ok, result} -> result
           {:error, reason} -> raise reason
         end
@@ -32,11 +42,7 @@ defmodule WestEgg.Info do
 
   defmacro __before_compile__(env) do
     unless Module.defines?(env.module, {:do_fetch, 3}) do
-      raise "no keys are idd in module #{inspect(env.module)} using WestEgg.Info"
-    end
-
-    unless Module.defines?(env.module, {:registry_id, 0}) do
-      raise "the registry id for module #{inspect(env.module)} using WestEgg.Info"
+      raise "no keys are available in module #{inspect(env.module)} using WestEgg.Info"
     end
 
     quote do
@@ -44,32 +50,18 @@ defmodule WestEgg.Info do
     end
   end
 
-  defmacro registry_id(name) when is_atom(name) do
-    quote do
-      def registry_id, do: unquote(name)
-    end
-  end
-
   defmacro public(type, keys) do
     quote do
-      defp do_fetch(:public, handle, key) when key in unquote(keys) do
-        with {:ok, map} <- WestEgg.Repo.fetch(:repo, :registry, registry_id(), handle) do
-          WestEgg.Repo.fetch(:repo, unquote(type), map["id"], key)
-        else
-          error -> error
-        end
+      defp do_fetch(:public, id, key) when key in unquote(keys) do
+        WestEgg.Repo.fetch(:repo, unquote(type), id, key)
       end
     end
   end
 
   defmacro private(type, keys) do
     quote do
-      defp do_fetch(:private, handle, key) when key in unquote(keys) do
-        with {:ok, map} <- WestEgg.Repo.fetch(:repo, :registry, registry_id(), handle) do
-          WestEgg.Repo.fetch(:repo, unquote(type), map["id"], key)
-        else
-          error -> error
-        end
+      defp do_fetch(:private, id, key) when key in unquote(keys) do
+        WestEgg.Repo.fetch(:repo, unquote(type), id, key)
       end
     end
   end
