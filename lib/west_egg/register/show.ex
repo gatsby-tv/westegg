@@ -5,7 +5,7 @@ defmodule WestEgg.Register.Show do
     spec: [
       handle: :required,
       channel: :required,
-      owners: :required
+      owners: :optional
     ]
 
   @impl true
@@ -19,27 +19,8 @@ defmodule WestEgg.Register.Show do
     |> stage(:registry)
     |> stage(:profile)
     |> stage(:channel)
+    |> stage(:owners)
     |> finish(conn)
-  end
-
-  defp fetch(%{owners: owners} = params, :owners) do
-    fetch_owner =
-      fn owner ->
-        owner = String.trim(owner)
-        case Repo.fetch(:repo, :registry, :users, owner) do
-          {:ok, register} ->
-            unless register["in_use?"], do: fail("unknown user, '#{owner}'")
-            register["id"]
-
-          {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{owner}'")
-          {:error, reason} -> raise reason
-        end
-      end
-
-    owners = Enum.map(owners, fetch_owner)
-    if length(owners) == 0, do: fail("shows must have at least one owner")
-
-    Map.put(params, :owners, owners)
   end
 
   defp fetch(%{channel: channel} = params, :channel) do
@@ -52,9 +33,6 @@ defmodule WestEgg.Register.Show do
       {:error, reason} -> raise reason
     end
   end
-
-  defp convert_handle(%{handle: handle, channel: channel} = params),
-    do: Map.put(params, :handle, "#{channel}#{handle}")
 
   defp valid?(%{handle: handle, channel: channel} = params, :handle) do
     case Repo.fetch(:repo, :registry, :shows, "#{channel}#{handle}") do
@@ -73,18 +51,15 @@ defmodule WestEgg.Register.Show do
     end
   end
 
-  defp authorize(%{owners: owners, channel_id: channel_id} = params, conn) do
-    session = get_session(conn)
-    user = session["user"]
-    if is_nil(user), do: raise Register.PermissionError
-    unless session["verified?"], do: raise Register.PermissionError
+  defp convert_handle(%{handle: handle, channel: channel} = params),
+    do: Map.put(params, :handle, "#{channel}#{handle}")
 
-    unless user in owners, do: raise Register.PermissionError
-
-    {:ok, channel} = Repo.fetch(:repo, :channels, channel_id, :profile)
-    unless user in channel["owners"], do: raise Register.PermissionError
-
-    params
+  defp authorize(%{channel_id: channel} = params, conn) do
+    cond do
+      not Auth.verified?(conn) -> raise Auth.AuthorizationError
+      not Auth.owns?(conn, channel: channel) -> raise Auth.AuthorizationError
+      true -> params
+    end
   end
 
   defp stage(%{id: id, handle: handle, channel_id: channel, owners: owners} = params, :profile) do
@@ -102,6 +77,15 @@ defmodule WestEgg.Register.Show do
   defp stage(%{id: id, channel_id: channel} = params, :channel) do
     methods = %{"shows" => Repo.add_element(id)}
     Repo.modify(:repo, :channels, channel, :profile, methods)
+    params
+  end
+
+  defp stage(%{id: id, owners: owners} = params, :owners) do
+    methods = %{"shows" => Repo.add_element(id)}
+    for owner <- owners do
+      Repo.modify(:repo, :users, owner, :profile, methods)
+    end
+
     params
   end
 end

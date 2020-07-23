@@ -5,9 +5,9 @@ defmodule WestEgg.Register.Video do
     spec: [
       handle: :required,
       title: :required,
-      owners: :required,
       channel: :required,
       show: :optional,
+      owners: :optional,
       description: :optional,
       tags: :optional
     ]
@@ -31,32 +31,9 @@ defmodule WestEgg.Register.Video do
     |> finish(conn)
   end
 
-  defp fetch(%{owners: owners} = params, :owners) do
-    fetch_owner =
-      fn owner ->
-        owner = String.trim(owner)
-        case Repo.fetch(:repo, :registry, :users, owner) do
-          {:ok, register} ->
-            unless register["in_use?"], do: fail("unknown user, '#{owner}'")
-            register["id"]
-
-          {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{owner}'")
-          {:error, reason} -> raise reason
-        end
-      end
-
-    owners = Enum.map(owners, fetch_owner)
-    if length(owners) == 0, do: fail("videos must have at least one owner")
-
-    Map.put(params, :owners, owners)
-  end
-
   defp fetch(%{channel: channel} = params, :channel) do
     case Repo.fetch(:repo, :registry, :channels, channel) do
-      {:ok, register} ->
-        unless register["in_use?"], do: fail("unknown channel, '#{channel}'")
-        Map.put(params, :channel_id, register["id"])
-
+      {:ok, %{"id" => id}} -> Map.put(params, :channel_id, id)
       {:error, %Repo.NotFoundError{}} -> fail("unknown channel, '#{channel}'")
       {:error, reason} -> raise reason
     end
@@ -67,10 +44,7 @@ defmodule WestEgg.Register.Video do
 
   defp fetch(%{show: show, channel: channel} = params, :show) do
     case Repo.fetch(:repo, :registry, :shows, "#{channel}#{show}") do
-      {:ok, register} ->
-        unless register["in_use?"], do: fail("unknown show, '#{show}'")
-        Map.put(params, :show_id, register["id"])
-
+      {:ok, %{"id" => id}} -> Map.put(params, :show_id, id)
       {:error, %Repo.NotFoundError{}} -> fail("unknown show, '#{show}'")
       {:error, reason} -> raise reason
     end
@@ -104,43 +78,34 @@ defmodule WestEgg.Register.Video do
   defp valid?(%{description: ""} = params, :description), do: params
 
   defp valid?(%{description: description} = params, :description) do
-    if String.length(description) > 1000, do: fail("description is too long")
-    params
+    if String.length(description) > 1000, do: fail("description is too long"), else: params
   end
 
   defp valid?(%{tags: nil} = params, :tags), do: params
   defp valid?(%{tags: []} = params, :tags), do: params
 
   defp valid?(%{tags: tags} = params, :tags) do
-    for tag <- Enum.map(tags, &String.trim/1) do
-      unless String.match?(tag, ~r/^[[:alnum:]\-\_][[:alnum:][:space:]\-\_]*$/),
-        do: fail("malformed tag, '#{tag}'")
-    end
+    tags =
+      for tag <- Enum.map(tags, &String.trim/1), into: [] do
+        unless String.match?(tag, ~r/^[[:alnum:]\-\_][[:alnum:][:space:]\-\_]*$/),
+          do: fail("malformed tag, '#{tag}'"),
+          else: tag
+      end
 
-    params
+    Map.put(params, :tags, tags)
   end
 
-  defp authorize(params, conn) do
-    session = get_session(conn)
-    user = session["user"]
-    if is_nil(user), do: raise Register.PermissionError
-    unless session["verified?"], do: raise Register.PermissionError
-
-    unless user in params.owners, do: raise Register.PermissionError
-
-    {:ok, channel} = Repo.fetch(:repo, :channels, params.channel_id, :profile)
-
-    unless user in channel["owners"] do
-      case params.show_id do
-        nil -> raise Register.PermissionError
-        "" -> raise Register.PermissionError
-        id ->
-          {:ok, show} = Repo.fetch(:repo, :shows, id, :profile)
-          unless user in show["owners"], do: raise Register.PermissionError
-      end
+  defp authorize(%{channel_id: channel, show_id: show} = params, conn) do
+    cond do
+      not Auth.verified?(conn) -> raise Auth.AuthorizationError
+      not Auth.owns?(conn, channel: channel) ->
+        cond do
+          show in [nil, ""] -> raise Auth.AuthorizationError
+          not Auth.owns?(conn, show: show) -> raise Auth.AuthorizationError
+          true -> params
+        end
+      true -> params
     end
-
-    params
   end
 
   defp stage(params, :profile) do

@@ -1,7 +1,8 @@
 defmodule WestEgg.Info.ChannelInfo do
   use WestEgg.Info,
-    bucket: :channels,
-    sigil: "#"
+    prefix: "channel",
+    sigil: "#",
+    bucket: :channels
 
   public :channels, [
     "profile",

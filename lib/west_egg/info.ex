@@ -7,26 +7,45 @@ defmodule WestEgg.Info do
     defexception message: "unknown request"
   end
 
-  defmacro __using__([bucket: bucket, sigil: sigil]) do
+  defmacro __using__([prefix: prefix, sigil: sigil, bucket: bucket]) do
     quote do
+      use Plug.Builder
       import WestEgg.Info
       @before_compile WestEgg.Info
 
-      @bucket unquote(bucket)
+      @prefix unquote(prefix)
       @sigil unquote(sigil)
+      @bucket unquote(bucket)
+
+      def call(%{params: %{"id" => id, "request" => request}} = conn, access: type) do
+        content = fetch!(type, "#{@prefix}_#{id}", request)
+        send_json_resp(conn, content)
+      end
+
+      def call(%{params: %{"handle" => handle, "request" => request}} = conn, access: type) do
+        case WestEgg.Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{handle}") do
+          {:ok, %{"id" => id}} ->
+            content = fetch!(type, id, request)
+            send_json_resp(conn, content)
+          {:error, reason} -> raise reason
+        end
+      end
+
+      defp send_json_resp(conn, content) do
+        case Poison.encode(content) do
+          {:ok, json} ->
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(:ok, json)
+          {:error, reason} -> raise reason
+        end
+      end
 
       def fetch(type, key, request) when type in [:public, :private] do
         try do
-          if String.starts_with?(key, @sigil) do
-            case WestEgg.Repo.fetch(:repo, :registry, @bucket, key) do
-              {:ok, %{"id" => id}} -> do_fetch(type, id, request)
-              error -> error
-            end
-          else
-            do_fetch(type, key, request)
-          end
+          do_fetch(type, key, request)
         rescue
-          FunctionClauseError -> {:error, WestEgg.Info.InvalidAccessError}
+          FunctionClauseError -> {:error, InvalidAccessError}
           error -> error
         end
       end

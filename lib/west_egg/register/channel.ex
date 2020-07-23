@@ -4,7 +4,7 @@ defmodule WestEgg.Register.Channel do
     bucket: :channels,
     spec: [
       handle: :required,
-      owners: :required
+      owners: :optional
     ]
 
   @impl true
@@ -17,26 +17,6 @@ defmodule WestEgg.Register.Channel do
     |> stage(:profile)
     |> stage(:owners)
     |> finish(conn)
-  end
-
-  defp fetch(%{owners: owners} = params, :owners) do
-    fetch_owner =
-      fn owner ->
-        owner = String.trim(owner)
-        case Repo.fetch(:repo, :registry, :users, owner) do
-          {:ok, register} ->
-            unless register["in_use?"], do: fail("unknown user, '#{owner}'")
-            register["id"]
-
-          {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{owner}'")
-          {:error, reason} -> raise reason
-        end
-      end
-
-    owners = Enum.map(owners, fetch_owner)
-    if length(owners) == 0, do: fail("channels must have at least one owner")
-
-    Map.put(params, :owners, owners)
   end
 
   defp valid?(%{handle: handle} = params, :handle) do
@@ -56,15 +36,8 @@ defmodule WestEgg.Register.Channel do
     end
   end
 
-  defp authorize(%{owners: owners} = params, conn) do
-    session = get_session(conn)
-    user = session["user"]
-    if is_nil(user), do: raise Register.PermissionError
-    unless session["verified?"], do: Register.PermissionError
-
-    unless user in owners, do: raise Register.PermissionError
-
-    params
+  defp authorize(params, conn) do
+    if Auth.verified?(conn), do: params, else: raise Auth.AuthorizationError
   end
 
   defp stage(%{id: id, handle: handle, owners: owners} = params, :profile) do

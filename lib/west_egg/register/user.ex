@@ -88,6 +88,7 @@ defmodule WestEgg.Register.User do
     |> put_session("user", id)
     # TODO: change this to "password?" when 2FA is added.
     |> put_session("verified?", true)
+    |> configure_session(renew: true)
     |> send_resp(:ok, "ok")
   end
 end

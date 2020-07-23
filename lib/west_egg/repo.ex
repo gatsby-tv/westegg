@@ -60,7 +60,7 @@ defmodule WestEgg.Repo do
     end
   end
 
-  defp format_key(key), do: String.downcase(to_string(key))
+  defp format_key(key), do: key |> to_string() |> String.trim() |> String.downcase()
 
   defp parse(obj) do
     cond do

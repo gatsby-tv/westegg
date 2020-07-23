@@ -1,9 +1,6 @@
 defmodule WestEgg.Auth.Authenticate do
-  @behaviour Plug
-  import Plug.Conn
+  use Plug.Builder
   alias WestEgg.{Repo, Auth}
-
-  def init(opts), do: opts
 
   def call(conn, _opts) do
     with {:ok, register} <- Repo.fetch(:repo, :registry, :users, conn.body_params["user"]),

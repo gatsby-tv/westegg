@@ -1,7 +1,8 @@
 defmodule WestEgg.Info.VideoInfo do
   use WestEgg.Info,
-    bucket: :videos,
-    sigil: "$"
+    prefix: "video",
+    sigil: "$",
+    bucket: :videos
 
   public :videos, [
     "profile",

@@ -14,7 +14,6 @@ defmodule WestEgg do
   def handle_errors(conn, %{reason: reason}) do
     case reason do
       %Register.RegistrationError{} -> send_resp(conn, :bad_request, reason.message)
-      %Register.PermissionError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthorizationError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthenticationError{} -> send_resp(conn, :forbidden, reason.message)
       %Repo.NotFoundError{} -> send_resp(conn, :not_found, reason.message)

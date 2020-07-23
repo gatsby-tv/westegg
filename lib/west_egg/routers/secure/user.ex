@@ -3,20 +3,10 @@ defmodule WestEgg.Routers.Secure.User do
   alias WestEgg.{Auth, Info}
 
   plug :match
-  plug Auth.Authorize,
-    for: :user,
-    level: :verified
   plug :dispatch
 
   get "/:handle/:request" do
-    content = Info.UserInfo.fetch!(:private, "@#{handle}", request)
-
-    with {:ok, json} <- Poison.encode(content) do
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(:ok, json)
-    else
-      error -> raise error
-    end
+    unless Auth.verified?(conn, as: "@#{handle}"), do: raise Auth.AuthorizationError
+    send_resp(conn, :no_content, "")
   end
 end

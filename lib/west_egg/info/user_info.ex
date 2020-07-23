@@ -1,7 +1,8 @@
 defmodule WestEgg.Info.UserInfo do
   use WestEgg.Info,
-    bucket: :users,
-    sigil: "@"
+    prefix: "user",
+    sigil: "@",
+    bucket: :users
 
   public :users, [
     "profile",
