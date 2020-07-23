@@ -10,4 +10,6 @@ defmodule WestEgg.Routers.Register.Channel do
   plug :dispatch
 
   post "/", to: Register.Channel
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end

@@ -7,4 +7,6 @@ defmodule WestEgg.Routers.Channel do
 
   get "/channel_:id/:request", to: Info.Channel, init_opts: [access: :public]
   get "/:handle/:request", to: Info.Channel, init_opts: [access: :public]
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end

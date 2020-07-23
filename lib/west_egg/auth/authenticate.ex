@@ -12,6 +12,8 @@ defmodule WestEgg.Auth.Authenticate do
       |> put_session("user", register["id"])
       # TODO: Change this to "password?" when 2FA is added.
       |> put_session("verified?", true)
+      |> configure_session(renew: true)
+      |> send_resp(:ok, "ok")
     else
       {:error, %Repo.NotFoundError{}} -> raise Auth.AuthenticationError
       {:error, reason} -> raise reason

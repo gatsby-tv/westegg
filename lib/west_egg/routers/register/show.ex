@@ -10,4 +10,6 @@ defmodule WestEgg.Routers.Register.Show do
   plug :dispatch
 
   post "/", to: Register.Show
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end

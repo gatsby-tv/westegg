@@ -7,4 +7,6 @@ defmodule WestEgg.Routers.User do
 
   get "/user_:id/:request", to: Info.User, init_opts: [access: :public]
   get "/:handle/:request", to: Info.User, init_opts: [access: :public]
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end

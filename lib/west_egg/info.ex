@@ -47,7 +47,7 @@ defmodule WestEgg.Info do
           do: raise(Auth.AuthorizationError)
 
         try do
-          do_fetch(:private, key, request)
+          do_fetch(:private, id, request)
         rescue
           FunctionClauseError -> raise InvalidAccessError
         end

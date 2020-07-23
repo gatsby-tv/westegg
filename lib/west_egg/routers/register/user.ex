@@ -10,4 +10,6 @@ defmodule WestEgg.Routers.Register.User do
   plug :dispatch
 
   post "/", to: Register.User
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end
