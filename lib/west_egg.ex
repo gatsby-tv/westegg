@@ -9,7 +9,7 @@ defmodule WestEgg do
   use Plug.Router
   use Plug.ErrorHandler
 
-  alias WestEgg.{Auth, Info, Register, Repo, Routers}
+  alias WestEgg.{Auth, Fetch, Register, Repo, Routers}
 
   def handle_errors(conn, %{reason: reason}) do
     case reason do
@@ -17,7 +17,7 @@ defmodule WestEgg do
       %Auth.AuthorizationError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthenticationError{} -> send_resp(conn, :forbidden, reason.message)
       %Repo.NotFoundError{} -> send_resp(conn, :not_found, reason.message)
-      %Info.InvalidAccessError{} -> send_resp(conn, :not_found, reason.message)
+      %Fetch.AccessError{} -> send_resp(conn, :not_found, reason.message)
       %Plug.BadRequestError{} -> send_resp(conn, :bad_request, reason.message)
       _ -> send_resp(conn, :internal_server_error, "internal server error")
     end

@@ -1,5 +1,5 @@
-defmodule WestEgg.Info.Show do
-  use WestEgg.Info,
+defmodule WestEgg.Fetch.Show do
+  use WestEgg.Fetch,
     prefix: "show",
     sigil: "#",
     bucket: :shows
@@ -9,7 +9,7 @@ defmodule WestEgg.Info.Show do
         %{params: %{"channel" => channel, "show" => show, "request" => request}} = conn,
         access: type
       ) do
-    case WestEgg.Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{channel}/#{show}") do
+    case Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{channel}/#{show}") do
       {:ok, %{"id" => id}} ->
         content = fetch(type, conn, id, request)
         send_json_resp(conn, content)

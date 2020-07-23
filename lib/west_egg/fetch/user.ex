@@ -1,5 +1,5 @@
-defmodule WestEgg.Info.User do
-  use WestEgg.Info,
+defmodule WestEgg.Fetch.User do
+  use WestEgg.Fetch,
     prefix: "user",
     sigil: "@",
     bucket: :users

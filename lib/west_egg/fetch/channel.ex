@@ -1,5 +1,5 @@
-defmodule WestEgg.Info.Channel do
-  use WestEgg.Info,
+defmodule WestEgg.Fetch.Channel do
+  use WestEgg.Fetch,
     prefix: "channel",
     sigil: "#",
     bucket: :channels

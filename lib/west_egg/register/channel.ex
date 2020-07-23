@@ -11,7 +11,7 @@ defmodule WestEgg.Register.Channel do
   def register(conn, params, _opts) do
     params
     |> fetch(:owners)
-    |> valid?(:handle)
+    |> validate(:handle)
     |> authorize(conn)
     |> stage(:registry)
     |> stage(:profile)
@@ -19,7 +19,7 @@ defmodule WestEgg.Register.Channel do
     |> finish(conn)
   end
 
-  defp valid?(%{handle: handle} = params, :handle) do
+  defp validate(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :channels, handle) do
       {:ok, %{"in_use?" => true}} ->
         fail("channel already exists")

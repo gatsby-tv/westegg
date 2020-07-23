@@ -1,4 +1,4 @@
-defmodule WestEgg.Info do
+defmodule WestEgg.Fetch do
   @moduledoc """
   Behaviour for requesting keys from the database.
   """
@@ -7,18 +7,18 @@ defmodule WestEgg.Info do
 
   @callback authorized?(Plug.Conn.t(), Keyword.t()) :: bool
 
-  defmodule InvalidAccessError do
+  defmodule AccessError do
     defexception message: "unknown request"
   end
 
   defmacro __using__(prefix: prefix, sigil: sigil, bucket: bucket) do
     quote do
       use Plug.Builder
-      import WestEgg.Info
+      import WestEgg.Fetch
       alias WestEgg.{Auth, Repo}
 
-      @behaviour WestEgg.Info
-      @before_compile WestEgg.Info
+      @behaviour WestEgg.Fetch
+      @before_compile WestEgg.Fetch
 
       @prefix unquote(prefix)
       @sigil unquote(sigil)
@@ -49,7 +49,7 @@ defmodule WestEgg.Info do
         try do
           do_fetch(:private, id, request)
         rescue
-          FunctionClauseError -> raise InvalidAccessError
+          FunctionClauseError -> raise AccessError
         end
       end
 
@@ -57,7 +57,7 @@ defmodule WestEgg.Info do
         try do
           do_fetch(:public, id, request)
         rescue
-          FunctionClauseError -> raise InvalidAccessError
+          FunctionClauseError -> raise AccessError
         end
       end
 
@@ -76,17 +76,17 @@ defmodule WestEgg.Info do
       def authorized?(conn, opts \\ [])
       def authorized?(conn, _opts), do: Auth.verified?(conn)
 
-      defoverridable WestEgg.Info
+      defoverridable WestEgg.Fetch
     end
   end
 
   defmacro __before_compile__(env) do
     unless Module.defines?(env.module, {:do_fetch, 3}) do
-      raise "no keys are available in module #{inspect(env.module)} using WestEgg.Info"
+      raise "no keys are available in module #{inspect(env.module)} using WestEgg.Fetch"
     end
 
     quote do
-      import WestEgg.Info, only: []
+      import WestEgg.Fetch, only: []
     end
   end
 

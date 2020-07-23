@@ -13,7 +13,7 @@ defmodule WestEgg.Register.Show do
     params
     |> fetch(:owners)
     |> fetch(:channel)
-    |> valid?(:handle)
+    |> validate(:handle)
     |> convert_handle()
     |> authorize(conn)
     |> stage(:registry)
@@ -37,7 +37,7 @@ defmodule WestEgg.Register.Show do
     end
   end
 
-  defp valid?(%{handle: handle, channel: channel} = params, :handle) do
+  defp validate(%{handle: handle, channel: channel} = params, :handle) do
     case Repo.fetch(:repo, :registry, :shows, "#{channel}#{handle}") do
       {:ok, %{"in_use?" => true}} ->
         fail("show already exists")

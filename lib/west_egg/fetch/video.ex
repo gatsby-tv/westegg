@@ -1,5 +1,5 @@
-defmodule WestEgg.Info.Video do
-  use WestEgg.Info,
+defmodule WestEgg.Fetch.Video do
+  use WestEgg.Fetch,
     prefix: "video",
     sigil: "$",
     bucket: :videos

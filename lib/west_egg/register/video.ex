@@ -18,10 +18,10 @@ defmodule WestEgg.Register.Video do
     |> fetch(:owners)
     |> fetch(:channel)
     |> fetch(:show)
-    |> valid?(:handle)
-    |> valid?(:title)
-    |> valid?(:description)
-    |> valid?(:tags)
+    |> validate(:handle)
+    |> validate(:title)
+    |> validate(:description)
+    |> validate(:tags)
     |> authorize(conn)
     |> stage(:registry)
     |> stage(:profile)
@@ -50,7 +50,7 @@ defmodule WestEgg.Register.Video do
     end
   end
 
-  defp valid?(%{handle: handle} = params, :handle) do
+  defp validate(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :videos, handle) do
       {:ok, %{"in_use?" => true}} ->
         fail("video already exists")
@@ -70,7 +70,7 @@ defmodule WestEgg.Register.Video do
     end
   end
 
-  defp valid?(%{title: title} = params, :title) do
+  defp validate(%{title: title} = params, :title) do
     cond do
       String.length(title) == 0 -> fail("empty title")
       String.length(title) > 128 -> fail("title is too long")
@@ -78,17 +78,17 @@ defmodule WestEgg.Register.Video do
     end
   end
 
-  defp valid?(%{description: nil} = params, :description), do: params
-  defp valid?(%{description: ""} = params, :description), do: params
+  defp validate(%{description: nil} = params, :description), do: params
+  defp validate(%{description: ""} = params, :description), do: params
 
-  defp valid?(%{description: description} = params, :description) do
+  defp validate(%{description: description} = params, :description) do
     if String.length(description) > 1000, do: fail("description is too long"), else: params
   end
 
-  defp valid?(%{tags: nil} = params, :tags), do: params
-  defp valid?(%{tags: []} = params, :tags), do: params
+  defp validate(%{tags: nil} = params, :tags), do: params
+  defp validate(%{tags: []} = params, :tags), do: params
 
-  defp valid?(%{tags: tags} = params, :tags) do
+  defp validate(%{tags: tags} = params, :tags) do
     tags =
       for tag <- Enum.map(tags, &String.trim/1), into: [] do
         unless String.match?(tag, ~r/^[[:alnum:]\-\_][[:alnum:][:space:]\-\_]*$/),

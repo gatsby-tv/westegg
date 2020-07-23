@@ -11,9 +11,9 @@ defmodule WestEgg.Register.User do
   @impl true
   def register(conn, params, _opts) do
     params
-    |> valid?(:handle)
-    |> valid?(:password)
-    |> valid?(:email)
+    |> validate(:handle)
+    |> validate(:password)
+    |> validate(:email)
     |> stage(:registry)
     |> stage(:login_info)
     |> stage(:contact_info)
@@ -21,7 +21,7 @@ defmodule WestEgg.Register.User do
     |> finish(conn)
   end
 
-  defp valid?(%{handle: handle} = params, :handle) do
+  defp validate(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :users, handle) do
       {:ok, %{"in_use?" => true}} ->
         fail("handle not available")
@@ -42,7 +42,7 @@ defmodule WestEgg.Register.User do
     end
   end
 
-  defp valid?(%{password: password} = params, :password) do
+  defp validate(%{password: password} = params, :password) do
     cond do
       String.length(password) < 8 -> fail("password is too short")
       String.length(password) > 64 -> fail("password is too long")
@@ -50,7 +50,7 @@ defmodule WestEgg.Register.User do
     end
   end
 
-  defp valid?(%{email: email} = params, :email) do
+  defp validate(%{email: email} = params, :email) do
     cond do
       not EmailChecker.valid?(email, [EmailChecker.Check.Format]) -> fail("invalid email")
       true -> params
