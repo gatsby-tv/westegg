@@ -52,8 +52,11 @@ defmodule WestEgg.Register.Video do
 
   defp valid?(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :videos, handle) do
-      {:ok, %{"in_use?" => true}} -> fail("video already exists")
-      {:ok, _} -> params
+      {:ok, %{"in_use?" => true}} ->
+        fail("video already exists")
+
+      {:ok, _} ->
+        params
 
       {:error, %Repo.NotFoundError{}} ->
         cond do
@@ -62,7 +65,8 @@ defmodule WestEgg.Register.Video do
           true -> params
         end
 
-      {:error, reason} -> raise reason
+      {:error, reason} ->
+        raise reason
     end
   end
 
@@ -97,19 +101,24 @@ defmodule WestEgg.Register.Video do
 
   defp authorize(%{channel_id: channel, show_id: show} = params, conn) do
     cond do
-      not Auth.verified?(conn) -> raise Auth.AuthorizationError
+      not Auth.verified?(conn) ->
+        raise Auth.AuthorizationError
+
       not Auth.owns?(conn, channel: channel) ->
         cond do
           show in [nil, ""] -> raise Auth.AuthorizationError
           not Auth.owns?(conn, show: show) -> raise Auth.AuthorizationError
           true -> params
         end
-      true -> params
+
+      true ->
+        params
     end
   end
 
   defp stage(params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
+
     methods = %{
       "handle" => Repo.set(params.handle),
       "title" => Repo.set(params.title),

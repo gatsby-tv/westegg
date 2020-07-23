@@ -6,14 +6,16 @@ defmodule WestEgg.Info.Show do
 
   @impl true
   def call(
-    %{params: %{"channel" => channel, "show" => show, "request" => request}} = conn,
-    access: type
-  ) do
+        %{params: %{"channel" => channel, "show" => show, "request" => request}} = conn,
+        access: type
+      ) do
     case WestEgg.Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{channel}/#{show}") do
       {:ok, %{"id" => id}} ->
         content = fetch(type, conn, id, request)
         send_json_resp(conn, content)
-      {:error, reason} -> raise reason
+
+      {:error, reason} ->
+        raise reason
     end
   end
 

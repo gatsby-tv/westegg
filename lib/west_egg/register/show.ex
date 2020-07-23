@@ -29,15 +29,21 @@ defmodule WestEgg.Register.Show do
         unless register["in_use?"], do: fail("unknown channel, '#{channel}'")
         Map.put(params, :channel_id, register["id"])
 
-      {:error, %Repo.NotFoundError{}} -> fail("unknown channel, '#{channel}'")
-      {:error, reason} -> raise reason
+      {:error, %Repo.NotFoundError{}} ->
+        fail("unknown channel, '#{channel}'")
+
+      {:error, reason} ->
+        raise reason
     end
   end
 
   defp valid?(%{handle: handle, channel: channel} = params, :handle) do
     case Repo.fetch(:repo, :registry, :shows, "#{channel}#{handle}") do
-      {:ok, %{"in_use?" => true}} -> fail("show already exists")
-      {:ok, _} -> params
+      {:ok, %{"in_use?" => true}} ->
+        fail("show already exists")
+
+      {:ok, _} ->
+        params
 
       {:error, %Repo.NotFoundError{}} ->
         cond do
@@ -47,7 +53,8 @@ defmodule WestEgg.Register.Show do
           true -> params
         end
 
-      {:error, reason} -> raise reason
+      {:error, reason} ->
+        raise reason
     end
   end
 
@@ -64,12 +71,14 @@ defmodule WestEgg.Register.Show do
 
   defp stage(%{id: id, handle: handle, channel_id: channel, owners: owners} = params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
+
     methods = %{
       "handle" => Repo.set(handle),
       "channel" => Repo.set(channel),
       "owners" => Repo.add_elements(owners),
       "creation_time" => Repo.set(now)
     }
+
     Repo.modify(:repo, :shows, id, :profile, methods)
     params
   end
@@ -82,6 +91,7 @@ defmodule WestEgg.Register.Show do
 
   defp stage(%{id: id, owners: owners} = params, :owners) do
     methods = %{"shows" => Repo.add_element(id)}
+
     for owner <- owners do
       Repo.modify(:repo, :users, owner, :profile, methods)
     end

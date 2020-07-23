@@ -1,5 +1,5 @@
 defmodule WestEgg.Register do
-  @callback register(Plug.Conn.t, any, Keyword.t) :: Plug.Conn.t
+  @callback register(Plug.Conn.t(), any, Keyword.t()) :: Plug.Conn.t()
 
   defmodule RegistrationError do
     defexception message: "invalid registration"
@@ -9,7 +9,7 @@ defmodule WestEgg.Register do
     [
       prefix: prefix,
       bucket: bucket,
-      spec: spec,
+      spec: spec
     ] = opts
 
     quote do
@@ -24,6 +24,7 @@ defmodule WestEgg.Register do
       @impl true
       def call(conn, opts) do
         keys = Keyword.keys(unquote(spec))
+
         params =
           conn.body_params
           |> Map.take(Enum.map(keys, &to_string/1))
@@ -42,15 +43,17 @@ defmodule WestEgg.Register do
 
       defp add_ownership(%{owners: nil} = params, conn) do
         user = get_session(conn, "user")
+
         unless is_nil(user),
           do: Map.put(params, :owners, [user]),
-          else: raise Auth.AuthorizationError
+          else: raise(Auth.AuthorizationError)
       end
 
       defp add_ownership(%{owners: owners} = params, conn) do
         # NOTE: modules that invoke this method must check session verification.
         user = get_session(conn, "user")
-        if is_nil(user), do: raise Auth.AuthorizationError
+        if is_nil(user), do: raise(Auth.AuthorizationError)
+
         cond do
           user not in owners ->
             case Repo.fetch(:repo, :users, user, :profile) do
@@ -63,26 +66,34 @@ defmodule WestEgg.Register do
                   Map.put(params, :owners, [user | owners])
                 end
 
-              {:error, %Repo.NotFoundError{}} -> raise Auth.AuthorizationError
-              {:error, reason} -> raise reason
+              {:error, %Repo.NotFoundError{}} ->
+                raise Auth.AuthorizationError
+
+              {:error, reason} ->
+                raise reason
             end
-          true -> params
+
+          true ->
+            params
         end
       end
 
       defp fetch(%{owners: owners} = params, :owners) do
-        owners = for user <- Enum.map(owners, &String.trim/1), into: [] do
-          cond do
-            String.starts_with?(user, "@") ->
-              case Repo.fetch(:repo, :registry, :users, user) do
-                # NOTE: should this fail if the handle is not in use?
-                {:ok, %{"id" => id}} -> id
-                {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{user}'")
-                {:error, reason} -> raise reason
-              end
-            true -> user
+        owners =
+          for user <- Enum.map(owners, &String.trim/1), into: [] do
+            cond do
+              String.starts_with?(user, "@") ->
+                case Repo.fetch(:repo, :registry, :users, user) do
+                  # NOTE: should this fail if the handle is not in use?
+                  {:ok, %{"id" => id}} -> id
+                  {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{user}'")
+                  {:error, reason} -> raise reason
+                end
+
+              true ->
+                user
+            end
           end
-        end
 
         if length(owners) == 0, do: fail("#{unquote(bucket)} must have at least one owner")
 
@@ -108,10 +119,10 @@ defmodule WestEgg.Register do
 
       defp finish(_params, conn), do: send_resp(conn, :ok, "ok")
 
-      defp fail, do: raise Register.RegistrationError
-      defp fail(message), do: raise Register.RegistrationError, message: message
+      defp fail, do: raise(Register.RegistrationError)
+      defp fail(message), do: raise(Register.RegistrationError, message: message)
 
-      defoverridable [finish: 2]
+      defoverridable finish: 2
       defoverridable Register
       defoverridable Plug
     end

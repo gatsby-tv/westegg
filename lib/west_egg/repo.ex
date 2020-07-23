@@ -10,7 +10,7 @@ defmodule WestEgg.Repo do
   def child_spec(opts) do
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
+      start: {__MODULE__, :start_link, [opts]}
     }
   end
 
@@ -27,9 +27,9 @@ defmodule WestEgg.Repo do
 
   def fetch(pid, type, bucket, key) do
     [type, bucket, key] = Enum.map([type, bucket, key], &format_key/1)
+
     with {:ok, obj} <- :riakc_pb_socket.fetch_type(pid, {type, bucket}, key),
-         {:ok, content} <- parse(obj)
-    do
+         {:ok, content} <- parse(obj) do
       {:ok, content}
     else
       {:error, :notfound} -> {:error, %NotFoundError{}}
@@ -41,6 +41,7 @@ defmodule WestEgg.Repo do
 
   def drop(pid, type, bucket, key) do
     [type, bucket, key] = Enum.map([type, bucket, key], &format_key/1)
+
     with :ok <- :riakc_pb_socket.delete(pid, {type, bucket}, key) do
       :ok
     else
@@ -75,6 +76,7 @@ defmodule WestEgg.Repo do
 
   defp do_parse(:map, keypairs),
     do: Map.new(keypairs, fn {{key, type}, value} -> {key, do_parse(type, value)} end)
+
   defp do_parse(_, value), do: value
 
   def add_element(binary), do: {:set, &:riakc_set.add_element(binary, &1)}
@@ -113,10 +115,9 @@ defmodule WestEgg.Repo do
   def update?(methods), do: update(methods)
 
   defp update(obj, methods) do
-    transform =
-      fn {key, {type, method}}, acc ->
-        :riakc_map.update({key, type}, method, acc)
-      end
+    transform = fn {key, {type, method}}, acc ->
+      :riakc_map.update({key, type}, method, acc)
+    end
 
     methods
     |> Map.to_list()

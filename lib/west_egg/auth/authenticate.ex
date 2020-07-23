@@ -4,10 +4,9 @@ defmodule WestEgg.Auth.Authenticate do
 
   def call(conn, _opts) do
     with {:ok, register} <- Repo.fetch(:repo, :registry, :users, conn.body_params["user"]),
-         {:ok, login_info} <- Repo.fetch(:repo, :secrets, register["id"], "login_info")
-    do
+         {:ok, login_info} <- Repo.fetch(:repo, :secrets, register["id"], "login_info") do
       unless Argon2.verify_pass(conn.body_params["password"], login_info["password"]),
-        do: raise Auth.AuthenticationError
+        do: raise(Auth.AuthenticationError)
 
       conn
       |> put_session("user", register["id"])

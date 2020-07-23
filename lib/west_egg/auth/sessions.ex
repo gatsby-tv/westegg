@@ -19,17 +19,16 @@ defmodule WestEgg.Auth.Sessions do
   def put(_conn, sid, session, _opts) do
     if is_nil(sid) do
       user = session["user"]
-      if is_nil(user), do: raise Auth.InvalidSessionError
+      if is_nil(user), do: raise(Auth.InvalidSessionError)
 
       sid =
         :crypto.strong_rand_bytes(64)
         |> Base.encode32(padding: false)
         |> String.downcase()
 
-      put_method_if =
-        fn methods, key, method ->
-          if session[key], do: Map.put_new(methods, key, method), else: methods
-        end
+      put_method_if = fn methods, key, method ->
+        if session[key], do: Map.put_new(methods, key, method), else: methods
+      end
 
       methods =
         %{"user" => Repo.set(user)}

@@ -23,8 +23,11 @@ defmodule WestEgg.Register.User do
 
   defp valid?(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :users, handle) do
-      {:ok, %{"in_use?" => true}} -> fail("handle not available")
-      {:ok, _} -> params
+      {:ok, %{"in_use?" => true}} ->
+        fail("handle not available")
+
+      {:ok, _} ->
+        params
 
       {:error, %Repo.NotFoundError{}} ->
         cond do
@@ -34,7 +37,8 @@ defmodule WestEgg.Register.User do
           true -> params
         end
 
-      {:error, reason} -> raise reason
+      {:error, reason} ->
+        raise reason
     end
   end
 
@@ -55,6 +59,7 @@ defmodule WestEgg.Register.User do
 
   defp stage(%{id: id, password: password, email: email} = params, :login_info) do
     hash = Argon2.add_hash(password)[:password_hash]
+
     methods = %{
       "email" => Repo.set(email),
       "password" => Repo.set(hash)
@@ -73,6 +78,7 @@ defmodule WestEgg.Register.User do
 
   defp stage(%{id: id, handle: handle} = params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
+
     methods = %{
       "handle" => Repo.set(handle),
       "creation_time" => Repo.set(now)

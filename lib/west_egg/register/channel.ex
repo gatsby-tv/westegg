@@ -21,8 +21,11 @@ defmodule WestEgg.Register.Channel do
 
   defp valid?(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :channels, handle) do
-      {:ok, %{"in_use?" => true}} -> fail("channel already exists")
-      {:ok, _} -> params
+      {:ok, %{"in_use?" => true}} ->
+        fail("channel already exists")
+
+      {:ok, _} ->
+        params
 
       {:error, %Repo.NotFoundError{}} ->
         cond do
@@ -32,16 +35,18 @@ defmodule WestEgg.Register.Channel do
           true -> params
         end
 
-      {:error, reason} -> raise reason
+      {:error, reason} ->
+        raise reason
     end
   end
 
   defp authorize(params, conn) do
-    if Auth.verified?(conn), do: params, else: raise Auth.AuthorizationError
+    if Auth.verified?(conn), do: params, else: raise(Auth.AuthorizationError)
   end
 
   defp stage(%{id: id, handle: handle, owners: owners} = params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
+
     methods = %{
       "handle" => Repo.set(handle),
       "owners" => Repo.add_elements(owners),

@@ -5,13 +5,13 @@ defmodule WestEgg.Info do
 
   alias WestEgg.{Auth, Repo}
 
-  @callback authorized?(Plug.Conn.t, Keyword.t) :: bool
+  @callback authorized?(Plug.Conn.t(), Keyword.t()) :: bool
 
   defmodule InvalidAccessError do
     defexception message: "unknown request"
   end
 
-  defmacro __using__([prefix: prefix, sigil: sigil, bucket: bucket]) do
+  defmacro __using__(prefix: prefix, sigil: sigil, bucket: bucket) do
     quote do
       use Plug.Builder
       import WestEgg.Info
@@ -36,13 +36,15 @@ defmodule WestEgg.Info do
           {:ok, %{"id" => id}} ->
             content = fetch(type, conn, id, request)
             send_json_resp(conn, content)
-          {:error, reason} -> raise reason
+
+          {:error, reason} ->
+            raise reason
         end
       end
 
       defp fetch(:private, conn, id, request) do
         unless authorized?(conn, id: id, request: request),
-          do: raise Auth.AuthorizationError
+          do: raise(Auth.AuthorizationError)
 
         try do
           do_fetch(:private, key, request)
@@ -65,7 +67,9 @@ defmodule WestEgg.Info do
             conn
             |> put_resp_content_type("application/json")
             |> send_resp(:ok, json)
-          {:error, reason} -> raise reason
+
+          {:error, reason} ->
+            raise reason
         end
       end
 

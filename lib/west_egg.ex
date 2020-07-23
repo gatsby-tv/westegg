@@ -24,15 +24,18 @@ defmodule WestEgg do
   end
 
   plug Plug.Logger
+
   plug Plug.Parsers,
     parsers: [:json],
     pass: ["application/json"],
     json_decoder: Poison
+
   # NOTE: session cookies are currently persistent.
   plug Plug.Session,
     store: Auth.Sessions,
     key: "_sid",
     http_only: true
+
   plug :fetch_session
   plug :match
   plug :dispatch

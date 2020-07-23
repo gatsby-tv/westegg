@@ -23,8 +23,12 @@ defmodule WestEgg.Auth do
       case Repo.fetch(:repo, :registry, :users, handle) do
         {:ok, %{"id" => id}} ->
           if verified?(conn), do: get_session(conn, "user") == id, else: false
-        {:error, %Repo.NotFoundError{}} -> false
-        {:error, reason} -> raise reason
+
+        {:error, %Repo.NotFoundError{}} ->
+          false
+
+        {:error, reason} ->
+          raise reason
       end
     else
       if verified?(conn), do: get_session(conn, "user") == handle, else: false
