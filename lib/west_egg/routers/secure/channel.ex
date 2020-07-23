@@ -5,15 +5,6 @@ defmodule WestEgg.Routers.Secure.Channel do
   plug :match
   plug :dispatch
 
-  get "/:handle/:request" do
-    content = Info.ChannelInfo.fetch!(:private, "##{handle}", request)
-
-    with {:ok, json} <- Poison.encode(content) do
-      conn
-      |> put_resp_content_type("application/json")
-      |>send_resp(:ok, json)
-    else
-      error -> raise error
-    end
-  end
+  get "/channel_:id/:request", to: Info.Channel, init_opts: [access: :private]
+  get "/:handle/:request", to: Info.Channel, init_opts: [access: :private]
 end

@@ -5,6 +5,6 @@ defmodule WestEgg.Routers.Video do
   plug :match
   plug :dispatch
 
-  get "/video_:id/:request", to: Info.VideoInfo, init_opts: [access: :public]
-  get "/:handle/:request", to: Info.VideoInfo, init_opts: [access: :public]
+  get "/video_:id/:request", to: Info.Video, init_opts: [access: :public]
+  get "/:handle/:request", to: Info.Video, init_opts: [access: :public]
 end

@@ -5,6 +5,6 @@ defmodule WestEgg.Routers.Show do
   plug :match
   plug :dispatch
 
-  get "/show_:id/:request", to: Info.ShowInfo, init_opts: [access: :public]
-  get "/:channel/:show/:request", to: Info.ShowInfo, init_opts: [access: :public]
+  get "/show_:id/:request", to: Info.Show, init_opts: [access: :public]
+  get "/:channel/:show/:request", to: Info.Show, init_opts: [access: :public]
 end

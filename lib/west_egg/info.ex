@@ -3,6 +3,10 @@ defmodule WestEgg.Info do
   Behaviour for requesting keys from the database.
   """
 
+  alias WestEgg.{Auth, Repo}
+
+  @callback authorized?(Plug.Conn.t, Keyword.t) :: bool
+
   defmodule InvalidAccessError do
     defexception message: "unknown request"
   end
@@ -11,23 +15,47 @@ defmodule WestEgg.Info do
     quote do
       use Plug.Builder
       import WestEgg.Info
+      alias WestEgg.{Auth, Repo}
+
+      @behaviour WestEgg.Info
       @before_compile WestEgg.Info
 
       @prefix unquote(prefix)
       @sigil unquote(sigil)
       @bucket unquote(bucket)
 
+      @impl true
       def call(%{params: %{"id" => id, "request" => request}} = conn, access: type) do
-        content = fetch!(type, "#{@prefix}_#{id}", request)
+        content = fetch(type, conn, "#{@prefix}_#{id}", request)
         send_json_resp(conn, content)
       end
 
+      @impl true
       def call(%{params: %{"handle" => handle, "request" => request}} = conn, access: type) do
-        case WestEgg.Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{handle}") do
+        case Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{handle}") do
           {:ok, %{"id" => id}} ->
-            content = fetch!(type, id, request)
+            content = fetch(type, conn, id, request)
             send_json_resp(conn, content)
           {:error, reason} -> raise reason
+        end
+      end
+
+      defp fetch(:private, conn, id, request) do
+        unless authorized?(conn, id: id, request: request),
+          do: raise Auth.AuthorizationError
+
+        try do
+          do_fetch(:private, key, request)
+        rescue
+          FunctionClauseError -> raise InvalidAccessError
+        end
+      end
+
+      defp fetch(:public, _conn, id, request) do
+        try do
+          do_fetch(:public, id, request)
+        rescue
+          FunctionClauseError -> raise InvalidAccessError
         end
       end
 
@@ -41,21 +69,10 @@ defmodule WestEgg.Info do
         end
       end
 
-      def fetch(type, key, request) when type in [:public, :private] do
-        try do
-          do_fetch(type, key, request)
-        rescue
-          FunctionClauseError -> {:error, InvalidAccessError}
-          error -> error
-        end
-      end
+      def authorized?(conn, opts \\ [])
+      def authorized?(conn, _opts), do: Auth.verified?(conn)
 
-      def fetch!(type, key, request) when type in [:public, :private] do
-        case fetch(type, key, request) do
-          {:ok, result} -> result
-          {:error, reason} -> raise reason
-        end
-      end
+      defoverridable WestEgg.Info
     end
   end
 
@@ -72,7 +89,10 @@ defmodule WestEgg.Info do
   defmacro public(type, keys) do
     quote do
       defp do_fetch(:public, id, key) when key in unquote(keys) do
-        WestEgg.Repo.fetch(:repo, unquote(type), id, key)
+        case Repo.fetch(:repo, unquote(type), id, key) do
+          {:ok, content} -> content
+          {:error, reason} -> raise reason
+        end
       end
     end
   end
@@ -80,7 +100,10 @@ defmodule WestEgg.Info do
   defmacro private(type, keys) do
     quote do
       defp do_fetch(:private, id, key) when key in unquote(keys) do
-        WestEgg.Repo.fetch(:repo, unquote(type), id, key)
+        case Repo.fetch(:repo, unquote(type), id, key) do
+          {:ok, content} -> content
+          {:error, reason} -> raise reason
+        end
       end
     end
   end

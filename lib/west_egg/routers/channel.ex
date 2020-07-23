@@ -5,6 +5,6 @@ defmodule WestEgg.Routers.Channel do
   plug :match
   plug :dispatch
 
-  get "/channel_:id/:request", to: Info.ChannelInfo, init_opts: [access: :public]
-  get "/:handle/:request", to: Info.ChannelInfo, init_opts: [access: :public]
+  get "/channel_:id/:request", to: Info.Channel, init_opts: [access: :public]
+  get "/:handle/:request", to: Info.Channel, init_opts: [access: :public]
 end
