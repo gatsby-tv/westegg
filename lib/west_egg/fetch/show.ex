@@ -20,8 +20,8 @@ defmodule WestEgg.Fetch.Show do
   end
 
   @impl true
-  def authorized?(conn, opts),
-    do: Auth.verified?(conn) and Auth.owns?(conn, show: opts[:id])
+  def authorized?(conn, %{id: id}),
+    do: Auth.verified?(conn) and Auth.owns?(conn, show: id)
 
   public :shows, [
     "profile",

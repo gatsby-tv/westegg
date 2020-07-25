@@ -25,11 +25,28 @@ defmodule WestEgg.Repo do
     {:ok, pid}
   end
 
+  def lookup(pid, type, handle) do
+    cond do
+      not String.starts_with?(handle, "#{type}_") ->
+        case fetch(pid, :registry, "#{type}s", handle) do
+          {:ok, %{"id" => id}} -> {:ok, id}
+          error -> error
+        end
+
+      true ->
+        case fetch(pid, "#{type}s", handle, :profile) do
+          {:ok, _} -> {:ok, handle}
+          error -> error
+        end
+    end
+  end
+
   def fetch(pid, type, bucket, key) do
     [type, bucket, key] = Enum.map([type, bucket, key], &format_key/1)
 
     with {:ok, obj} <- :riakc_pb_socket.fetch_type(pid, {type, bucket}, key),
-         {:ok, content} <- parse(obj) do
+         {:ok, content} <- parse(obj)
+    do
       {:ok, content}
     else
       {:error, :notfound} -> {:error, %NotFoundError{}}
@@ -42,9 +59,8 @@ defmodule WestEgg.Repo do
   def drop(pid, type, bucket, key) do
     [type, bucket, key] = Enum.map([type, bucket, key], &format_key/1)
 
-    with :ok <- :riakc_pb_socket.delete(pid, {type, bucket}, key) do
-      :ok
-    else
+    case :riakc_pb_socket.delete(pid, {type, bucket}, key) do
+      :ok -> :ok
       {:error, reason} -> raise reason
     end
   end
@@ -53,9 +69,8 @@ defmodule WestEgg.Repo do
     [type, bucket, key] = Enum.map([type, bucket, key], &format_key/1)
     modify_fn = fn map -> update(map, methods) end
 
-    with :ok <- :riakc_pb_socket.modify_type(pid, modify_fn, {type, bucket}, key, [:create]) do
-      :ok
-    else
+    case :riakc_pb_socket.modify_type(pid, modify_fn, {type, bucket}, key, [:create]) do
+      :ok -> :ok
       {:error, :unmodified} -> :unmodified
       {:error, reason} -> raise reason
     end
@@ -76,6 +91,13 @@ defmodule WestEgg.Repo do
 
   defp do_parse(:map, keypairs),
     do: Map.new(keypairs, fn {{key, type}, value} -> {key, do_parse(type, value)} end)
+
+  defp do_parse(:register, value) do
+    case Integer.parse(value) do
+      {integer, _} -> integer
+      :error -> value
+    end
+  end
 
   defp do_parse(_, value), do: value
 

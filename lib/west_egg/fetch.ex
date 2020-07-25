@@ -37,13 +37,16 @@ defmodule WestEgg.Fetch do
             content = fetch(type, conn, id, request)
             send_json_resp(conn, content)
 
+          {:error, %Repo.NotFoundError{}} ->
+            raise AccessError
+
           {:error, reason} ->
             raise reason
         end
       end
 
       defp fetch(:private, conn, id, request) do
-        unless authorized?(conn, id: id, request: request),
+        unless authorized?(conn, %{id: id, request: request}),
           do: raise(Auth.AuthorizationError)
 
         try do
@@ -73,7 +76,8 @@ defmodule WestEgg.Fetch do
         end
       end
 
-      def authorized?(conn, opts \\ [])
+      @impl true
+      def authorized?(conn, opts \\ %{})
       def authorized?(conn, _opts), do: Auth.verified?(conn)
 
       defoverridable WestEgg.Fetch

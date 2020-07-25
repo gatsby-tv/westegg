@@ -5,8 +5,8 @@ defmodule WestEgg.Fetch.Channel do
     bucket: :channels
 
   @impl true
-  def authorized?(conn, opts),
-    do: Auth.verified?(conn) and Auth.owns?(conn, channel: opts[:id])
+  def authorized?(conn, %{id: id}),
+    do: Auth.verified?(conn) and Auth.owns?(conn, channel: id)
 
   public :channels, [
     "profile",

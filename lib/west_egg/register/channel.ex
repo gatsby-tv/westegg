@@ -22,7 +22,7 @@ defmodule WestEgg.Register.Channel do
   defp validate(%{handle: handle} = params, :handle) do
     case Repo.fetch(:repo, :registry, :channels, handle) do
       {:ok, %{"in_use?" => true}} ->
-        fail("channel already exists")
+        fail("handle not available")
 
       {:ok, _} ->
         params
@@ -54,7 +54,6 @@ defmodule WestEgg.Register.Channel do
     }
 
     Repo.modify(:repo, :channels, id, :profile, methods)
-
     params
   end
 

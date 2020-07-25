@@ -9,7 +9,9 @@ defmodule WestEgg.Register.Video do
       show: :optional,
       owners: :optional,
       description: :optional,
-      tags: :optional
+      tags: :optional,
+      channel_id: :phantom,
+      show_id: :phantom
     ]
 
   @impl true
@@ -32,8 +34,8 @@ defmodule WestEgg.Register.Video do
   end
 
   defp fetch(%{channel: channel} = params, :channel) do
-    case Repo.fetch(:repo, :registry, :channels, channel) do
-      {:ok, %{"id" => id}} -> Map.put(params, :channel_id, id)
+    case Repo.lookup(:repo, :channel, channel) do
+      {:ok, id} -> Map.put(params, :channel_id, id)
       {:error, %Repo.NotFoundError{}} -> fail("unknown channel, '#{channel}'")
       {:error, reason} -> raise reason
     end
@@ -43,8 +45,25 @@ defmodule WestEgg.Register.Video do
   defp fetch(%{show: ""} = params, :show), do: params
 
   defp fetch(%{show: show, channel: channel} = params, :show) do
-    case Repo.fetch(:repo, :registry, :shows, "#{channel}#{show}") do
-      {:ok, %{"id" => id}} -> Map.put(params, :show_id, id)
+    is_show_handle? = String.starts_with?(show, "/")
+    is_channel_handle? = String.starts_with?(channel, "#")
+    handle =
+      cond do
+        is_show_handle? and is_channel_handle? ->
+          "#{channel}#{show}"
+
+        is_show_handle? ->
+          case Repo.fetch(:repo, :channels, channel, :profile) do
+            {:ok, %{"handle" => channel_handle}} -> "#{channel_handle}#{show}"
+            {:error, reason} -> raise reason
+          end
+
+        true ->
+          show
+      end
+
+    case Repo.lookup(:repo, :show, handle) do
+      {:ok, id} -> Map.put(params, :show_id, id)
       {:error, %Repo.NotFoundError{}} -> fail("unknown show, '#{show}'")
       {:error, reason} -> raise reason
     end
@@ -117,21 +136,31 @@ defmodule WestEgg.Register.Video do
   end
 
   defp stage(params, :profile) do
+    %{
+      id: id,
+      handle: handle,
+      title: title,
+      owners: owners,
+      channel_id: channel,
+      show_id: show,
+      description: description,
+      tags: tags
+    } = params
+
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
-      "handle" => Repo.set(params.handle),
-      "title" => Repo.set(params.title),
-      "owners" => Repo.add_elements(params.owners),
-      "channel" => Repo.set(params.channel_id),
-      "show" => Repo.set?(params.show_id),
-      "description" => Repo.set?(params.description),
-      "tags" => Repo.add_elements?(params.tags),
+      "handle" => Repo.set(handle),
+      "title" => Repo.set(title),
+      "owners" => Repo.add_elements(owners),
+      "channel" => Repo.set(channel),
+      "show" => Repo.set?(show),
+      "description" => Repo.set?(description),
+      "tags" => Repo.add_elements?(tags),
       "creation_time" => Repo.set(now)
     }
 
-    Repo.modify(:repo, :videos, params.id, :profile, methods)
-
+    Repo.modify(:repo, :videos, id, :profile, methods)
     params
   end
 

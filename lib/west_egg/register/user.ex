@@ -66,7 +66,6 @@ defmodule WestEgg.Register.User do
     }
 
     Repo.modify(:repo, :secrets, id, :login_info, methods)
-
     params
   end
 
@@ -85,7 +84,6 @@ defmodule WestEgg.Register.User do
     }
 
     Repo.modify(:repo, :users, id, :profile, methods)
-
     params
   end
 

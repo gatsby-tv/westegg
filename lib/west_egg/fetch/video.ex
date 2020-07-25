@@ -5,8 +5,8 @@ defmodule WestEgg.Fetch.Video do
     bucket: :videos
 
   @impl true
-  def authorized?(conn, opts),
-    do: Auth.verified?(conn) and Auth.owns?(conn, video: opts[:id])
+  def authorized?(conn, %{id: id}),
+    do: Auth.verified?(conn) and Auth.owns?(conn, video: id)
 
   public :videos, [
     "profile",

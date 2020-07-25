@@ -19,24 +19,15 @@ defmodule WestEgg.Auth do
   def verified?(conn, opts \\ [])
 
   def verified?(conn, as: handle) do
-    if String.starts_with?(handle, "@") do
-      case Repo.fetch(:repo, :registry, :users, handle) do
-        {:ok, %{"id" => id}} ->
-          if verified?(conn), do: get_session(conn, "user") == id, else: false
-
-        {:error, %Repo.NotFoundError{}} ->
-          false
-
-        {:error, reason} ->
-          raise reason
-      end
-    else
-      if verified?(conn), do: get_session(conn, "user") == handle, else: false
+    case Repo.lookup(:repo, :user, handle) do
+      {:ok, id} -> if verified?(conn), do: get_session(conn, "user") == id, else: false
+      {:error, %Repo.NotFoundError{}} -> false
+      {:error, reason} -> raise reason
     end
   end
 
   def verified?(conn, _opts) do
-    get_session(conn, "verified?")
+    get_session(conn, "verified?") || false
   end
 
   def owns?(conn, [{type, bucket}]) when type in @ownables do

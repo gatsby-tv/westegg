@@ -5,7 +5,7 @@ defmodule WestEgg.Fetch.User do
     bucket: :users
 
   @impl true
-  def authorized?(conn, opts), do: Auth.verified?(conn, as: opts[:id])
+  def authorized?(conn, %{id: id}), do: Auth.verified?(conn, as: id)
 
   public :users, [
     "profile",

@@ -5,7 +5,8 @@ defmodule WestEgg.Register.Show do
     spec: [
       handle: :required,
       channel: :required,
-      owners: :optional
+      owners: :optional,
+      channel_id: :phantom
     ]
 
   @impl true
@@ -24,16 +25,10 @@ defmodule WestEgg.Register.Show do
   end
 
   defp fetch(%{channel: channel} = params, :channel) do
-    case Repo.fetch(:repo, :registry, :channels, channel) do
-      {:ok, register} ->
-        unless register["in_use?"], do: fail("unknown channel, '#{channel}'")
-        Map.put(params, :channel_id, register["id"])
-
-      {:error, %Repo.NotFoundError{}} ->
-        fail("unknown channel, '#{channel}'")
-
-      {:error, reason} ->
-        raise reason
+    case Repo.lookup(:repo, :channel, channel) do
+      {:ok, id} -> Map.put(params, :channel_id, id)
+      {:error, %Repo.NotFoundError{}} -> fail("unknown channel, '#{channel}'")
+      {:error, reason} -> raise reason
     end
   end
 

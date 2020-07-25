@@ -9,16 +9,15 @@ defmodule WestEgg do
   use Plug.Router
   use Plug.ErrorHandler
 
-  alias WestEgg.{Auth, Fetch, Register, Repo, Routers}
+  alias WestEgg.{Auth, Fetch, Modify, Register, Routers}
 
   def handle_errors(conn, %{reason: reason}) do
     case reason do
+      %Modify.ModificationError{} -> send_resp(conn, :bad_request, reason.message)
       %Register.RegistrationError{} -> send_resp(conn, :bad_request, reason.message)
       %Auth.AuthorizationError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthenticationError{} -> send_resp(conn, :forbidden, reason.message)
-      %Repo.NotFoundError{} -> send_resp(conn, :not_found, reason.message)
       %Fetch.AccessError{} -> send_resp(conn, :not_found, reason.message)
-      %Plug.BadRequestError{} -> send_resp(conn, :bad_request, reason.message)
       _ -> send_resp(conn, :internal_server_error, "internal server error")
     end
   end
@@ -48,13 +47,11 @@ defmodule WestEgg do
   forward "/show", to: Routers.Show
   forward "/video", to: Routers.Video
 
-  forward "/register/user", to: Routers.Register.User
-  forward "/register/channel", to: Routers.Register.Channel
-  forward "/register/show", to: Routers.Register.Show
-  forward "/register/video", to: Routers.Register.Video
-
   forward "/secure/user", to: Routers.Secure.User
   forward "/secure/channel", to: Routers.Secure.Channel
+
+  forward "/modify", to: Routers.Modify
+  forward "/register", to: Routers.Register
 
   match _, do: send_resp(conn, :not_found, "unknown request")
 end

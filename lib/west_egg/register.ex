@@ -18,13 +18,12 @@ defmodule WestEgg.Register do
       alias WestEgg.{Auth, Register, Repo}
 
       defmodule Parameters do
-        defstruct [:id, :channel_id, :show_id, :video_id | Keyword.keys(unquote(spec))]
+        defstruct [:id | Keyword.keys(unquote(spec))]
       end
 
       @impl true
       def call(conn, opts) do
         keys = Keyword.keys(unquote(spec))
-
         params =
           conn.body_params
           |> Map.take(Enum.map(keys, &to_string/1))
@@ -37,7 +36,6 @@ defmodule WestEgg.Register do
         end
 
         params = if :owners in keys, do: add_ownership(params, conn), else: params
-
         register(conn, params, opts)
       end
 
@@ -58,12 +56,14 @@ defmodule WestEgg.Register do
           user not in owners ->
             case Repo.fetch(:repo, :users, user, :profile) do
               {:ok, %{"handle" => handle}} ->
-                if handle in owners do
-                  # This saves us from having to do another Repo query later.
-                  index = Enum.find_index(owners, fn owner -> owner == handle end)
-                  Map.put(params, :owners, List.replace_at(owners, index, user))
-                else
-                  Map.put(params, :owners, [user | owners])
+                cond do
+                  handle in owners ->
+                    # This saves us from having to do another Repo query later.
+                    index = Enum.find_index(owners, &(&1 == handle))
+                    Map.put(params, :owners, List.replace_at(owners, index, user))
+
+                  true ->
+                    Map.put(params, :owners, [user | owners])
                 end
 
               {:error, %Repo.NotFoundError{}} ->
@@ -80,23 +80,17 @@ defmodule WestEgg.Register do
 
       defp fetch(%{owners: owners} = params, :owners) do
         owners =
-          for user <- Enum.map(owners, &String.trim/1), into: [] do
-            cond do
-              String.starts_with?(user, "@") ->
-                case Repo.fetch(:repo, :registry, :users, user) do
-                  # NOTE: should this fail if the handle is not in use?
-                  {:ok, %{"id" => id}} -> id
-                  {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{user}'")
-                  {:error, reason} -> raise reason
-                end
-
-              true ->
-                user
+          owners
+          |> Stream.map(&String.trim/1)
+          |> Enum.reduce_while([], fn user, acc ->
+            case Repo.lookup(:repo, :user, user) do
+              {:ok, id} -> {:cont, [id | acc]}
+              {:error, %Repo.NotFoundError{}} -> fail("unknown user, '#{user}'")
+              {:error, reason} -> raise reason
             end
-          end
+          end)
 
         if length(owners) == 0, do: fail("#{unquote(bucket)} must have at least one owner")
-
         Map.put(params, :owners, owners)
       end
 
@@ -113,7 +107,6 @@ defmodule WestEgg.Register do
         }
 
         Repo.modify(:repo, :registry, unquote(bucket), handle, methods)
-
         Map.put(params, :id, id)
       end
 
