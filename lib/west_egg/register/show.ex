@@ -19,8 +19,9 @@ defmodule WestEgg.Register.Show do
     |> convert_handle()
     |> stage(:registry)
     |> stage(:profile)
-    |> stage(:channel)
     |> stage(:owners)
+    |> stage(:channel)
+    |> stage(:users)
     |> finish(conn)
   end
 
@@ -64,18 +65,27 @@ defmodule WestEgg.Register.Show do
     end
   end
 
-  defp stage(%{id: id, handle: handle, channel_id: channel, owners: owners} = params, :profile) do
+  defp stage(%{id: id, handle: handle, channel_id: channel} = params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
       "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
       "channel" => Repo.set(channel),
-      "owners" => Repo.add_elements(owners),
       "creation_time" => Repo.set(now)
     }
 
     Repo.modify(:repo, :shows, id, :profile, methods)
+    params
+  end
+
+  defp stage(%{id: id, owners: owners} = params, :owners) do
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "owners" => Repo.add_elements(owners)
+    }
+
+    Repo.modify(:repo, :shows, id, :owners, methods)
     params
   end
 
@@ -88,7 +98,7 @@ defmodule WestEgg.Register.Show do
     params
   end
 
-  defp stage(%{id: id, owners: owners} = params, :owners) do
+  defp stage(%{id: id, owners: owners} = params, :users) do
     methods = %{
       "_type" => Repo.set("application/riak_set"),
       "shows" => Repo.add_element(id)

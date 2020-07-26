@@ -16,6 +16,7 @@ defmodule WestEgg.Register.Channel do
     |> stage(:registry)
     |> stage(:profile)
     |> stage(:owners)
+    |> stage(:users)
     |> finish(conn)
   end
 
@@ -44,13 +45,12 @@ defmodule WestEgg.Register.Channel do
     if Auth.verified?(conn), do: params, else: raise(Auth.AuthorizationError)
   end
 
-  defp stage(%{id: id, handle: handle, owners: owners} = params, :profile) do
+  defp stage(%{id: id, handle: handle} = params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
       "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
-      "owners" => Repo.add_elements(owners),
       "creation_time" => Repo.set(now)
     }
 
@@ -59,6 +59,16 @@ defmodule WestEgg.Register.Channel do
   end
 
   defp stage(%{id: id, owners: owners} = params, :owners) do
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "owners" => Repo.add_elements(owners)
+    }
+
+    Repo.modify(:repo, :channels, id, :owners, methods)
+    params
+  end
+
+  defp stage(%{id: id, owners: owners} = params, :users) do
     for owner <- owners do
       methods = %{
         "_type" => Repo.set("application/riak_set"),

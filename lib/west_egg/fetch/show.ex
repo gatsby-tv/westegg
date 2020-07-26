@@ -29,6 +29,7 @@ defmodule WestEgg.Fetch.Show do
 
   public :shows, [
     "profile",
+    "owners",
     "videos"
   ]
 end

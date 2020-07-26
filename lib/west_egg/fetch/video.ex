@@ -9,6 +9,7 @@ defmodule WestEgg.Fetch.Video do
 
   public :videos, [
     "profile",
+    "owners",
     "promotions"
   ]
 end

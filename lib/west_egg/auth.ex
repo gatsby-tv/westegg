@@ -31,7 +31,7 @@ defmodule WestEgg.Auth do
   end
 
   def owns?(conn, [{type, bucket}]) when type in @ownables do
-    case Repo.fetch(:repo, "#{type}s", bucket, :profile) do
+    case Repo.fetch(:repo, "#{type}s", bucket, :owners) do
       {:ok, %{"owners" => owners}} -> get_session(conn, "user") in owners
       {:error, %Repo.NotFoundError{}} -> false
       {:error, reason} -> raise reason
