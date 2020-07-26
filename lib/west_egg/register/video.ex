@@ -48,6 +48,7 @@ defmodule WestEgg.Register.Video do
   defp fetch(%{show: show, channel: channel} = params, :show) do
     is_show_handle? = String.starts_with?(show, "/")
     is_channel_handle? = String.starts_with?(channel, "#")
+
     handle =
       cond do
         is_show_handle? and is_channel_handle? ->
@@ -169,6 +170,7 @@ defmodule WestEgg.Register.Video do
       "_type" => Repo.set("application/riak_set"),
       "owners" => Repo.add_elements(owners)
     }
+
     Repo.modify(:repo, :videos, id, :owners, methods)
     params
   end
@@ -178,6 +180,7 @@ defmodule WestEgg.Register.Video do
       "_type" => Repo.set("application/riak_set"),
       "videos" => Repo.add_element(id)
     }
+
     Repo.modify(:repo, :channels, channel, :videos, methods)
     params
   end
@@ -190,6 +193,7 @@ defmodule WestEgg.Register.Video do
       "_type" => Repo.set("application/riak_set"),
       "videos" => Repo.add_element(id)
     }
+
     Repo.modify(:repo, :shows, show, :videos, methods)
     params
   end
@@ -200,6 +204,7 @@ defmodule WestEgg.Register.Video do
         "_type" => Repo.set("application/riak_set"),
         "videos" => Repo.add_element(id)
       }
+
       Repo.modify(:repo, :users, owner, :videos, methods)
     end
 

@@ -84,10 +84,12 @@ defmodule WestEgg.Modify.Followers do
 
   defp stage(%{user: user, session: session} = params, :add, :followers) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
+
     methods = %{
       "_type" => Repo.set("plain/text"),
       "since" => Repo.set(now)
     }
+
     Repo.modify(:repo, :followers, user, session, methods)
     params
   end
@@ -97,6 +99,7 @@ defmodule WestEgg.Modify.Followers do
       "_type" => Repo.set("application/riak_set"),
       "following" => Repo.add_element(user)
     }
+
     Repo.modify(:repo, :users, session, :following, methods)
     params
   end
@@ -106,6 +109,7 @@ defmodule WestEgg.Modify.Followers do
       "_type" => Repo.set("application/riak_counter"),
       "followers" => Repo.increment()
     }
+
     Repo.modify(:repo, :users, user, :followers, methods)
     params
   end

@@ -13,11 +13,11 @@ defmodule WestEgg do
 
   def handle_errors(conn, %{reason: reason}) do
     case reason do
+      %Fetch.AccessError{} -> send_resp(conn, :not_found, reason.message)
       %Modify.ModificationError{} -> send_resp(conn, :bad_request, reason.message)
       %Register.RegistrationError{} -> send_resp(conn, :bad_request, reason.message)
       %Auth.AuthorizationError{} -> send_resp(conn, :forbidden, reason.message)
       %Auth.AuthenticationError{} -> send_resp(conn, :forbidden, reason.message)
-      %Fetch.AccessError{} -> send_resp(conn, :not_found, reason.message)
       _ -> send_resp(conn, :internal_server_error, "internal server error")
     end
   end

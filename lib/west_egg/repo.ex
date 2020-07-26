@@ -45,8 +45,7 @@ defmodule WestEgg.Repo do
     [type, bucket, key] = Enum.map([type, bucket, key], &format_key/1)
 
     with {:ok, obj} <- :riakc_pb_socket.fetch_type(pid, {type, bucket}, key),
-         {:ok, content} <- parse(obj)
-    do
+         {:ok, content} <- parse(obj) do
       {:ok, content}
     else
       {:error, :notfound} -> {:error, %NotFoundError{}}

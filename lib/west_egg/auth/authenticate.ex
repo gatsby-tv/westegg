@@ -5,7 +5,6 @@ defmodule WestEgg.Auth.Authenticate do
   def call(%{body_params: %{"user" => user, "password" => password}} = conn, _opts) do
     with {:ok, id} <- Repo.lookup(:repo, :user, user),
          {:ok, %{"password" => hash}} <- Repo.fetch(:repo, :secrets, id, :login_info) do
-
       unless Argon2.verify_pass(password, hash), do: raise(Auth.AuthenticationError)
 
       conn

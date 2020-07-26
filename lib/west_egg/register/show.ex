@@ -94,6 +94,7 @@ defmodule WestEgg.Register.Show do
       "_type" => Repo.set("application/riak_set"),
       "shows" => Repo.add_element(id)
     }
+
     Repo.modify(:repo, :channels, channel, :shows, methods)
     params
   end

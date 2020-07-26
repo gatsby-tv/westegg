@@ -33,6 +33,7 @@ defmodule WestEgg.Modify.Votes do
       "_type" => Repo.set("application/riak_counter"),
       "votes" => Repo.increment(quantity)
     }
+
     Repo.modify(:repo, :users, session, :votes, methods)
     params
   end

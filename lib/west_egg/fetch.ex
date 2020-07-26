@@ -25,7 +25,9 @@ defmodule WestEgg.Fetch do
 
       @impl true
       def call(%{params: %{"handle" => handle, "request" => request}} = conn, access: type) do
-        handle = if String.starts_with?(handle, "#{@bucket}_"), do: handle, else: "#{@sigil}#{handle}"
+        handle =
+          if String.starts_with?(handle, "#{@bucket}_"), do: handle, else: "#{@sigil}#{handle}"
+
         case Repo.lookup(:repo, @bucket, handle) do
           {:ok, id} ->
             fetch(type, conn, id, request)

@@ -75,6 +75,7 @@ defmodule WestEgg.Register.User do
       "_type" => Repo.set("application/riak_map"),
       "emails" => Repo.add_element(email)
     }
+
     Repo.modify(:repo, :secrets, id, :contact_info, methods)
     params
   end

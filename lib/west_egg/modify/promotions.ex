@@ -41,7 +41,7 @@ defmodule WestEgg.Modify.Promotions do
   end
 
   defp authorize(params, conn) do
-    if Auth.verified?(conn), do: params, else: raise Auth.AuthorizationError
+    if Auth.verified?(conn), do: params, else: raise(Auth.AuthorizationError)
   end
 
   defp fetch(%{video: video} = params, :video) do
@@ -71,6 +71,7 @@ defmodule WestEgg.Modify.Promotions do
 
   defp validate(%{video: video, profile: profile} = params, :video) do
     videos = profile["videos"]
+
     cond do
       is_nil(videos) -> params
       video in videos -> fail("video owned by session")
@@ -80,6 +81,7 @@ defmodule WestEgg.Modify.Promotions do
 
   defp validate(%{quantity: quantity, profile: profile} = params, :add, :quantity) do
     votes = profile["votes"]
+
     cond do
       is_nil(votes) or votes < quantity -> fail("insufficient votes")
       true -> params
@@ -88,6 +90,7 @@ defmodule WestEgg.Modify.Promotions do
 
   defp validate(params, :remove, :quantity) do
     %{video: video, quantity: quantity, session: session} = params
+
     case Repo.fetch(:repo, :promotions, video, session) do
       {:ok, %{"quantity" => invested}} ->
         cond do
@@ -105,10 +108,12 @@ defmodule WestEgg.Modify.Promotions do
 
   defp stage(params, :add, :promotions) do
     %{video: video, quantity: quantity, session: session} = params
+
     methods = %{
       "_type" => Repo.set("application/riak_counter"),
       "quantity" => Repo.increment(quantity)
     }
+
     Repo.modify(:repo, :promotions, video, session, methods)
     params
   end
@@ -124,6 +129,7 @@ defmodule WestEgg.Modify.Promotions do
       "_type" => Repo.set("application/riak_counter"),
       "promotions" => Repo.increment(quantity)
     }
+
     Repo.modify(:repo, :videos, video, :promotions, methods)
     params
   end

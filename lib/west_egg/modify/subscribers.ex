@@ -33,7 +33,7 @@ defmodule WestEgg.Modify.Subscribers do
   end
 
   defp authorize(params, conn) do
-    if Auth.verified?(conn), do: params, else: raise Auth.AuthorizationError
+    if Auth.verified?(conn), do: params, else: raise(Auth.AuthorizationError)
   end
 
   defp fetch(%{channel: channel} = params, :channel) do
@@ -49,6 +49,7 @@ defmodule WestEgg.Modify.Subscribers do
       {:ok, profile} ->
         subscriptions = profile["subscriptions"]
         channels = profile["channels"]
+
         cond do
           not is_nil(subscriptions) and channel in subscriptions ->
             fail("session already subscribed to '#{channel}'")
@@ -70,6 +71,7 @@ defmodule WestEgg.Modify.Subscribers do
       {:ok, profile} ->
         subscriptions = profile["subscriptions"]
         channels = profile["channels"]
+
         cond do
           is_nil(subscriptions) or channel not in subscriptions ->
             fail("session not subscribed to '#{channel}'")
@@ -88,10 +90,12 @@ defmodule WestEgg.Modify.Subscribers do
 
   defp stage(%{channel: channel, session: session} = params, :add, :subscribers) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
+
     methods = %{
       "_type" => Repo.set("plain/text"),
       "since" => Repo.set(now)
     }
+
     Repo.modify(:repo, :subscribers, channel, session, methods)
     params
   end
@@ -101,6 +105,7 @@ defmodule WestEgg.Modify.Subscribers do
       "_type" => Repo.set("application/riak_set"),
       "subscriptions" => Repo.add_element(channel)
     }
+
     Repo.modify(:repo, :users, session, :subscriptions, methods)
     params
   end
@@ -110,6 +115,7 @@ defmodule WestEgg.Modify.Subscribers do
       "_type" => Repo.set("application/riak_counter"),
       "subscribers" => Repo.increment()
     }
+
     Repo.modify(:repo, :channels, channel, :subscribers, methods)
     params
   end

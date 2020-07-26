@@ -74,6 +74,7 @@ defmodule WestEgg.Register.Channel do
         "_type" => Repo.set("application/riak_set"),
         "channels" => Repo.add_element(id)
       }
+
       Repo.modify(:repo, :users, owner, :channels, methods)
     end
 

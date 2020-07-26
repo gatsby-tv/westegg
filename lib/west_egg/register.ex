@@ -24,6 +24,7 @@ defmodule WestEgg.Register do
       @impl true
       def call(conn, opts) do
         keys = Keyword.keys(unquote(spec))
+
         params =
           conn.body_params
           |> Map.take(Enum.map(keys, &to_string/1))

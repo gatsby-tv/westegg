@@ -9,6 +9,7 @@ defmodule WestEgg.Fetch.Show do
         access: type
       ) do
     handle = "#{@sigil}#{channel}/#{show}"
+
     case Repo.lookup(:repo, @bucket, handle) do
       {:ok, id} ->
         fetch(type, conn, id, request)

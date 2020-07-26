@@ -41,7 +41,7 @@ defmodule WestEgg.Modify do
       defp fail, do: raise(Modify.ModificationError)
       defp fail(message), do: raise(Modify.ModificationError, message: message)
 
-      defoverridable [finish: 2]
+      defoverridable finish: 2
       defoverridable Modify
       defoverridable Plug
     end
