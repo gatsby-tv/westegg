@@ -10,7 +10,8 @@ defmodule WestEgg.Fetch.Channel do
 
   public :channels, [
     "profile",
-    "photo",
-    "banner"
+    "videos",
+    "shows",
+    "subscribers"
   ]
 end

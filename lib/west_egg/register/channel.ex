@@ -10,9 +10,9 @@ defmodule WestEgg.Register.Channel do
   @impl true
   def register(conn, params, _opts) do
     params
+    |> authorize(conn)
     |> fetch(:owners)
     |> validate(:handle)
-    |> authorize(conn)
     |> stage(:registry)
     |> stage(:profile)
     |> stage(:owners)
@@ -48,6 +48,7 @@ defmodule WestEgg.Register.Channel do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
+      "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
       "owners" => Repo.add_elements(owners),
       "creation_time" => Repo.set(now)
@@ -59,8 +60,11 @@ defmodule WestEgg.Register.Channel do
 
   defp stage(%{id: id, owners: owners} = params, :owners) do
     for owner <- owners do
-      methods = %{"channels" => Repo.add_element(id)}
-      Repo.modify(:repo, :users, owner, :profile, methods)
+      methods = %{
+        "_type" => Repo.set("application/riak_set"),
+        "channels" => Repo.add_element(id)
+      }
+      Repo.modify(:repo, :users, owner, :channels, methods)
     end
 
     params

@@ -9,13 +9,16 @@ defmodule WestEgg.Fetch.User do
 
   public :users, [
     "profile",
-    "preferences",
-    "photo"
+    "videos",
+    "shows",
+    "channels",
+    "followers"
   ]
 
   private :secrets, [
     "contact_info",
-    "payment_info",
-    "history"
+    "votes",
+    "following",
+    "subscriptions"
   ]
 end

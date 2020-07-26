@@ -14,9 +14,9 @@ defmodule WestEgg.Register.Show do
     params
     |> fetch(:owners)
     |> fetch(:channel)
+    |> authorize(conn)
     |> validate(:handle)
     |> convert_handle()
-    |> authorize(conn)
     |> stage(:registry)
     |> stage(:profile)
     |> stage(:channel)
@@ -68,6 +68,7 @@ defmodule WestEgg.Register.Show do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
+      "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
       "channel" => Repo.set(channel),
       "owners" => Repo.add_elements(owners),
@@ -79,16 +80,22 @@ defmodule WestEgg.Register.Show do
   end
 
   defp stage(%{id: id, channel_id: channel} = params, :channel) do
-    methods = %{"shows" => Repo.add_element(id)}
-    Repo.modify(:repo, :channels, channel, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "shows" => Repo.add_element(id)
+    }
+    Repo.modify(:repo, :channels, channel, :shows, methods)
     params
   end
 
   defp stage(%{id: id, owners: owners} = params, :owners) do
-    methods = %{"shows" => Repo.add_element(id)}
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "shows" => Repo.add_element(id)
+    }
 
     for owner <- owners do
-      Repo.modify(:repo, :users, owner, :profile, methods)
+      Repo.modify(:repo, :users, owner, :shows, methods)
     end
 
     params

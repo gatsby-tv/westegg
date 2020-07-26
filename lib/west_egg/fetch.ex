@@ -26,16 +26,18 @@ defmodule WestEgg.Fetch do
 
       @impl true
       def call(%{params: %{"id" => id, "request" => request}} = conn, access: type) do
-        content = fetch(type, conn, "#{@prefix}_#{id}", request)
-        send_json_resp(conn, content)
+        fetch(type, conn, "#{@prefix}_#{id}", request)
+        |> parse()
+        |> finish(conn)
       end
 
       @impl true
       def call(%{params: %{"handle" => handle, "request" => request}} = conn, access: type) do
         case Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{handle}") do
           {:ok, %{"id" => id}} ->
-            content = fetch(type, conn, id, request)
-            send_json_resp(conn, content)
+            fetch(type, conn, id, request)
+            |> parse()
+            |> finish(conn)
 
           {:error, %Repo.NotFoundError{}} ->
             raise AccessError
@@ -64,7 +66,23 @@ defmodule WestEgg.Fetch do
         end
       end
 
-      defp send_json_resp(conn, content) do
+      defp parse(content) do
+        case Map.pop(content, "_type") do
+          {nil, _} ->
+            raise "undefined object"
+
+          {"application/riak_map", content} ->
+            {"application/riak_map", content}
+
+          {type, content} ->
+            content
+            |> Map.to_list()
+            |> hd()
+            |> (fn {_, resp} -> {type, resp} end).()
+        end
+      end
+
+      defp finish({"application/riak_map", content}, conn) do
         case Poison.encode(content) do
           {:ok, json} ->
             conn
@@ -74,6 +92,30 @@ defmodule WestEgg.Fetch do
           {:error, reason} ->
             raise reason
         end
+      end
+
+      defp finish({"application/riak_set", content}, conn) do
+        case Poison.encode(content) do
+          {:ok, json} ->
+            conn
+            |> put_resp_content_type("application/json")
+            |> send_resp(:ok, json)
+
+          {:error, reason} ->
+            raise reason
+        end
+      end
+
+      defp finish({"application/riak_counter", content}, conn) do
+        conn
+        |> put_resp_content_type("plain/text")
+        |> send_resp(:ok, to_string(content))
+      end
+
+      defp finish({type, content}, conn) do
+        conn
+        |> put_resp_content_type(type)
+        |> send_resp(:ok, to_string(content))
       end
 
       @impl true

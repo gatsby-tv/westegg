@@ -61,6 +61,7 @@ defmodule WestEgg.Register.User do
     hash = Argon2.add_hash(password)[:password_hash]
 
     methods = %{
+      "_type" => Repo.set("application/riak_map"),
       "email" => Repo.set(email),
       "password" => Repo.set(hash)
     }
@@ -70,7 +71,10 @@ defmodule WestEgg.Register.User do
   end
 
   defp stage(%{id: id, email: email} = params, :contact_info) do
-    methods = %{"emails" => Repo.add_element(email)}
+    methods = %{
+      "_type" => Repo.set("application/riak_map"),
+      "emails" => Repo.add_element(email)
+    }
     Repo.modify(:repo, :secrets, id, :contact_info, methods)
     params
   end
@@ -79,6 +83,7 @@ defmodule WestEgg.Register.User do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
+      "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
       "creation_time" => Repo.set(now)
     }

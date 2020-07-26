@@ -47,7 +47,7 @@ defmodule WestEgg.Modify.Followers do
     if user == session do
       fail("cannot follow session user")
     else
-      case Repo.fetch(:repo, :users, session, :profile) do
+      case Repo.fetch(:repo, :users, session, :following) do
         {:ok, %{"following" => following}} ->
           if user in following,
             do: fail("session already following '#{user}'"),
@@ -66,7 +66,7 @@ defmodule WestEgg.Modify.Followers do
     if user == session do
       fail("cannot unfollow session user")
     else
-      case Repo.fetch(:repo, :users, session, :profile) do
+      case Repo.fetch(:repo, :users, session, :following) do
         {:ok, %{"following" => following}} ->
           if user not in following,
             do: fail("session not following '#{user}'"),
@@ -83,20 +83,29 @@ defmodule WestEgg.Modify.Followers do
 
   defp stage(%{user: user, session: session} = params, :add, :followers) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
-    methods = %{"since" => Repo.set(now)}
+    methods = %{
+      "_type" => Repo.set("plain/text"),
+      "since" => Repo.set(now)
+    }
     Repo.modify(:repo, :followers, user, session, methods)
     params
   end
 
   defp stage(%{user: user, session: session} = params, :add, :session) do
-    methods = %{"following" => Repo.add_element(user)}
-    Repo.modify(:repo, :users, session, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "following" => Repo.add_element(user)
+    }
+    Repo.modify(:repo, :users, session, :following, methods)
     params
   end
 
   defp stage(%{user: user} = params, :add, :user) do
-    methods = %{"followers" => Repo.increment()}
-    Repo.modify(:repo, :users, user, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_counter"),
+      "followers" => Repo.increment()
+    }
+    Repo.modify(:repo, :users, user, :followers, methods)
     params
   end
 
@@ -107,13 +116,13 @@ defmodule WestEgg.Modify.Followers do
 
   defp stage(%{user: user, session: session} = params, :remove, :session) do
     methods = %{"following" => Repo.del_element(user)}
-    Repo.modify(:repo, :users, session, :profile, methods)
+    Repo.modify(:repo, :users, session, :following, methods)
     params
   end
 
   defp stage(%{user: user} = params, :remove, :user) do
     methods = %{"followers" => Repo.decrement()}
-    Repo.modify(:repo, :users, user, :profile, methods)
+    Repo.modify(:repo, :users, user, :followers, methods)
     params
   end
 end

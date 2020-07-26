@@ -87,20 +87,29 @@ defmodule WestEgg.Modify.Subscribers do
 
   defp stage(%{channel: channel, session: session} = params, :add, :subscribers) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
-    methods = %{"since" => Repo.set(now)}
+    methods = %{
+      "_type" => Repo.set("plain/text"),
+      "since" => Repo.set(now)
+    }
     Repo.modify(:repo, :subscribers, channel, session, methods)
     params
   end
 
   defp stage(%{channel: channel, session: session} = params, :add, :session) do
-    methods = %{"subscriptions" => Repo.add_element(channel)}
-    Repo.modify(:repo, :users, session, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "subscriptions" => Repo.add_element(channel)
+    }
+    Repo.modify(:repo, :users, session, :subscriptions, methods)
     params
   end
 
   defp stage(%{channel: channel} = params, :add, :channel) do
-    methods = %{"subscribers" => Repo.increment()}
-    Repo.modify(:repo, :channels, channel, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_counter"),
+      "subscribers" => Repo.increment()
+    }
+    Repo.modify(:repo, :channels, channel, :subscribers, methods)
     params
   end
 
@@ -111,13 +120,13 @@ defmodule WestEgg.Modify.Subscribers do
 
   defp stage(%{channel: channel, session: session} = params, :remove, :session) do
     methods = %{"subscriptions" => Repo.del_element(channel)}
-    Repo.modify(:repo, :users, session, :profile, methods)
+    Repo.modify(:repo, :users, session, :subscriptions, methods)
     params
   end
 
   defp stage(%{channel: channel} = params, :remove, :channel) do
     methods = %{"subscribers" => Repo.decrement()}
-    Repo.modify(:repo, :channels, channel, :profile, methods)
+    Repo.modify(:repo, :channels, channel, :subscribers, methods)
     params
   end
 end

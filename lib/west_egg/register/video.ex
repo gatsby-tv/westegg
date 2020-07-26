@@ -20,11 +20,11 @@ defmodule WestEgg.Register.Video do
     |> fetch(:owners)
     |> fetch(:channel)
     |> fetch(:show)
+    |> authorize(conn)
     |> validate(:handle)
     |> validate(:title)
     |> validate(:description)
     |> validate(:tags)
-    |> authorize(conn)
     |> stage(:registry)
     |> stage(:profile)
     |> stage(:channel)
@@ -150,6 +150,7 @@ defmodule WestEgg.Register.Video do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
+      "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
       "title" => Repo.set(title),
       "owners" => Repo.add_elements(owners),
@@ -165,8 +166,11 @@ defmodule WestEgg.Register.Video do
   end
 
   defp stage(%{id: id, channel_id: channel} = params, :channel) do
-    methods = %{"videos" => Repo.add_element(id)}
-    Repo.modify(:repo, :channels, channel, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "videos" => Repo.add_element(id)
+    }
+    Repo.modify(:repo, :channels, channel, :videos, methods)
     params
   end
 
@@ -174,15 +178,21 @@ defmodule WestEgg.Register.Video do
   defp stage(%{show_id: ""} = params, :show), do: params
 
   defp stage(%{id: id, show_id: show} = params, :show) do
-    methods = %{"videos" => Repo.add_element(id)}
-    Repo.modify(:repo, :shows, show, :profile, methods)
+    methods = %{
+      "_type" => Repo.set("application/riak_set"),
+      "videos" => Repo.add_element(id)
+    }
+    Repo.modify(:repo, :shows, show, :videos, methods)
     params
   end
 
   defp stage(%{id: id, owners: owners} = params, :owners) do
     for owner <- owners do
-      methods = %{"videos" => Repo.add_element(id)}
-      Repo.modify(:repo, :users, owner, :profile, methods)
+      methods = %{
+        "_type" => Repo.set("application/riak_set"),
+        "videos" => Repo.add_element(id)
+      }
+      Repo.modify(:repo, :users, owner, :videos, methods)
     end
 
     params

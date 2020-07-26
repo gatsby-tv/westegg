@@ -104,8 +104,26 @@ defmodule WestEgg.Modify.Promotions do
 
   defp stage(params, :add, :promotions) do
     %{video: video, quantity: quantity, session: session} = params
-    methods = %{"quantity" => Repo.increment(quantity)}
+    methods = %{
+      "_type" => Repo.set("application/riak_counter"),
+      "quantity" => Repo.increment(quantity)
+    }
     Repo.modify(:repo, :promotions, video, session, methods)
+    params
+  end
+
+  defp stage(%{quantity: quantity, session: session} = params, :add, :session) do
+    methods = %{"votes" => Repo.decrement(quantity)}
+    Repo.modify(:repo, :users, session, :votes, methods)
+    params
+  end
+
+  defp stage(%{video: video, quantity: quantity} = params, :add, :video) do
+    methods = %{
+      "_type" => Repo.set("application/riak_counter"),
+      "promotions" => Repo.increment(quantity)
+    }
+    Repo.modify(:repo, :videos, video, :promotions, methods)
     params
   end
 
@@ -116,28 +134,16 @@ defmodule WestEgg.Modify.Promotions do
     params
   end
 
-  defp stage(%{quantity: quantity, session: session} = params, :add, :session) do
-    methods = %{"votes" => Repo.decrement(quantity)}
-    Repo.modify(:repo, :users, session, :profile, methods)
-    params
-  end
-
   defp stage(%{quantity: quantity, session: session} = params, :remove, :session) do
     quantity = trunc(0.7 * quantity)
     methods = %{"votes" => Repo.increment(quantity)}
-    Repo.modify(:repo, :users, session, :profile, methods)
-    params
-  end
-
-  defp stage(%{video: video, quantity: quantity} = params, :add, :video) do
-    methods = %{"promotions" => Repo.increment(quantity)}
-    Repo.modify(:repo, :videos, video, :profile, methods)
+    Repo.modify(:repo, :users, session, :votes, methods)
     params
   end
 
   defp stage(%{video: video, quantity: quantity} = params, :remove, :video) do
     methods = %{"promotions" => Repo.decrement(quantity)}
-    Repo.modify(:repo, :videos, video, :profile, methods)
+    Repo.modify(:repo, :videos, video, :promotions, methods)
     params
   end
 end

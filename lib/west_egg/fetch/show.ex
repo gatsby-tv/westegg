@@ -11,8 +11,9 @@ defmodule WestEgg.Fetch.Show do
       ) do
     case Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{channel}/#{show}") do
       {:ok, %{"id" => id}} ->
-        content = fetch(type, conn, id, request)
-        send_json_resp(conn, content)
+        fetch(type, conn, id, request)
+        |> parse()
+        |> finish(conn)
 
       {:error, reason} ->
         raise reason
@@ -25,7 +26,8 @@ defmodule WestEgg.Fetch.Show do
 
   public :shows, [
     "profile",
-    "thumbnail",
-    "banner"
+    "videos"
+    #"thumbnail",
+    #"banner"
   ]
 end
