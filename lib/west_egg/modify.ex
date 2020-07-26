@@ -5,18 +5,20 @@ defmodule WestEgg.Modify do
     defexception message: "invalid modification"
   end
 
-  defmacro __using__(spec: spec) do
+  defmacro __using__(spec: spec, ops: ops) do
     quote do
       @behaviour WestEgg.Modify
       use Plug.Builder
       alias WestEgg.{Auth, Modify, Repo}
+
+      @ops Enum.map(unquote(ops), &to_string/1)
 
       defmodule Parameters do
         defstruct Keyword.keys(unquote(spec))
       end
 
       @impl true
-      def call(conn, opts) do
+      def call(%{params: %{"op" => op}} = conn, opts) when op in @ops do
         params =
           conn.body_params
           |> Map.take(unquote(spec) |> Keyword.keys() |> Enum.map(&to_string/1))
@@ -28,9 +30,11 @@ defmodule WestEgg.Modify do
           if is_nil(Map.fetch!(params, key)), do: fail("missing key, '#{key}'")
         end
 
-        {[op: op], opts} = Keyword.split(opts, [:op])
-        modify(op, conn, params, Map.new(opts))
+        modify(String.to_atom(op), conn, params, Map.new(opts))
       end
+
+      @impl true
+      def call(conn, _opts), do: send_resp(conn, :not_found, "unknown request")
 
       defp finish(_params, conn), do: send_resp(conn, :ok, "ok")
 

@@ -3,7 +3,8 @@ defmodule WestEgg.Modify.Followers do
     spec: [
       user: :required,
       session: :phantom
-    ]
+    ],
+    ops: [:add, :remove]
 
   @impl true
   def modify(:add, conn, params, _opts) do

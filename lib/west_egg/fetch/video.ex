@@ -1,8 +1,7 @@
 defmodule WestEgg.Fetch.Video do
   use WestEgg.Fetch,
-    prefix: "video",
     sigil: "$",
-    bucket: :videos
+    bucket: :video
 
   @impl true
   def authorized?(conn, %{id: id}),

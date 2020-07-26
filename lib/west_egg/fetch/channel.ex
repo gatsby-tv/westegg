@@ -1,8 +1,7 @@
 defmodule WestEgg.Fetch.Channel do
   use WestEgg.Fetch,
-    prefix: "channel",
     sigil: "#",
-    bucket: :channels
+    bucket: :channel
 
   @impl true
   def authorized?(conn, %{id: id}),

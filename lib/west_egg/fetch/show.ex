@@ -1,19 +1,22 @@
 defmodule WestEgg.Fetch.Show do
   use WestEgg.Fetch,
-    prefix: "show",
     sigil: "#",
-    bucket: :shows
+    bucket: :show
 
   @impl true
   def call(
         %{params: %{"channel" => channel, "show" => show, "request" => request}} = conn,
         access: type
       ) do
-    case Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{channel}/#{show}") do
-      {:ok, %{"id" => id}} ->
+    handle = "#{@sigil}#{channel}/#{show}"
+    case Repo.lookup(:repo, @bucket, handle) do
+      {:ok, id} ->
         fetch(type, conn, id, request)
         |> parse()
         |> finish(conn)
+
+      {:error, %Repo.NotFoundError{}} ->
+        raise Fetch.AccessError, "key '#{handle}' does not exist"
 
       {:error, reason} ->
         raise reason
@@ -27,7 +30,5 @@ defmodule WestEgg.Fetch.Show do
   public :shows, [
     "profile",
     "videos"
-    #"thumbnail",
-    #"banner"
   ]
 end

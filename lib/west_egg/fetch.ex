@@ -3,7 +3,7 @@ defmodule WestEgg.Fetch do
   Behaviour for requesting keys from the database.
   """
 
-  alias WestEgg.{Auth, Repo}
+  alias WestEgg.{Auth, Fetch, Repo}
 
   @callback authorized?(Plug.Conn.t(), Keyword.t()) :: bool
 
@@ -11,36 +11,29 @@ defmodule WestEgg.Fetch do
     defexception message: "unknown request"
   end
 
-  defmacro __using__(prefix: prefix, sigil: sigil, bucket: bucket) do
+  defmacro __using__(sigil: sigil, bucket: bucket) do
     quote do
       use Plug.Builder
       import WestEgg.Fetch
-      alias WestEgg.{Auth, Repo}
+      alias WestEgg.{Auth, Fetch, Repo}
 
       @behaviour WestEgg.Fetch
       @before_compile WestEgg.Fetch
 
-      @prefix unquote(prefix)
       @sigil unquote(sigil)
       @bucket unquote(bucket)
 
       @impl true
-      def call(%{params: %{"id" => id, "request" => request}} = conn, access: type) do
-        fetch(type, conn, "#{@prefix}_#{id}", request)
-        |> parse()
-        |> finish(conn)
-      end
-
-      @impl true
       def call(%{params: %{"handle" => handle, "request" => request}} = conn, access: type) do
-        case Repo.fetch(:repo, :registry, @bucket, "#{@sigil}#{handle}") do
-          {:ok, %{"id" => id}} ->
+        handle = if String.starts_with?(handle, "#{@bucket}_"), do: handle, else: "#{@sigil}#{handle}"
+        case Repo.lookup(:repo, @bucket, handle) do
+          {:ok, id} ->
             fetch(type, conn, id, request)
             |> parse()
             |> finish(conn)
 
           {:error, %Repo.NotFoundError{}} ->
-            raise AccessError
+            raise AccessError, "key '#{handle}' does not exist"
 
           {:error, reason} ->
             raise reason
@@ -141,6 +134,7 @@ defmodule WestEgg.Fetch do
       defp do_fetch(:public, id, key) when key in unquote(keys) do
         case Repo.fetch(:repo, unquote(type), id, key) do
           {:ok, content} -> content
+          {:error, %Repo.NotFoundError{}} -> raise Fetch.AccessError, "key not found"
           {:error, reason} -> raise reason
         end
       end
@@ -152,6 +146,7 @@ defmodule WestEgg.Fetch do
       defp do_fetch(:private, id, key) when key in unquote(keys) do
         case Repo.fetch(:repo, unquote(type), id, key) do
           {:ok, content} -> content
+          {:error, %Repo.NotFoundError{}} -> raise Fetch.AccessError, "key not found"
           {:error, reason} -> raise reason
         end
       end

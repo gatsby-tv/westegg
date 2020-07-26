@@ -3,7 +3,8 @@ defmodule WestEgg.Modify.Subscribers do
     spec: [
       channel: :required,
       session: :phantom
-    ]
+    ],
+    ops: [:add, :remove]
 
   @impl true
   def modify(:add, conn, params, _opts) do

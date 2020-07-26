@@ -5,7 +5,8 @@ defmodule WestEgg.Modify.Promotions do
       quantity: :optional,
       session: :phantom,
       profile: :phantom
-    ]
+    ],
+    ops: [:add, :remove]
 
   @impl true
   def modify(:add, conn, params, _opts) do

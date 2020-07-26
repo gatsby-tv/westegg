@@ -5,7 +5,7 @@ defmodule WestEgg.Routers.Show do
   plug :match
   plug :dispatch
 
-  get "/show_:id/:request", to: Fetch.Show, init_opts: [access: :public]
+  get "/:handle/:request", to: Fetch.Show, init_opts: [access: :public]
   get "/:channel/:show/:request", to: Fetch.Show, init_opts: [access: :public]
 
   match _, do: send_resp(conn, :not_found, "unknown request")

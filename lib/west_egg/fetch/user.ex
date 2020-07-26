@@ -1,8 +1,7 @@
 defmodule WestEgg.Fetch.User do
   use WestEgg.Fetch,
-    prefix: "user",
     sigil: "@",
-    bucket: :users
+    bucket: :user
 
   @impl true
   def authorized?(conn, %{id: id}), do: Auth.verified?(conn, as: id)
@@ -15,10 +14,13 @@ defmodule WestEgg.Fetch.User do
     "followers"
   ]
 
-  private :secrets, [
-    "contact_info",
+  private :users, [
     "votes",
     "following",
     "subscriptions"
+  ]
+
+  private :secrets, [
+    "contact_info"
   ]
 end
