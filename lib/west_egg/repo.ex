@@ -3,6 +3,10 @@ defmodule WestEgg.Repo do
     defexception message: "key could not be found"
   end
 
+  defmodule QueryError do
+    defexception message: "query failed, check the logs"
+  end
+
   defmodule UnknownObjectError do
     defexception message: "unknown riak object"
   end
@@ -17,6 +21,24 @@ defmodule WestEgg.Repo do
   def start_link(opts) do
     {[host: host, port: port], opts} = Keyword.split(opts, [:host, :port])
     {:ok, pid} = :riakc_pb_socket.start_link(to_charlist(host), port)
+
+    for file <- Path.wildcard("priv/search/*.xml") do
+      name =
+        file
+        |> Path.basename()
+        |> String.replace(".xml", "")
+
+      with {:ok, schema} <- File.read(file),
+           :ok <- :riakc_pb_socket.create_search_schema(pid, name, schema),
+           :ok <- :riakc_pb_socket.create_search_index(pid, name, name, []),
+           :ok <- :riakc_pb_socket.set_bucket_type(pid, name, search_index: name)
+      do
+        :ok
+      else
+        {:error, :enoent} -> raise "file #{file} could not be read"
+        {:error, _} -> raise "could not create schema for #{file}"
+      end
+    end
 
     with {:ok, name} <- Keyword.fetch(opts, :name) do
       Process.register(pid, name)
@@ -75,7 +97,43 @@ defmodule WestEgg.Repo do
     end
   end
 
+  def search(pid, index, query, opts \\ []) when is_binary(query) do
+    case :riakc_pb_socket.search(pid, to_string(index), query, opts) do
+      {:ok, {:search_results, results, max_score, matches}} ->
+        results = results |> Enum.map(&parse_search_result/1)
+        {:ok, {results, max_score, matches}}
+
+      {:error, _} ->
+        {:error, %QueryError{}}
+    end
+  end
+
   defp format_key(key), do: key |> to_string() |> String.trim() |> String.downcase()
+
+  defp parse_search_result(result) do
+    {_, keys} = result
+    parse_result_keys(keys, %{})
+  end
+
+  defp parse_result_keys(keys, map) do
+    case keys do
+      [] ->
+        map
+
+      [{"score", value} | keys] ->
+        {value, _} = Float.parse(value)
+        parse_result_keys(keys, Map.put(map, :score, value))
+
+      [{"_yz_rb", bucket} | keys] ->
+        parse_result_keys(keys, Map.put(map, :bucket, bucket))
+
+      [{"_yz_rk", key} | keys] ->
+        parse_result_keys(keys, Map.put(map, :key, key))
+
+      [_key | keys] ->
+        parse_result_keys(keys, map)
+    end
+  end
 
   defp parse(obj) do
     cond do
