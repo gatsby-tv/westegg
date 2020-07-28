@@ -4,6 +4,7 @@ defmodule WestEgg.Register.User do
     bucket: :users,
     spec: [
       handle: :required,
+      title: :required,
       password: :required,
       email: :required
     ]
@@ -12,6 +13,7 @@ defmodule WestEgg.Register.User do
   def register(conn, params, _opts) do
     params
     |> validate(:handle)
+    |> validate(:title)
     |> validate(:password)
     |> validate(:email)
     |> stage(:registry)
@@ -39,6 +41,14 @@ defmodule WestEgg.Register.User do
 
       {:error, reason} ->
         raise reason
+    end
+  end
+
+  defp validate(%{title: title} = params, :title) do
+    cond do
+      String.length(title) == 0 -> fail("empty display name")
+      String.length(title) > 64 -> fail("display name is too long")
+      true -> params
     end
   end
 
@@ -80,11 +90,12 @@ defmodule WestEgg.Register.User do
     params
   end
 
-  defp stage(%{id: id, handle: handle} = params, :profile) do
+  defp stage(%{id: id, handle: handle, title: title} = params, :profile) do
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
       "_type" => Repo.set("application/riak_map"),
+      "title" => Repo.set(title),
       "handle" => Repo.set(handle),
       "creation_time" => Repo.set(now)
     }

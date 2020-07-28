@@ -4,6 +4,7 @@ defmodule WestEgg.Register.Show do
     bucket: :shows,
     spec: [
       handle: :required,
+      title: :required,
       channel: :required,
       owners: :optional,
       channel_id: :phantom
@@ -16,6 +17,7 @@ defmodule WestEgg.Register.Show do
     |> fetch(:channel)
     |> authorize(conn)
     |> validate(:handle)
+    |> validate(:title)
     |> convert_handle()
     |> stage(:registry)
     |> stage(:profile)
@@ -54,6 +56,14 @@ defmodule WestEgg.Register.Show do
     end
   end
 
+  defp validate(%{title: title} = params, :title) do
+    cond do
+      String.length(title) == 0 -> fail("empty title")
+      String.length(title) > 64 -> fail("title is too long")
+      true -> params
+    end
+  end
+
   defp convert_handle(%{handle: handle, channel: channel} = params),
     do: Map.put(params, :handle, "#{channel}#{handle}")
 
@@ -65,12 +75,20 @@ defmodule WestEgg.Register.Show do
     end
   end
 
-  defp stage(%{id: id, handle: handle, channel_id: channel} = params, :profile) do
+  defp stage(params, :profile) do
+    %{
+      id: id,
+      handle: handle,
+      title: title,
+      channel_id: channel
+    } = params
+
     now = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     methods = %{
       "_type" => Repo.set("application/riak_map"),
       "handle" => Repo.set(handle),
+      "title" => Repo.set(title),
       "channel" => Repo.set(channel),
       "creation_time" => Repo.set(now)
     }
