@@ -15,7 +15,7 @@ defmodule WestEgg.Register do
     quote do
       @behaviour WestEgg.Register
       use Plug.Builder
-      alias WestEgg.{Auth, Register, Repo}
+      alias WestEgg.{Auth, Register, Repo, Validate}
 
       defmodule Parameters do
         defstruct [:id | Keyword.keys(unquote(spec))]
@@ -102,11 +102,7 @@ defmodule WestEgg.Register do
           |> String.downcase()
           |> (&"#{unquote(prefix)}_#{&1}").()
 
-        methods = %{
-          "id" => Repo.set(id),
-          "in_use?" => Repo.enable()
-        }
-
+        methods = %{"id" => Repo.set(id), "in_use?" => Repo.enable()}
         Repo.modify(:repo, :registry, unquote(bucket), handle, methods)
         Map.put(params, :id, id)
       end

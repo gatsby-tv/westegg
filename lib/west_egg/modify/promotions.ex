@@ -9,7 +9,7 @@ defmodule WestEgg.Modify.Promotions do
     ops: [:add, :remove]
 
   @impl true
-  def modify(:add, conn, params, _opts) do
+  def modify(op, conn, params, _opts) do
     params
     |> Map.put(:session, get_session(conn, "user"))
     |> authorize(conn)
@@ -17,26 +17,10 @@ defmodule WestEgg.Modify.Promotions do
     |> fetch(:profile)
     |> convert_quantity()
     |> validate(:video)
-    |> validate(:add, :quantity)
-    |> stage(:add, :promotions)
-    |> stage(:add, :session)
-    |> stage(:add, :video)
-    |> finish(conn)
-  end
-
-  @impl true
-  def modify(:remove, conn, params, _opts) do
-    params
-    |> Map.put(:session, get_session(conn, "user"))
-    |> authorize(conn)
-    |> fetch(:video)
-    |> fetch(:profile)
-    |> convert_quantity()
-    |> validate(:video)
-    |> validate(:remove, :quantity)
-    |> stage(:remove, :promotions)
-    |> stage(:remove, :session)
-    |> stage(:remove, :video)
+    |> validate(op, :quantity)
+    |> stage(op, :promotions)
+    |> stage(op, :session)
+    |> stage(op, :video)
     |> finish(conn)
   end
 

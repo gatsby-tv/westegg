@@ -10,5 +10,9 @@ defmodule WestEgg.Routers.Modify do
   post "/:op/promotion", to: Modify.Promotions
   post "/:op/votes", to: Modify.Votes
 
+  post "/:op/handle", to: Modify.Handles
+  post "/:op/title", to: Modify.Titles
+  post "/:op/description", to: Modify.Descriptions
+
   match _, do: send_resp(conn, :not_found, "unknown request")
 end

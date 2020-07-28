@@ -24,46 +24,30 @@ defmodule WestEgg.Register.User do
   end
 
   defp validate(%{handle: handle} = params, :handle) do
-    case Repo.fetch(:repo, :registry, :users, handle) do
-      {:ok, %{"in_use?" => true}} ->
-        fail("handle not available")
-
-      {:ok, _} ->
-        params
-
-      {:error, %Repo.NotFoundError{}} ->
-        cond do
-          String.length(handle) == 0 -> fail("empty handle")
-          String.length(handle) > 25 -> fail("handle is too long")
-          not String.match?(handle, ~r/^@[[:alnum:]\-]+$/) -> fail("malformed handle")
-          true -> params
-        end
-
-      {:error, reason} ->
-        raise reason
+    case Validate.handle(:user, handle) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
   defp validate(%{title: title} = params, :title) do
-    cond do
-      String.length(title) == 0 -> fail("empty display name")
-      String.length(title) > 64 -> fail("display name is too long")
-      true -> params
+    case Validate.title(:user, title) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
   defp validate(%{password: password} = params, :password) do
-    cond do
-      String.length(password) < 8 -> fail("password is too short")
-      String.length(password) > 64 -> fail("password is too long")
-      true -> params
+    case Validate.password(password) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
   defp validate(%{email: email} = params, :email) do
-    cond do
-      not EmailChecker.valid?(email, [EmailChecker.Check.Format]) -> fail("invalid email")
-      true -> params
+    case Validate.email(email) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 

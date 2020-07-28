@@ -18,7 +18,7 @@ defmodule WestEgg.Register.Show do
     |> authorize(conn)
     |> validate(:handle)
     |> validate(:title)
-    |> convert_handle()
+    |> build_handle()
     |> stage(:registry)
     |> stage(:profile)
     |> stage(:owners)
@@ -36,35 +36,20 @@ defmodule WestEgg.Register.Show do
   end
 
   defp validate(%{handle: handle, channel: channel} = params, :handle) do
-    case Repo.fetch(:repo, :registry, :shows, "#{channel}#{handle}") do
-      {:ok, %{"in_use?" => true}} ->
-        fail("show already exists")
-
-      {:ok, _} ->
-        params
-
-      {:error, %Repo.NotFoundError{}} ->
-        cond do
-          String.length(handle) == 0 -> fail("empty handle")
-          String.length(handle) > 25 -> fail("handle is too long")
-          not String.match?(handle, ~r/^\/[[:alnum:]\-]+$/) -> fail("malformed handle")
-          true -> params
-        end
-
-      {:error, reason} ->
-        raise reason
+    case Validate.handle(:show, {channel, handle}) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
   defp validate(%{title: title} = params, :title) do
-    cond do
-      String.length(title) == 0 -> fail("empty title")
-      String.length(title) > 64 -> fail("title is too long")
-      true -> params
+    case Validate.title(:show, title) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
-  defp convert_handle(%{handle: handle, channel: channel} = params),
+  defp build_handle(%{handle: handle, channel: channel} = params),
     do: Map.put(params, :handle, "#{channel}#{handle}")
 
   defp authorize(%{channel_id: channel} = params, conn) do

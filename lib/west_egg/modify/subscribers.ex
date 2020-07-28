@@ -7,28 +7,15 @@ defmodule WestEgg.Modify.Subscribers do
     ops: [:add, :remove]
 
   @impl true
-  def modify(:add, conn, params, _opts) do
+  def modify(op, conn, params, _opts) do
     params
     |> Map.put(:session, get_session(conn, "user"))
     |> authorize(conn)
     |> fetch(:channel)
-    |> validate(:add, :channel)
-    |> stage(:add, :subscribers)
-    |> stage(:add, :session)
-    |> stage(:add, :channel)
-    |> finish(conn)
-  end
-
-  @impl true
-  def modify(:remove, conn, params, _opts) do
-    params
-    |> Map.put(:session, get_session(conn, "user"))
-    |> authorize(conn)
-    |> fetch(:channel)
-    |> validate(:remove, :channel)
-    |> stage(:remove, :subscribers)
-    |> stage(:remove, :session)
-    |> stage(:remove, :channel)
+    |> validate(op, :channel)
+    |> stage(op, :subscribers)
+    |> stage(op, :session)
+    |> stage(op, :channel)
     |> finish(conn)
   end
 

@@ -9,7 +9,7 @@ defmodule WestEgg.Modify do
     quote do
       @behaviour WestEgg.Modify
       use Plug.Builder
-      alias WestEgg.{Auth, Modify, Repo}
+      alias WestEgg.{Auth, Modify, Repo, Validate}
 
       @ops Enum.map(unquote(ops), &to_string/1)
 

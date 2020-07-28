@@ -7,28 +7,15 @@ defmodule WestEgg.Modify.Followers do
     ops: [:add, :remove]
 
   @impl true
-  def modify(:add, conn, params, _opts) do
+  def modify(op, conn, params, _opts) do
     params
     |> Map.put(:session, get_session(conn, "user"))
     |> authorize(conn)
     |> fetch(:user)
-    |> validate(:add, :user)
-    |> stage(:add, :followers)
-    |> stage(:add, :session)
-    |> stage(:add, :user)
-    |> finish(conn)
-  end
-
-  @impl true
-  def modify(:remove, conn, params, _opts) do
-    params
-    |> Map.put(:session, get_session(conn, "user"))
-    |> authorize(conn)
-    |> fetch(:user)
-    |> validate(:remove, :user)
-    |> stage(:remove, :followers)
-    |> stage(:remove, :session)
-    |> stage(:remove, :user)
+    |> validate(op, :user)
+    |> stage(op, :followers)
+    |> stage(op, :session)
+    |> stage(op, :user)
     |> finish(conn)
   end
 

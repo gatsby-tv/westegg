@@ -21,6 +21,7 @@ defmodule WestEgg.Register.Video do
     |> fetch(:channel)
     |> fetch(:show)
     |> authorize(conn)
+    |> trim_tags()
     |> validate(:handle)
     |> validate(:title)
     |> validate(:description)
@@ -71,53 +72,40 @@ defmodule WestEgg.Register.Video do
     end
   end
 
+  defp trim_tags(%{tags: tags} = params) do
+    Map.put(params, :tags, Enum.map(tags, &String.trim/1))
+  end
+
   defp validate(%{handle: handle} = params, :handle) do
-    case Repo.fetch(:repo, :registry, :videos, handle) do
-      {:ok, %{"in_use?" => true}} ->
-        fail("video already exists")
-
-      {:ok, _} ->
-        params
-
-      {:error, %Repo.NotFoundError{}} ->
-        cond do
-          String.length(handle) == 0 -> fail("empty handle")
-          not String.match?(handle, ~r/^\$[0-9A-HJ-NP-Za-km-z]+$/) -> fail("malformed handle")
-          true -> params
-        end
-
-      {:error, reason} ->
-        raise reason
+    case Validate.handle(:video, handle) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
   defp validate(%{title: title} = params, :title) do
-    cond do
-      String.length(title) == 0 -> fail("empty title")
-      String.length(title) > 128 -> fail("title is too long")
-      true -> params
+    case Validate.title(:video, title) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
     end
   end
 
   defp validate(%{description: nil} = params, :description), do: params
-  defp validate(%{description: ""} = params, :description), do: params
 
   defp validate(%{description: description} = params, :description) do
-    if String.length(description) > 1000, do: fail("description is too long"), else: params
+    case Validate.description(:video, description) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
+    end
   end
 
   defp validate(%{tags: nil} = params, :tags), do: params
-  defp validate(%{tags: []} = params, :tags), do: params
 
   defp validate(%{tags: tags} = params, :tags) do
-    tags =
-      for tag <- Enum.map(tags, &String.trim/1), into: [] do
-        unless String.match?(tag, ~r/^[[:alnum:]\-\_][[:alnum:][:space:]\-\_]*$/),
-          do: fail("malformed tag, '#{tag}'"),
-          else: tag
-      end
-
-    Map.put(params, :tags, tags)
+    case Validate.tags(:video, tags) do
+      :ok -> params
+      {:error, reason} -> fail(reason)
+    end
   end
 
   defp authorize(%{channel_id: channel, show_id: show} = params, conn) do

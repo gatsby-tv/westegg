@@ -1,1 +1,1 @@
-alias WestEgg.Repo
+alias WestEgg.{Repo, Validate}
