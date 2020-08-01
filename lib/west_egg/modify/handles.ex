@@ -15,6 +15,7 @@ defmodule WestEgg.Modify.Handles do
     |> validate(op, :new)
     |> stage(op, :old)
     |> stage(op, :new)
+    |> stage(op, :profile)
     |> finish(conn)
   end
 
@@ -50,6 +51,12 @@ defmodule WestEgg.Modify.Handles do
   defp stage(%{id: id, new: new} = params, type, :new) do
     methods = %{"id" => Repo.set(id), "in_use?" => Repo.enable()}
     Repo.modify(:repo, :registry, "#{type}s", new, methods)
+    params
+  end
+
+  defp stage(%{id: id, new: new} = params, type, :profile) do
+    methods = %{"handle" => Repo.set(new)}
+    Repo.modify(:repo, "#{type}s", id, :profile, methods)
     params
   end
 end
