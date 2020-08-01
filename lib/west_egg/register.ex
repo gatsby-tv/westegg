@@ -1,4 +1,8 @@
 defmodule WestEgg.Register do
+  @moduledoc """
+  Behaviour for Plugs that handle requests for registering new objects in the database.
+  """
+
   @callback register(Plug.Conn.t(), any, Keyword.t()) :: Plug.Conn.t()
 
   defmodule RegistrationError do

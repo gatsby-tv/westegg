@@ -1,4 +1,15 @@
 defmodule WestEgg.Auth.Authenticate do
+  @moduledoc """
+  Plug for validating a login attempt.
+
+  Logins will be handled via a POST request whose body contains the
+  user handle to login as and an associated password.
+
+  This Plug is deliberately slow and rate limiting should be applied to prevent
+  DDoS attacks. The slow performance is due to the choice of our password hashing
+  algorithm, Argon2: https://en.wikipedia.org/wiki/Argon2.
+  """
+
   use Plug.Builder
   alias WestEgg.{Repo, Auth}
 

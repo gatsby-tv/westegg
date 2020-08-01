@@ -1,4 +1,8 @@
 defmodule WestEgg.Modify do
+  @moduledoc """
+  Behaviour for Plugs that handle requests for modifying objects in the database.
+  """
+
   @callback modify(atom, Plug.Conn.t(), any, Map.t()) :: Plug.Conn.t()
 
   defmodule ModificationError do

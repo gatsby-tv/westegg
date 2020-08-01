@@ -1,4 +1,8 @@
 defmodule WestEgg.Routers.Show do
+  @moduledoc """
+  Router for requesting show data.
+  """
+
   use Plug.Router
   alias WestEgg.Fetch
 

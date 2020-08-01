@@ -1,4 +1,8 @@
 defmodule WestEgg.Routers.Channel do
+  @moduledoc """
+  Router for requesting channel data.
+  """
+
   use Plug.Router
   alias WestEgg.Fetch
 

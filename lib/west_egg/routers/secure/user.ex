@@ -1,4 +1,8 @@
 defmodule WestEgg.Routers.Secure.User do
+  @moduledoc """
+  Router for requesting secure channel data.
+  """
+
   use Plug.Router
   alias WestEgg.Fetch
 

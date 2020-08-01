@@ -1,4 +1,9 @@
 defmodule WestEgg.Auth.Sessions do
+  @moduledoc """
+  Implementation of the Plug.Session.Store behaviour that stores user
+  sessions in Riak.
+  """
+
   @behaviour Plug.Session.Store
   alias WestEgg.{Auth, Repo}
 

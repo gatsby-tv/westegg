@@ -1,4 +1,8 @@
 defmodule WestEgg.Routers.Video do
+  @moduledoc """
+  Router for requesting video data.
+  """
+
   use Plug.Router
   alias WestEgg.Fetch
 

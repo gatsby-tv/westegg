@@ -1,4 +1,8 @@
 defmodule WestEgg.Routers.Modify do
+  @moduledoc """
+  Router for handling requests to modify/update data.
+  """
+
   use Plug.Router
   alias WestEgg.Modify
 

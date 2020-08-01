@@ -1,4 +1,8 @@
 defmodule WestEgg.Routers.User do
+  @moduledoc """
+  Router for requesting user data.
+  """
+
   use Plug.Router
   alias WestEgg.Fetch
 

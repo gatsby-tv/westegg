@@ -1,6 +1,6 @@
 defmodule WestEgg.Fetch do
   @moduledoc """
-  Behaviour for requesting keys from the database.
+  Behaviour for Plugs that handle requests for retrieving keys from the database.
   """
 
   alias WestEgg.{Auth, Fetch, Repo}
