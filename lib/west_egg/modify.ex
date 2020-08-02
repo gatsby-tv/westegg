@@ -34,6 +34,16 @@ defmodule WestEgg.Modify do
           if is_nil(Map.fetch!(params, key)), do: fail("missing key, '#{key}'")
         end
 
+        for {key, {:required, required_ops}} <- unquote(spec) do
+          Enum.reduce(required_ops, :ok, fn required_op, _ ->
+            cond do
+              op != to_string(required_op) -> :ok
+              is_nil(Map.fetch!(params, key)) -> fail("missing key, '#{key}'")
+              true -> :ok
+            end
+          end)
+        end
+
         modify(String.to_atom(op), conn, params, Map.new(opts))
       end
 

@@ -100,12 +100,7 @@ defmodule WestEgg.Register do
       end
 
       defp stage(%{handle: handle} = params, :registry) do
-        id =
-          :crypto.strong_rand_bytes(16)
-          |> Base.encode32(padding: false)
-          |> String.downcase()
-          |> (&"#{unquote(prefix)}_#{&1}").()
-
+        id = Repo.new_id(unquote(prefix))
         methods = %{"id" => Repo.set(id), "in_use?" => Repo.enable()}
         Repo.modify(:repo, :registry, unquote(bucket), handle, methods)
         Map.put(params, :id, id)

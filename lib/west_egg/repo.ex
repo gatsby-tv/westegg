@@ -159,6 +159,17 @@ defmodule WestEgg.Repo do
     {:ok, pid}
   end
 
+  @spec new_id(key, non_neg_integer) :: String.t()
+  @doc """
+  Generate a new unique identifier.
+  """
+  def new_id(prefix, bytes \\ 16) do
+    :crypto.strong_rand_bytes(bytes)
+    |> Base.encode32(padding: false)
+    |> String.downcase()
+    |> (&"#{prefix}_#{&1}").()
+  end
+
   @spec lookup(pid, key, String.t()) :: {:ok, String.t()} | {:error, term}
   @doc """
   Convenience method for looking up a handle in the registry.

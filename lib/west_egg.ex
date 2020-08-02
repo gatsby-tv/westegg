@@ -48,7 +48,6 @@ defmodule WestEgg do
   forward "/video", to: Routers.Video
 
   forward "/secure/user", to: Routers.Secure.User
-  forward "/secure/channel", to: Routers.Secure.Channel
 
   forward "/modify", to: Routers.Modify
   forward "/register", to: Routers.Register

@@ -18,5 +18,7 @@ defmodule WestEgg.Routers.Modify do
   post "/:op/title", to: Modify.Titles
   post "/:op/description", to: Modify.Descriptions
 
+  post "/:op/comment", to: Modify.Comments
+
   match _, do: send_resp(conn, :not_found, "unknown request")
 end
