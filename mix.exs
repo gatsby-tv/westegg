@@ -22,7 +22,7 @@ defmodule WestEgg.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:riakc, git: "https://github.com/basho/riak-erlang-client"},
+      {:xandra, "~> 0.13"},
       {:plug_cowboy, "~> 2.0"},
       {:argon2_elixir, "~> 2.0"},
       {:poison, "~> 4.0"},

@@ -1,1 +1,1 @@
-alias WestEgg.{Repo, Validate}
+alias WestEgg.{Registry, User, Channel, Batch}

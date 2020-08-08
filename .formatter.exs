@@ -1,7 +1,6 @@
 # Used by "mix format"
 locals_without_parens = [
-  public: 2,
-  private: 2
+  query: 2
 ]
 
 [

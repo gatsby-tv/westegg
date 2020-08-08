@@ -5,8 +5,8 @@ defmodule WestEgg.Application do
 
   def start(_type, _args) do
     children = [
-      {Plug.Cowboy, scheme: :http, plug: WestEgg, options: [port: 4001]},
-      {WestEgg.Repo, host: "localhost", port: 8087, name: :repo}
+      # {Plug.Cowboy, scheme: :http, plug: WestEgg, options: [port: 4001]},
+      {Xandra, nodes: ["localhost:9042"], name: :xandra}
     ]
 
     opts = [strategy: :one_for_one, name: WestEgg.Supervisor]
