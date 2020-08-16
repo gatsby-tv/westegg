@@ -1,9 +1,9 @@
 defmodule WestEgg.Secrets do
   defmodule Login do
+    defstruct [:id, :password]
+
     use WestEgg.Parameters
     import WestEgg.Query
-
-    defstruct [:id, :password]
 
     query :insert, """
     INSERT INTO secrets.logins (id, password)
@@ -28,12 +28,12 @@ defmodule WestEgg.Secrets do
   end
 
   def login(:insert, %Login{} = login) do
-    login = Login.to_params(login)
-    select = Xandra.execute!(:xandra, Login.query(:select), login)
+    params = Login.to_params(login)
+    select = Xandra.execute!(:xandra, Login.query(:select), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        Xandra.execute!(:xandra, Login.query(:insert), login)
+        Xandra.execute!(:xandra, Login.query(:insert), params)
         :ok
 
       {:ok, _} ->
@@ -42,22 +42,24 @@ defmodule WestEgg.Secrets do
   end
 
   def login(:select, %Login{} = login) do
-    login = Login.to_params(login)
-    select = Xandra.execute!(:xandra, Login.query(:select), login)
+    params = Login.to_params(login)
+    select = Xandra.execute!(:xandra, Login.query(:select), params)
 
     case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, Login.from_binary_map(result)}
       :error -> {:error, :not_found}
-      ok -> ok
     end
   end
 
   def login(:update, %Login{} = login) do
-    login = Login.to_params(login)
-    select = Xandra.execute!(:xandra, Login.query(:select), login)
+    params = Login.to_params(login)
+    select = Xandra.execute!(:xandra, Login.query(:select), params)
 
     case Enum.fetch(select, 0) do
       {:ok, current} ->
-        Xandra.execute!(:xandra, Login.query(:update), Map.merge(current, login))
+        %{password_hash: password} = Argon2.add_hash(params["password"])
+        params = Map.put(params, "password", password)
+        Xandra.execute!(:xandra, Login.query(:update), Map.merge(current, params))
         :ok
 
       :error ->
@@ -66,44 +68,46 @@ defmodule WestEgg.Secrets do
   end
 
   def login(:delete, %Login{} = login) do
-    login = Login.to_params(login)
-    Xandra.execute!(:xandra, Login.query(:delete), login)
+    params = Login.to_params(login)
+    Xandra.execute!(:xandra, Login.query(:delete), params)
     :ok
   end
 
   def login([{:error, _} | _] = batch, _op, _data), do: batch
 
   def login(batch, :insert, %Login{} = login) do
-    login = Login.to_params(login)
-    select = Xandra.execute!(:xandra, Login.query(:select), login)
+    params = Login.to_params(login)
+    select = Xandra.execute!(:xandra, Login.query(:select), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        query = &Xandra.Batch.add(&1, Login.query(:insert), login)
+        query = &Xandra.Batch.add(&1, Login.query(:insert), params)
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, :exists} | batch]
+        [{:error, {:exists, :login, login}} | batch]
     end
   end
 
   def login(batch, :update, %Login{} = login) do
-    login = Login.to_params(login)
-    select = Xandra.execute!(:xandra, Login.query(:select), login)
+    params = Login.to_params(login)
+    select = Xandra.execute!(:xandra, Login.query(:select), params)
 
     case Enum.fetch(select, 0) do
       {:ok, current} ->
-        query = &Xandra.Batch.add(&1, Login.query(:update), Map.merge(current, login))
+        %{password_hash: password} = Argon2.add_hash(params["password"])
+        params = Map.put(params, "password", password)
+        query = &Xandra.Batch.add(&1, Login.query(:update), Map.merge(current, params))
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, :not_found} | batch]
+        [{:error, {:not_found, :login, login}} | batch]
     end
   end
 
   def login(batch, :delete, %Login{} = login) do
-    login = Login.to_params(login)
-    query = &Xandra.Batch.add(&1, Login.query(:delete), login)
+    params = Login.to_params(login)
+    query = &Xandra.Batch.add(&1, Login.query(:delete), params)
     [{:ok, query} | batch]
   end
 end

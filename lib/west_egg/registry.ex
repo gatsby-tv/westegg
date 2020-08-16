@@ -1,19 +1,20 @@
 defmodule WestEgg.Registry do
-  @sigils %{
-    user: "@",
-    channel: "#",
-    show: "/",
-    video: "$"
-  }
-
-  @registry_types Map.keys(@sigils)
-
   defmodule Handle do
+    defstruct [:handle, :id, :in_use]
+
+    use WestEgg.Parameters
     import WestEgg.Query
+    alias WestEgg.Registry
+
+    @sigils %{
+      user: "@",
+      channel: "#",
+      video: "$"
+    }
 
     query :insert, """
     INSERT INTO registry.handles (handle, id, in_use)
-    VALUES (:handle, uuid(), true)
+    VALUES (:handle, :id, true)
     """
 
     query :select, """
@@ -33,14 +34,56 @@ defmodule WestEgg.Registry do
     SET in_use = false
     WHERE handle = :handle
     """
+
+    def new(type, handle) do
+      {:ok, %__MODULE__{id: UUID.uuid4(), handle: "#{@sigils[type]}#{handle}"}}
+    end
+
+    def from_keywords(handles) do
+      result =
+        Enum.reduce_while(handles, {:ok, []}, fn {type, handle}, {:ok, acc} ->
+          case fetch(type, handle) do
+            {:ok, new} -> {:cont, {:ok, [new | acc]}}
+            {:error, reason} -> {:halt, {:error, {reason, type, handle}}}
+          end
+        end)
+
+      case result do
+        {:ok, [handle | []]} -> {:ok, handle}
+        {:ok, list} -> {:ok, Enum.reverse(list)}
+        error -> error
+      end
+    end
+
+    defp fetch(type, handle) do
+      handle =
+        cond do
+          String.length(handle) > 25 -> %__MODULE__{id: handle}
+          true -> %__MODULE__{handle: "#{@sigils[type]}#{handle}"}
+        end
+
+      Registry.handle(:select, handle)
+    end
   end
 
   defmodule ScopedHandle do
+    defstruct [:scope, :handle, :id, :in_use]
+
+    use WestEgg.Parameters
     import WestEgg.Query
+    alias WestEgg.Registry
+
+    @sigils %{
+      show: "/"
+    }
+
+    @scopes %{
+      show: :channel
+    }
 
     query :insert, """
     INSERT INTO registry.scoped_handles (scope, handle, id, in_use)
-    VALUES (:scope, :handle, uuid(), true)
+    VALUES (:scope, :handle, :id, true)
     """
 
     query :select, """
@@ -63,6 +106,56 @@ defmodule WestEgg.Registry do
     WHERE scope = :scope
     AND handle = :handle
     """
+
+    def new(type, {scope, handle}) do
+      case Registry.Handle.from_keywords([{@scopes[type], scope}]) do
+        {:ok, %{id: scope}} ->
+          {:ok,
+           %__MODULE__{
+             id: UUID.uuid4(),
+             scope: scope,
+             handle: "#{@sigils[type]}#{handle}"
+           }}
+
+        error ->
+          error
+      end
+    end
+
+    def from_keywords(handles) do
+      result =
+        Enum.reduce_while(handles, {:ok, []}, fn {type, handle}, {:ok, acc} ->
+          case fetch(type, handle) do
+            {:ok, new} -> {:cont, {:ok, [new | acc]}}
+            {:error, {reason, type, handle}} -> {:halt, {:error, {reason, type, handle}}}
+            {:error, reason} -> {:halt, {:error, {reason, type, handle}}}
+          end
+        end)
+
+      case result do
+        {:ok, [handle | []]} -> {:ok, handle}
+        {:ok, list} -> {:ok, Enum.reverse(list)}
+        error -> error
+      end
+    end
+
+    defp fetch(type, {scope, handle}) do
+      case Registry.Handle.from_keywords([{@scopes[type], scope}]) do
+        {:ok, %{id: scope}} ->
+          Registry.handle(:select, %__MODULE__{
+            scope: scope,
+            handle: "#{@sigils[type]}#{handle}"
+          })
+
+        error ->
+          error
+      end
+    end
+
+    defp fetch(_type, id) do
+      handle = %__MODULE__{id: id}
+      Registry.handle(:select, handle)
+    end
   end
 
   defmodule HandleById do
@@ -93,6 +186,9 @@ defmodule WestEgg.Registry do
   end
 
   defmodule Alias do
+    defstruct [:id, :scope, :handle, :since]
+
+    use WestEgg.Parameters
     import WestEgg.Query
 
     query :select, """
@@ -142,325 +238,291 @@ defmodule WestEgg.Registry do
     """
   end
 
-  def new(type, {scope, handle}) when type in @registry_types do
-    case validate(type, {scope, handle}) do
-      :ok ->
-        Xandra.execute!(:xandra, ScopedHandle.query(:insert), %{
-          "scope" => scope,
-          "handle" => handle
-        })
+  def handle(:insert, %Handle{} = handle) do
+    params = Handle.to_params(handle)
+    select = Xandra.execute!(:xandra, Handle.query(:insert), params)
 
-        {:ok, id} = id({scope, handle})
-
-        Xandra.execute!(:xandra, HandleById.query(:update_with_scope), %{
-          "id" => id,
-          "scope" => scope,
-          "handle" => handle
-        })
-
-        {:ok, id}
-
-      error ->
-        error
-    end
-  end
-
-  def new(type, handle) when type in @registry_types do
-    case validate(type, handle) do
-      :ok ->
-        Xandra.execute!(:xandra, Handle.query(:insert), %{"handle" => handle})
-        {:ok, id} = id(handle)
-        Xandra.execute!(:xandra, HandleById.query(:update), %{"id" => id, "handle" => handle})
-        {:ok, id}
-
-      error ->
-        error
-    end
-  end
-
-  def switch(type, scope, current, new) when type in @registry_types do
-    with :ok <- validate(type, {scope, new}),
-         {:ok, id} <- id({scope, current}) do
+    do_insert = fn ->
       batch =
         Xandra.Batch.new()
-        |> Xandra.Batch.add(Alias.query(:update), %{"id" => id, "handle" => current})
-        |> Xandra.Batch.add(AliasByScopedHandle.query(:update), %{
-          "id" => id,
-          "scope" => scope,
-          "handle" => current
-        })
-        |> Xandra.Batch.add(ScopedHandle.query(:update_used), %{
-          "scope" => scope,
-          "handle" => current
-        })
-        |> Xandra.Batch.add(ScopedHandle.query(:update), %{
-          "id" => id,
-          "scope" => scope,
-          "handle" => new
-        })
-        |> Xandra.Batch.add(HandleById.query(:update_with_scope), %{
-          "id" => id,
-          "scope" => scope,
-          "handle" => new
-        })
+        |> Xandra.Batch.add(Handle.query(:insert), params)
+        |> Xandra.Batch.add(HandleById.query(:update), params)
 
       Xandra.execute!(:xandra, batch)
       :ok
-    else
-      error -> error
+    end
+
+    case Enum.fetch(select, 0) do
+      :error -> do_insert.()
+      {:ok, %{"in_use" => false}} -> do_insert.()
+      {:ok, _} -> {:error, :exists}
     end
   end
 
-  def switch(type, current, new) when type in @registry_types do
-    with :ok <- validate(type, new),
-         {:ok, id} <- id(current) do
+  def handle(:insert, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
+    select = Xandra.execute!(:xandra, ScopedHandle.query(:insert), params)
+
+    do_insert = fn ->
       batch =
         Xandra.Batch.new()
-        |> Xandra.Batch.add(Alias.query(:update), %{"id" => id, "handle" => current})
-        |> Xandra.Batch.add(AliasByHandle.query(:update), %{"id" => id, "handle" => current})
-        |> Xandra.Batch.add(Handle.query(:update_used), %{"handle" => current})
-        |> Xandra.Batch.add(Handle.query(:update), %{"id" => id, "handle" => new})
-        |> Xandra.Batch.add(HandleById.query(:update), %{"id" => id, "handle" => new})
+        |> Xandra.Batch.add(ScopedHandle.query(:insert), params)
+        |> Xandra.Batch.add(HandleById.query(:update_with_scope), params)
 
       Xandra.execute!(:xandra, batch)
       :ok
-    else
-      error -> error
     end
-  end
-
-  def validate(type, {scope, handle})
-      when type in @registry_types and "" in [scope, handle],
-      do: {:error, :empty}
-
-  def validate(type, {scope, handle}) do
-    select =
-      Xandra.execute!(
-        :xandra,
-        ScopedHandle.query(:select),
-        %{"scope" => scope, "handle" => handle}
-      )
 
     case Enum.fetch(select, 0) do
-      {:ok, %{"in_use" => true}} -> {:error, :in_use}
-      {:ok, _} -> do_validate(type, handle)
-      :error -> do_validate(type, handle)
+      :error -> do_insert.()
+      {:ok, %{"in_use" => false}} -> do_insert.()
+      {:ok, _} -> {:error, :exists}
     end
   end
 
-  def validate(type, "") when type in @registry_types, do: {:error, :empty}
-
-  def validate(type, handle) when type in @registry_types do
-    select = Xandra.execute!(:xandra, Handle.query(:select), %{"handle" => handle})
+  def handle(:select, %Handle{handle: nil} = handle) do
+    params = Handle.to_params(handle)
+    select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
     case Enum.fetch(select, 0) do
-      {:ok, %{"in_use" => true}} -> {:error, :in_use}
-      {:ok, _} -> do_validate(type, handle)
-      :error -> do_validate(type, handle)
+      {:ok, result} -> {:ok, Handle.from_binary_map(result)}
+      :error -> {:error, :not_found}
     end
   end
 
-  defp do_validate(type, handle) do
-    cond do
-      not String.match?(handle, ~r/^#{Map.fetch!(@sigils, type)}[[:alnum:]_]+$/) ->
-        {:error, :malformed}
+  def handle(:select, %ScopedHandle{handle: nil} = handle) do
+    params = ScopedHandle.to_params(handle)
+    select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
-      String.length(handle) > 25 ->
-        {:error, :too_long}
+    case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, ScopedHandle.from_binary_map(result)}
+      :error -> {:error, :not_found}
+    end
+  end
 
-      true ->
+  def handle(:select, %Handle{} = handle) do
+    params = Handle.to_params(handle)
+    select = Xandra.execute!(:xandra, Handle.query(:select), params)
+
+    case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, Handle.from_binary_map(result)}
+      :error -> {:error, :not_found}
+    end
+  end
+
+  def handle(:select, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
+    select = Xandra.execute!(:xandra, ScopedHandle.query(:select), params)
+
+    case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, ScopedHandle.from_binary_map(result)}
+      :error -> {:error, :not_found}
+    end
+  end
+
+  def handle(:update, %Handle{} = handle) do
+    params = Handle.to_params(handle)
+    select = Xandra.execute!(:xandra, HandleById.query(:select), params)
+
+    case Enum.fetch(select, 0) do
+      {:ok, current} ->
+        new = Map.merge(current, params)
+
+        batch =
+          Xandra.Batch.new()
+          |> Xandra.Batch.add(Alias.query(:update), current)
+          |> Xandra.Batch.add(AliasByHandle.query(:update), current)
+          |> Xandra.Batch.add(Handle.query(:update_used), current)
+          |> Xandra.Batch.add(Handle.query(:update), new)
+          |> Xandra.Batch.add(HandleById.query(:update), new)
+
+        Xandra.execute!(:xandra, batch)
         :ok
+
+      :error ->
+        {:error, :not_found}
     end
   end
 
-  def delete({scope, handle}) when "" in [scope, handle], do: {:error, :empty}
+  def handle(:update, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
+    select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
-  def delete({scope, handle}) do
-    with {:ok, id} <- id({scope, handle}),
-         {:ok, handle} <- handle({scope, handle}) do
-      handle =
-        case handle do
-          {_, handle} -> handle
-          handle -> handle
-        end
+    case Enum.fetch(select, 0) do
+      {:ok, current} ->
+        new = Map.merge(current, params)
 
-      batch =
-        Xandra.Batch.new()
-        |> Xandra.Batch.add(ScopedHandle.query(:update_used), %{
-          "scope" => scope,
-          "handle" => handle
-        })
-        |> Xandra.Batch.add(HandleById.query(:delete), %{"id" => id})
+        batch =
+          Xandra.Batch.new()
+          |> Xandra.Batch.add(Alias.query(:update), current)
+          |> Xandra.Batch.add(AliasByScopedHandle.query(:update), current)
+          |> Xandra.Batch.add(ScopedHandle.query(:update_used), current)
+          |> Xandra.Batch.add(ScopedHandle.query(:update), new)
+          |> Xandra.Batch.add(HandleById.query(:update), new)
 
-      Xandra.execute!(:xandra, batch)
-      :ok
-    else
-      error -> error
+        Xandra.execute!(:xandra, batch)
+        :ok
+
+      :error ->
+        {:error, :not_found}
     end
   end
 
-  def delete(""), do: {:error, :empty}
+  def handle(:delete, %Handle{} = handle) do
+    params = Handle.to_params(handle)
 
-  def delete(handle) do
-    with {:ok, id} <- id(handle),
-         {:ok, handle} <- handle(handle) do
-      handle =
-        case handle do
-          {_, _handle} -> :unexpected_scope
-          handle -> handle
-        end
+    batch =
+      Xandra.Batch.new()
+      |> Xandra.Batch.add(Handle.query(:update_used), params)
+      |> Xandra.Batch.add(HandleById.query(:delete), params)
 
-      batch =
-        Xandra.Batch.new()
-        |> Xandra.Batch.add(Handle.query(:update_used), %{"handle" => handle})
-        |> Xandra.Batch.add(HandleById.query(:delete), %{"id" => id})
+    Xandra.execute!(:xandra, batch)
+    :ok
+  end
 
-      Xandra.execute!(:xandra, batch)
-      :ok
-    else
-      error -> error
+  def handle(:delete, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
+
+    batch =
+      Xandra.Batch.new()
+      |> Xandra.Batch.add(ScopedHandle.query(:update_used), params)
+      |> Xandra.Batch.add(HandleById.query(:delete), params)
+
+    Xandra.execute!(:xandra, batch)
+    :ok
+  end
+
+  def handle([{:error, _} | _] = batch, _op, _data), do: batch
+
+  def handle(batch, :insert, %Handle{} = handle) do
+    params = Handle.to_params(handle)
+    select = Xandra.execute!(:xandra, Handle.query(:select), params)
+
+    do_insert = fn ->
+      query = fn acc ->
+        acc
+        |> Xandra.Batch.add(Handle.query(:insert), params)
+        |> Xandra.Batch.add(HandleById.query(:update), params)
+      end
+
+      [{:ok, query} | batch]
+    end
+
+    case Enum.fetch(select, 0) do
+      :error -> do_insert.()
+      {:ok, %{"in_use" => false}} -> do_insert.()
+      {:ok, _} -> [{:error, {:exists, :handle, handle}} | batch]
     end
   end
 
-  def id({scope, handle}) when "" in [scope, handle], do: {:error, :empty}
+  def handle(batch, :insert, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
+    select = Xandra.execute!(:xandra, ScopedHandle.query(:select), params)
 
-  def id({scope, handle}) do
-    cond do
-      String.starts_with?(handle, Map.values(@sigils)) ->
-        select =
-          Xandra.execute!(:xandra, ScopedHandle.query(:select), %{
-            "scope" => scope,
-            "handle" => handle
-          })
+    do_insert = fn ->
+      query = fn acc ->
+        acc
+        |> Xandra.Batch.add(ScopedHandle.query(:insert), params)
+        |> Xandra.Batch.add(HandleById.query(:update_with_scope), params)
+      end
 
-        case Enum.fetch(select, 0) do
-          {:ok, %{"id" => id}} -> {:ok, id}
-          _ -> {:error, :not_found}
-        end
+      [{:ok, query} | batch]
+    end
 
-      true ->
-        select = Xandra.execute!(:xandra, HandleById.query(:select), %{"id" => handle})
-
-        case Enum.fetch(select, 0) do
-          {:ok, _} -> {:ok, handle}
-          _ -> {:error, :not_found}
-        end
+    case Enum.fetch(select, 0) do
+      :error -> do_insert.()
+      {:ok, %{"in_use" => false}} -> do_insert.()
+      {:ok, _} -> [{:error, {:exists, :handle, handle}} | batch]
     end
   end
 
-  def id(""), do: {:error, :empty}
+  def handle(batch, :update, %Handle{} = handle) do
+    params = Handle.to_params(handle)
+    select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
-  def id(handle) do
-    cond do
-      String.starts_with?(handle, Map.values(@sigils)) ->
-        select = Xandra.execute!(:xandra, Handle.query(:select), %{"handle" => handle})
+    case Enum.fetch(select, 0) do
+      {:ok, current} ->
+        new = Map.merge(current, params)
 
-        case Enum.fetch(select, 0) do
-          {:ok, %{"id" => id}} -> {:ok, id}
-          _ -> {:error, :not_found}
+        query = fn acc ->
+          acc
+          |> Xandra.Batch.add(Alias.query(:update), current)
+          |> Xandra.Batch.add(AliasByHandle.query(:update), current)
+          |> Xandra.Batch.add(Handle.query(:update_used), current)
+          |> Xandra.Batch.add(Handle.query(:update), new)
+          |> Xandra.Batch.add(HandleById.query(:update), new)
         end
 
-      true ->
-        select = Xandra.execute!(:xandra, HandleById.query(:select), %{"id" => handle})
+        [{:ok, query} | batch]
 
-        case Enum.fetch(select, 0) do
-          {:ok, _} -> {:ok, handle}
-          _ -> {:error, :not_found}
-        end
+      :error ->
+        [{:error, {:not_found, :handle, handle}} | batch]
     end
   end
 
-  def handle({scope, id}) when "" in [scope, id], do: {:error, :empty}
+  def handle(batch, :update, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
+    select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
-  def handle({scope, id}) do
-    cond do
-      String.starts_with?(id, Map.values(@sigils)) ->
-        select =
-          Xandra.execute!(:xandra, ScopedHandle.query(:select), %{
-            "scope" => scope,
-            "handle" => id
-          })
+    case Enum.fetch(select, 0) do
+      {:ok, current} ->
+        new = Map.merge(current, params)
 
-        case Enum.fetch(select, 0) do
-          {:ok, _} -> {:ok, {scope, id}}
-          _ -> {:error, :not_found}
+        query = fn acc ->
+          acc
+          |> Xandra.Batch.add(Alias.query(:update), current)
+          |> Xandra.Batch.add(AliasByScopedHandle.query(:update), current)
+          |> Xandra.Batch.add(ScopedHandle.query(:update_used), current)
+          |> Xandra.Batch.add(ScopedHandle.query(:update), new)
+          |> Xandra.Batch.add(HandleById.query(:update_with_scope), new)
         end
 
-      true ->
-        select = Xandra.execute!(:xandra, HandleById.query(:select), %{"id" => id})
+        [{:ok, query} | batch]
 
-        case Enum.fetch(select, 0) do
-          {:ok, %{"scope" => scope, "handle" => handle}} when not is_nil(scope) ->
-            {:ok, {scope, handle}}
-
-          {:ok, %{"handle" => handle}} ->
-            {:ok, handle}
-
-          _ ->
-            {:error, :not_found}
-        end
+      :error ->
+        [{:error, {:not_found, :handle, handle}} | batch]
     end
   end
 
-  def handle(""), do: {:error, :empty}
+  def handle(batch, :delete, %Handle{} = handle) do
+    params = Handle.to_params(handle)
 
-  def handle(id) do
-    cond do
-      String.starts_with?(id, Map.values(@sigils)) ->
-        select = Xandra.execute!(:xandra, Handle.query(:select), %{"handle" => id})
-
-        case Enum.fetch(select, 0) do
-          {:ok, _} -> {:ok, id}
-          _ -> {:error, :not_found}
-        end
-
-      true ->
-        select = Xandra.execute!(:xandra, HandleById.query(:select), %{"id" => id})
-
-        case Enum.fetch(select, 0) do
-          {:ok, %{"scope" => scope, "handle" => handle}} when not is_nil(scope) ->
-            {:ok, {scope, handle}}
-
-          {:ok, %{"handle" => handle}} ->
-            {:ok, handle}
-
-          _ ->
-            {:error, :not_found}
-        end
+    query = fn acc ->
+      acc
+      |> Xandra.Batch.add(Handle.query(:update_used), params)
+      |> Xandra.Batch.add(HandleById.query(:delete), params)
     end
+
+    [{:ok, query} | batch]
   end
 
-  def aliases(""), do: {:error, :empty}
+  def handle(batch, :delete, %ScopedHandle{} = handle) do
+    params = ScopedHandle.to_params(handle)
 
-  def aliases(id) do
-    case id(id) do
-      {:ok, id} -> Xandra.execute!(:xandra, Alias.query(:select), %{"id" => id})
-      error -> error
+    query = fn acc ->
+      acc
+      |> Xandra.Batch.add(ScopedHandle.query(:update_used), params)
+      |> Xandra.Batch.add(HandleById.query(:delete), params)
     end
+
+    [{:ok, query} | batch]
   end
 
-  def history({scope, handle}) when "" in [scope, handle], do: {:error, :empty}
+  def aliases(:select, %Alias{id: nil, scope: nil} = alias_) do
+    params = Alias.to_params(alias_)
+    result = Xandra.execute!(:xandra, AliasByHandle.query(:select), params)
+    {:ok, result}
+  end
 
-  def history(""), do: {:error, :empty}
+  def aliases(:select, %Alias{id: nil} = alias_) do
+    params = Alias.to_params(alias_)
+    result = Xandra.execute!(:xandra, AliasByScopedHandle.query(:select), params)
+    {:ok, result}
+  end
 
-  def history(handle) do
-    case handle(handle) do
-      {:ok, {scope, handle}} ->
-        result =
-          Xandra.execute!(
-            :xandra,
-            AliasByScopedHandle.query(:select),
-            %{"scope" => scope, "handle" => handle}
-          )
-
-        {:ok, result}
-
-      {:ok, handle} ->
-        result = Xandra.execute!(:xandra, AliasByHandle.query(:select), %{"handle" => handle})
-        {:ok, result}
-
-      error ->
-        error
-    end
+  def aliases(:select, %Alias{} = alias_) do
+    params = Alias.to_params(alias_)
+    result = Xandra.execute!(:xandra, Alias.query(:select), params)
+    {:ok, result}
   end
 end

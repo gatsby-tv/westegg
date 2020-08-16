@@ -5,8 +5,18 @@ defmodule WestEgg.Parameters do
         obj
         |> Map.from_struct()
         |> Map.to_list()
-        |> Stream.reject(fn {_, value} -> is_nil(value) end)
-        |> Map.new(fn {key, value} -> {to_string(key), value} end)
+        |> Stream.reject(&is_nil(elem(&1, 1)))
+        |> Map.new(&{to_string(elem(&1, 0)), elem(&1, 1)})
+      end
+
+      def from_binary_map(map) do
+        %__MODULE__{}
+        |> Map.from_struct()
+        |> Map.keys()
+        |> Enum.map(&to_string/1)
+        |> (&Map.take(map, &1)).()
+        |> Map.new(&{String.to_atom(elem(&1, 0)), elem(&1, 1)})
+        |> (&struct(__MODULE__, &1)).()
       end
     end
   end

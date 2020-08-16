@@ -5,7 +5,7 @@ defmodule WestEgg.Session do
     import WestEgg.Query
 
     query :update, """
-    UPDATE sessions.logins USING :ttl
+    UPDATE sessions.logins
     SET id = :id,
         is_verified = :is_verified
     WHERE session = :session

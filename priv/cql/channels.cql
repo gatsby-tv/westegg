@@ -9,20 +9,26 @@ handle text,
 display text,
 since bigint);
 
-CREATE TABLE channels.subscribers
-(id uuid,
-subscriber uuid,
-since bigint,
-PRIMARY KEY (id, subscriber));
-
 CREATE TABLE channels.owners
 (id uuid,
 owner uuid,
 since bigint,
 PRIMARY KEY (id, owner));
 
+CREATE TABLE channels.subscribers
+(id uuid,
+subscriber uuid,
+since bigint,
+PRIMARY KEY (id, subscriber));
+
 CREATE TABLE channels.shows
 (id uuid,
 show uuid,
 since bigint,
 PRIMARY KEY (id, show));
+
+CREATE TABLE channels.videos
+(id uuid,
+video uuid,
+since bigint,
+PRIMARY KEY (id, video));

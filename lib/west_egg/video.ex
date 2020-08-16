@@ -1,9 +1,9 @@
 defmodule WestEgg.Video do
   defmodule Profile do
+    defstruct [:id, :handle, :display, :since]
+
     use WestEgg.Parameters
     import WestEgg.Query
-
-    defstruct [:id, :handle, :display]
 
     query :insert, """
     INSERT INTO videos.profiles (id, handle, display, since)
@@ -29,10 +29,10 @@ defmodule WestEgg.Video do
   end
 
   defmodule Owner do
+    defstruct [:id, :owner, :since]
+
     use WestEgg.Parameters
     import WestEgg.Query
-
-    defstruct [:id, :owner]
 
     query :insert, """
     INSERT INTO videos.owners (id, owner, since)
@@ -58,10 +58,10 @@ defmodule WestEgg.Video do
   end
 
   defmodule Promoter do
+    defstruct [:id, :promoter, :since]
+
     use WestEgg.Parameters
     import WestEgg.Query
-
-    defstruct [:id, :promoter]
 
     query :insert, """
     INSERT INTO videos.promoters (id, promoter, since)
@@ -87,12 +87,12 @@ defmodule WestEgg.Video do
   end
 
   def profile(:insert, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    select = Xandra.execute!(:xandra, Profile.query(:select), profile)
+    params = Profile.to_params(profile)
+    select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        Xandra.execute!(:xandra, Profile.query(:insert), profile)
+        Xandra.execute!(:xandra, Profile.query(:insert), params)
         :ok
 
       {:ok, _} ->
@@ -101,22 +101,22 @@ defmodule WestEgg.Video do
   end
 
   def profile(:select, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    select = Xandra.execute!(:xandra, Profile.query(:select), profile)
+    params = Profile.to_params(profile)
+    select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, Profile.from_binary_map(result)}
       :error -> {:error, :not_found}
-      ok -> ok
     end
   end
 
   def profile(:update, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    select = Xandra.execute!(:xandra, Profile.query(:select), profile)
+    params = Profile.to_params(profile)
+    select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
       {:ok, current} ->
-        Xandra.execute!(:xandra, Profile.query(:update), Map.merge(current, profile))
+        Xandra.execute!(:xandra, Profile.query(:update), Map.merge(current, params))
         :ok
 
       :error ->
@@ -125,54 +125,54 @@ defmodule WestEgg.Video do
   end
 
   def profile(:delete, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    Xandra.execute!(:xandra, Profile.query(:delete), profile)
+    params = Profile.to_params(profile)
+    Xandra.execute!(:xandra, Profile.query(:delete), params)
     :ok
   end
 
   def profile([{:error, _} | _] = batch, _op, _data), do: batch
 
   def profile(batch, :insert, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    select = Xandra.execute!(:xandra, Profile.query(:select), profile)
+    params = Profile.to_params(profile)
+    select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        query = &Xandra.Batch.add(&1, Profile.query(:insert), profile)
+        query = &Xandra.Batch.add(&1, Profile.query(:insert), params)
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, :exists} | batch]
+        [{:error, {:exists, :profile, profile}} | batch]
     end
   end
 
   def profile(batch, :update, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    select = Xandra.execute!(:xandra, Profile.query(:select), profile)
+    params = Profile.to_params(profile)
+    select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
       {:ok, current} ->
-        query = &Xandra.Batch.add(&1, Profile.query(:update), Map.merge(current, profile))
+        query = &Xandra.Batch.add(&1, Profile.query(:update), Map.merge(current, params))
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, :not_found} | batch]
+        [{:error, {:not_found, :profile, profile}} | batch]
     end
   end
 
   def profile(batch, :delete, %Profile{} = profile) do
-    profile = Profile.to_params(profile)
-    query = &Xandra.Batch.add(&1, Profile.query(:delete), profile)
+    params = Profile.to_params(profile)
+    query = &Xandra.Batch.add(&1, Profile.query(:delete), params)
     [{:ok, query} | batch]
   end
 
   def owners(:insert, %Owner{} = owner) do
-    owner = Owner.to_params(owner)
-    select = Xandra.execute!(:xandra, Owner.query(:select_one), owner)
+    params = Owner.to_params(owner)
+    select = Xandra.execute!(:xandra, Owner.query(:select_one), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        Xandra.execute!(:xandra, Owner.query(:insert), owner)
+        Xandra.execute!(:xandra, Owner.query(:insert), params)
         :ok
 
       {:ok, _} ->
@@ -181,56 +181,56 @@ defmodule WestEgg.Video do
   end
 
   def owners(:select, %Owner{} = owner) do
-    owner = Owner.to_params(owner)
-    result = Xandra.execute!(:xandra, Owner.query(:select), owner)
+    params = Owner.to_params(owner)
+    result = Xandra.execute!(:xandra, Owner.query(:select), params)
     {:ok, result}
   end
 
   def owners(:select_one, %Owner{} = owner) do
-    owner = Owner.to_params(owner)
-    select = Xandra.execute!(:xandra, Owner.query(:select_one), owner)
+    params = Owner.to_params(owner)
+    select = Xandra.execute!(:xandra, Owner.query(:select_one), params)
 
     case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, Owner.from_binary_map(result)}
       :error -> {:error, :not_found}
-      ok -> ok
     end
   end
 
   def owners(:delete, %Owner{} = owner) do
-    owner = Owner.to_params(owner)
-    Xandra.execute!(:xandra, Owner.query(:delete), owner)
+    params = Owner.to_params(owner)
+    Xandra.execute!(:xandra, Owner.query(:delete), params)
     :ok
   end
 
   def owners([{:error, _} | _] = batch, _op, _data), do: batch
 
   def owners(batch, :insert, %Owner{} = owner) do
-    owner = Owner.to_params(owner)
-    select = Xandra.execute!(:xandra, Owner.query(:select_one), owner)
+    params = Owner.to_params(owner)
+    select = Xandra.execute!(:xandra, Owner.query(:select_one), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        query = &Xandra.Batch.add(&1, Owner.query(:insert), owner)
+        query = &Xandra.Batch.add(&1, Owner.query(:insert), params)
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, :exists} | batch]
+        [{:error, {:exists, :owner, owner}} | batch]
     end
   end
 
   def owners(batch, :delete, %Owner{} = owner) do
-    owner = Owner.to_params(owner)
-    query = &Xandra.Batch.add(&1, Owner.query(:delete), owner)
+    params = Owner.to_params(owner)
+    query = &Xandra.Batch.add(&1, Owner.query(:delete), params)
     [{:ok, query} | batch]
   end
 
   def promoters(:insert, %Promoter{} = promoter) do
-    promoter = Promoter.to_params(promoter)
-    select = Xandra.execute!(:xandra, Promoter.query(:select_one), promoter)
+    params = Promoter.to_params(promoter)
+    select = Xandra.execute!(:xandra, Promoter.query(:select_one), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        Xandra.execute!(:xandra, Promoter.query(:insert), promoter)
+        Xandra.execute!(:xandra, Promoter.query(:insert), params)
         :ok
 
       {:ok, _} ->
@@ -239,46 +239,46 @@ defmodule WestEgg.Video do
   end
 
   def promoters(:select, %Promoter{} = promoter) do
-    promoter = Promoter.to_params(promoter)
-    result = Xandra.execute!(:xandra, Promoter.query(:select), promoter)
+    params = Promoter.to_params(promoter)
+    result = Xandra.execute!(:xandra, Promoter.query(:select), params)
     {:ok, result}
   end
 
   def promoters(:select_one, %Promoter{} = promoter) do
-    promoter = Promoter.to_params(promoter)
-    select = Xandra.execute!(:xandra, Promoter.query(:select_one), promoter)
+    params = Promoter.to_params(promoter)
+    select = Xandra.execute!(:xandra, Promoter.query(:select_one), params)
 
     case Enum.fetch(select, 0) do
+      {:ok, result} -> {:ok, Promoter.from_binary_map(result)}
       :error -> {:error, :not_found}
-      ok -> ok
     end
   end
 
   def promoters(:delete, %Promoter{} = promoter) do
-    promoter = Promoter.to_params(promoter)
-    Xandra.execute!(:xandra, Promoter.query(:delete), promoter)
+    params = Promoter.to_params(promoter)
+    Xandra.execute!(:xandra, Promoter.query(:delete), params)
     :ok
   end
 
   def promoters([{:error, _} | _] = batch, _op, _data), do: batch
 
   def promoters(batch, :insert, %Promoter{} = promoter) do
-    promoter = Promoter.to_params(promoter)
-    select = Xandra.execute!(:xandra, Promoter.query(:select_one), promoter)
+    params = Promoter.to_params(promoter)
+    select = Xandra.execute!(:xandra, Promoter.query(:select_one), params)
 
     case Enum.fetch(select, 0) do
       :error ->
-        query = &Xandra.Batch.add(&1, Promoter.query(:insert), promoter)
+        query = &Xandra.Batch.add(&1, Promoter.query(:insert), params)
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, :exists} | batch]
+        [{:error, {:exists, :promoter, promoter}} | batch]
     end
   end
 
   def promoters(batch, :delete, %Promoter{} = promoter) do
-    promoter = Promoter.to_params(promoter)
-    query = &Xandra.Batch.add(&1, Promoter.query(:delete), promoter)
+    params = Promoter.to_params(promoter)
+    query = &Xandra.Batch.add(&1, Promoter.query(:delete), params)
     [{:ok, query} | batch]
   end
 end

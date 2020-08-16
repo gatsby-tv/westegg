@@ -1,1 +1,1 @@
-alias WestEgg.{Registry, User, Channel, Batch}
+alias WestEgg.{Registry, User, Channel, Batch, Plugs}
