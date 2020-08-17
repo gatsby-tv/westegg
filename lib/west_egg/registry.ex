@@ -251,7 +251,9 @@ defmodule WestEgg.Registry do
     """
   end
 
-  def handle(:insert, %Handle{} = handle) do
+  def handle(op, data, opts \\ [])
+
+  def handle(:insert, %Handle{} = handle, _opts) do
     params = Handle.to_params(handle)
     select = Xandra.execute!(:xandra, Handle.query(:insert), params)
 
@@ -272,7 +274,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:insert, %ScopedHandle{} = handle) do
+  def handle(:insert, %ScopedHandle{} = handle, _opts) do
     params = ScopedHandle.to_params(handle)
     select = Xandra.execute!(:xandra, ScopedHandle.query(:insert), params)
 
@@ -293,7 +295,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:select, %Handle{handle: nil} = handle) do
+  def handle(:select, %Handle{handle: nil} = handle, _opts) do
     params = Handle.to_params(handle)
     select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
@@ -303,7 +305,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:select, %ScopedHandle{handle: nil} = handle) do
+  def handle(:select, %ScopedHandle{handle: nil} = handle, _opts) do
     params = ScopedHandle.to_params(handle)
     select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
@@ -313,7 +315,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:select, %Handle{} = handle) do
+  def handle(:select, %Handle{} = handle, _opts) do
     params = Handle.to_params(handle)
     select = Xandra.execute!(:xandra, Handle.query(:select), params)
 
@@ -323,7 +325,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:select, %ScopedHandle{} = handle) do
+  def handle(:select, %ScopedHandle{} = handle, _opts) do
     params = ScopedHandle.to_params(handle)
     select = Xandra.execute!(:xandra, ScopedHandle.query(:select), params)
 
@@ -333,7 +335,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:update, %Handle{} = handle) do
+  def handle(:update, %Handle{} = handle, _opts) do
     params = Handle.to_params(handle)
     select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
@@ -357,7 +359,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:update, %ScopedHandle{} = handle) do
+  def handle(:update, %ScopedHandle{} = handle, _opts) do
     params = ScopedHandle.to_params(handle)
     select = Xandra.execute!(:xandra, HandleById.query(:select), params)
 
@@ -381,7 +383,7 @@ defmodule WestEgg.Registry do
     end
   end
 
-  def handle(:delete, %Handle{} = handle) do
+  def handle(:delete, %Handle{} = handle, _opts) do
     params = Handle.to_params(handle)
 
     batch =
@@ -393,7 +395,7 @@ defmodule WestEgg.Registry do
     :ok
   end
 
-  def handle(:delete, %ScopedHandle{} = handle) do
+  def handle(:delete, %ScopedHandle{} = handle, _opts) do
     params = ScopedHandle.to_params(handle)
 
     batch =
@@ -521,21 +523,23 @@ defmodule WestEgg.Registry do
     [{:ok, query} | batch]
   end
 
-  def aliases(:select, %Alias{id: nil, scope: nil} = alias_) do
+  def aliases(op, data, opts \\ [])
+
+  def aliases(:select, %Alias{id: nil, scope: nil} = alias_, opts) do
     params = Alias.to_params(alias_)
-    result = Xandra.execute!(:xandra, AliasByHandle.query(:select), params)
+    result = Xandra.execute!(:xandra, AliasByHandle.query(:select), params, opts)
     {:ok, result}
   end
 
-  def aliases(:select, %Alias{id: nil} = alias_) do
+  def aliases(:select, %Alias{id: nil} = alias_, opts) do
     params = Alias.to_params(alias_)
-    result = Xandra.execute!(:xandra, AliasByScopedHandle.query(:select), params)
+    result = Xandra.execute!(:xandra, AliasByScopedHandle.query(:select), params, opts)
     {:ok, result}
   end
 
-  def aliases(:select, %Alias{} = alias_) do
+  def aliases(:select, %Alias{} = alias_, opts) do
     params = Alias.to_params(alias_)
-    result = Xandra.execute!(:xandra, Alias.query(:select), params)
+    result = Xandra.execute!(:xandra, Alias.query(:select), params, opts)
     {:ok, result}
   end
 end

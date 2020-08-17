@@ -222,8 +222,8 @@ defmodule WestEgg.Routers.Videos do
 
   get "/:handle/owners" do
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(video: handle),
-         {:ok, owners} <- Video.owners(:select, %Video.Owner{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(owners, &Video.Owner.from_binary_map/1)) do
+         {:ok, page} <- Video.Owner.page(%Video.Owner{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)
@@ -274,8 +274,8 @@ defmodule WestEgg.Routers.Videos do
 
   get "/:handle/promoters" do
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(video: handle),
-         {:ok, promoters} <- Video.promoters(:select, %Video.Promoter{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(promoters, &Video.Promoter.from_binary_map/1)) do
+         {:ok, page} <- Video.Promoter.page(%Video.Promoter{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)

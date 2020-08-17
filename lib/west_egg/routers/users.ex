@@ -122,8 +122,8 @@ defmodule WestEgg.Routers.Users do
 
   get "/:handle/followers" do
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
-         {:ok, followers} <- User.followers(:select, %User.Follower{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(followers, &User.Follower.from_binary_map/1)) do
+         {:ok, page} <- User.Follower.page(%User.Follower{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)
@@ -134,8 +134,68 @@ defmodule WestEgg.Routers.Users do
 
   get "/:handle/follows" do
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
-         {:ok, follows} <- User.follows(:select, %User.Follow{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(follows, &User.Follow.from_binary_map/1)) do
+         {:ok, page} <- User.Follow.page(%User.Follow{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/subscriptions" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, page} <- User.Subscription.page(%User.Subscription{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/promotions" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, page} <- User.Promotion.page(%User.Promotion{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/channels" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, page} <- User.Channel.page(%User.Channel{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/shows" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, page} <- User.Show.page(%User.Show{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/videos" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, page} <- User.Video.page(%User.Video{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)

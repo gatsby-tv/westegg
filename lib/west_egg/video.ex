@@ -33,6 +33,7 @@ defmodule WestEgg.Video do
     defstruct [:id, :owner, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.Video.owners/3
     import WestEgg.Query
 
     query :insert, """
@@ -62,6 +63,7 @@ defmodule WestEgg.Video do
     defstruct [:id, :promoter, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.Video.promoters/3
     import WestEgg.Query
 
     query :insert, """
@@ -87,7 +89,9 @@ defmodule WestEgg.Video do
     """
   end
 
-  def profile(:insert, %Profile{} = profile) do
+  def profile(op, data, opts \\ [])
+
+  def profile(:insert, %Profile{} = profile, _opts) do
     params =
       profile
       |> Profile.to_params()
@@ -105,7 +109,7 @@ defmodule WestEgg.Video do
     end
   end
 
-  def profile(:select, %Profile{} = profile) do
+  def profile(:select, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
@@ -115,7 +119,7 @@ defmodule WestEgg.Video do
     end
   end
 
-  def profile(:update, %Profile{} = profile) do
+  def profile(:update, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
@@ -129,7 +133,7 @@ defmodule WestEgg.Video do
     end
   end
 
-  def profile(:delete, %Profile{} = profile) do
+  def profile(:delete, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     Xandra.execute!(:xandra, Profile.query(:delete), params)
     :ok
@@ -175,7 +179,9 @@ defmodule WestEgg.Video do
     [{:ok, query} | batch]
   end
 
-  def owners(:insert, %Owner{} = owner) do
+  def owners(op, data, opts \\ [])
+
+  def owners(:insert, %Owner{} = owner, _opts) do
     params = Owner.to_params(owner)
     select = Xandra.execute!(:xandra, Owner.query(:select_one), params)
 
@@ -189,13 +195,13 @@ defmodule WestEgg.Video do
     end
   end
 
-  def owners(:select, %Owner{} = owner) do
+  def owners(:select, %Owner{} = owner, opts) do
     params = Owner.to_params(owner)
-    result = Xandra.execute!(:xandra, Owner.query(:select), params)
+    result = Xandra.execute!(:xandra, Owner.query(:select), params, opts)
     {:ok, result}
   end
 
-  def owners(:select_one, %Owner{} = owner) do
+  def owners(:select_one, %Owner{} = owner, _opts) do
     params = Owner.to_params(owner)
     select = Xandra.execute!(:xandra, Owner.query(:select_one), params)
 
@@ -205,7 +211,7 @@ defmodule WestEgg.Video do
     end
   end
 
-  def owners(:delete, %Owner{} = owner) do
+  def owners(:delete, %Owner{} = owner, _opts) do
     params = Owner.to_params(owner)
     Xandra.execute!(:xandra, Owner.query(:delete), params)
     :ok
@@ -233,7 +239,9 @@ defmodule WestEgg.Video do
     [{:ok, query} | batch]
   end
 
-  def promoters(:insert, %Promoter{} = promoter) do
+  def promoters(op, data, opts \\ [])
+
+  def promoters(:insert, %Promoter{} = promoter, _opts) do
     params = Promoter.to_params(promoter)
     select = Xandra.execute!(:xandra, Promoter.query(:select_one), params)
 
@@ -247,13 +255,13 @@ defmodule WestEgg.Video do
     end
   end
 
-  def promoters(:select, %Promoter{} = promoter) do
+  def promoters(:select, %Promoter{} = promoter, opts) do
     params = Promoter.to_params(promoter)
-    result = Xandra.execute!(:xandra, Promoter.query(:select), params)
+    result = Xandra.execute!(:xandra, Promoter.query(:select), params, opts)
     {:ok, result}
   end
 
-  def promoters(:select_one, %Promoter{} = promoter) do
+  def promoters(:select_one, %Promoter{} = promoter, _opts) do
     params = Promoter.to_params(promoter)
     select = Xandra.execute!(:xandra, Promoter.query(:select_one), params)
 
@@ -263,7 +271,7 @@ defmodule WestEgg.Video do
     end
   end
 
-  def promoters(:delete, %Promoter{} = promoter) do
+  def promoters(:delete, %Promoter{} = promoter, _opts) do
     params = Promoter.to_params(promoter)
     Xandra.execute!(:xandra, Promoter.query(:delete), params)
     :ok

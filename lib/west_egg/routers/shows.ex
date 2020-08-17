@@ -146,8 +146,20 @@ defmodule WestEgg.Routers.Shows do
 
   get "/:scope/:handle/owners" do
     with {:ok, %{id: id}} <- Registry.ScopedHandle.from_keywords(show: {scope, handle}),
-         {:ok, owners} <- Show.owners(:select, %Show.Owner{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(owners, &Show.Owner.from_binary_map/1)) do
+         {:ok, page} <- Show.Owner.page(%Show.Owner{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:scope/:handle/videos" do
+    with {:ok, %{id: id}} <- Registry.ScopedHandle.from_keywords(show: {scope, handle}),
+         {:ok, page} <- Show.Video.page(%Show.Video{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)

@@ -27,7 +27,9 @@ defmodule WestEgg.Secrets do
     """
   end
 
-  def login(:insert, %Login{} = login) do
+  def login(op, data, opts \\ [])
+
+  def login(:insert, %Login{} = login, _opts) do
     params = Login.to_params(login)
     select = Xandra.execute!(:xandra, Login.query(:select), params)
 
@@ -41,7 +43,7 @@ defmodule WestEgg.Secrets do
     end
   end
 
-  def login(:select, %Login{} = login) do
+  def login(:select, %Login{} = login, _opts) do
     params = Login.to_params(login)
     select = Xandra.execute!(:xandra, Login.query(:select), params)
 
@@ -51,7 +53,7 @@ defmodule WestEgg.Secrets do
     end
   end
 
-  def login(:update, %Login{} = login) do
+  def login(:update, %Login{} = login, _opts) do
     params = Login.to_params(login)
     select = Xandra.execute!(:xandra, Login.query(:select), params)
 
@@ -67,7 +69,7 @@ defmodule WestEgg.Secrets do
     end
   end
 
-  def login(:delete, %Login{} = login) do
+  def login(:delete, %Login{} = login, _opts) do
     params = Login.to_params(login)
     Xandra.execute!(:xandra, Login.query(:delete), params)
     :ok

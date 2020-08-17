@@ -142,8 +142,8 @@ defmodule WestEgg.Routers.Channels do
 
   get "/:handle/owners" do
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(channel: handle),
-         {:ok, owners} <- Channel.owners(:select, %Channel.Owner{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(owners, &Channel.Owner.from_binary_map/1)) do
+         {:ok, page} <- Channel.Owner.page(%Channel.Owner{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)
@@ -194,8 +194,8 @@ defmodule WestEgg.Routers.Channels do
 
   get "/:handle/subscribers" do
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(channel: handle),
-         {:ok, subscribers} <- Channel.subscribers(:select, %Channel.Subscriber{id: id}),
-         {:ok, resp} <- Poison.encode(Enum.map(subscribers, &Channel.Owner.from_binary_map/1)) do
+         {:ok, page} <- Channel.Subscriber.page(%Channel.Subscriber{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)
@@ -203,4 +203,30 @@ defmodule WestEgg.Routers.Channels do
       {:error, reason} -> raise Error, reason: reason
     end
   end
+
+  get "/:handle/shows" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(channel: handle),
+         {:ok, page} <- Channel.Show.page(%Channel.Show{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/videos" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(channel: handle),
+         {:ok, page} <- Channel.Video.page(%Channel.Video{id: id}, conn.params),
+         {:ok, resp} <- Poison.encode(page) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end

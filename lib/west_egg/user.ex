@@ -32,6 +32,7 @@ defmodule WestEgg.User do
     defstruct [:id, :follower, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.followers/3
     import WestEgg.Query
 
     query :insert, """
@@ -61,6 +62,7 @@ defmodule WestEgg.User do
     defstruct [:id, :follow, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.follows/3
     import WestEgg.Query
 
     query :insert, """
@@ -90,6 +92,7 @@ defmodule WestEgg.User do
     defstruct [:id, :subscription, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.subscriptions/3
     import WestEgg.Query
 
     query :insert, """
@@ -119,6 +122,7 @@ defmodule WestEgg.User do
     defstruct [:id, :promotion, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.promotions/3
     import WestEgg.Query
 
     query :insert, """
@@ -148,6 +152,7 @@ defmodule WestEgg.User do
     defstruct [:id, :channel, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.channels/3
     import WestEgg.Query
 
     query :insert, """
@@ -177,6 +182,7 @@ defmodule WestEgg.User do
     defstruct [:id, :show, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.shows/3
     import WestEgg.Query
 
     query :insert, """
@@ -206,6 +212,7 @@ defmodule WestEgg.User do
     defstruct [:id, :video, :since]
 
     use WestEgg.Parameters
+    use WestEgg.Paging, method: &WestEgg.User.videos/3
     import WestEgg.Query
 
     query :insert, """
@@ -231,7 +238,9 @@ defmodule WestEgg.User do
     """
   end
 
-  def profile(:insert, %Profile{} = profile) do
+  def profile(op, data, opts \\ [])
+
+  def profile(:insert, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
@@ -245,7 +254,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def profile(:select, %Profile{} = profile) do
+  def profile(:select, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
@@ -255,7 +264,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def profile(:update, %Profile{} = profile) do
+  def profile(:update, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
@@ -269,7 +278,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def profile(:delete, %Profile{} = profile) do
+  def profile(:delete, %Profile{} = profile, _opts) do
     params = Profile.to_params(profile)
     Xandra.execute!(:xandra, Profile.query(:delete), params)
     :ok
@@ -311,7 +320,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def followers(:insert, %Follower{} = follower) do
+  def followers(op, data, opts \\ [])
+
+  def followers(:insert, %Follower{} = follower, _opts) do
     params = Follower.to_params(follower)
     select = Xandra.execute!(:xandra, Follower.query(:select_one), params)
 
@@ -325,13 +336,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def followers(:select, %Follower{} = follower) do
+  def followers(:select, %Follower{} = follower, opts) do
     params = Follower.to_params(follower)
-    result = Xandra.execute!(:xandra, Follower.query(:select), params)
+    result = Xandra.execute!(:xandra, Follower.query(:select), params, opts)
     {:ok, result}
   end
 
-  def followers(:select_one, %Follower{} = follower) do
+  def followers(:select_one, %Follower{} = follower, _opts) do
     params = Follower.to_params(follower)
     select = Xandra.execute!(:xandra, Follower.query(:select_one), params)
 
@@ -341,7 +352,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def followers(:delete, %Follower{} = follower) do
+  def followers(:delete, %Follower{} = follower, _opts) do
     params = Follower.to_params(follower)
     Xandra.execute!(:xandra, Follower.query(:delete), params)
     :ok
@@ -369,7 +380,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def follows(:insert, %Follow{} = follow) do
+  def follows(op, data, opts \\ [])
+
+  def follows(:insert, %Follow{} = follow, _opts) do
     params = Follow.to_params(follow)
     select = Xandra.execute!(:xandra, Follow.query(:select_one), params)
 
@@ -383,13 +396,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def follows(:select, %Follow{} = follow) do
+  def follows(:select, %Follow{} = follow, opts) do
     params = Follow.to_params(follow)
-    result = Xandra.execute!(:xandra, Follow.query(:select), params)
+    result = Xandra.execute!(:xandra, Follow.query(:select), params, opts)
     {:ok, result}
   end
 
-  def follows(:select_one, %Follow{} = follow) do
+  def follows(:select_one, %Follow{} = follow, _opts) do
     params = Follow.to_params(follow)
     select = Xandra.execute!(:xandra, Follow.query(:select_one), params)
 
@@ -399,7 +412,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def follows(:delete, %Follow{} = follow) do
+  def follows(:delete, %Follow{} = follow, _opts) do
     params = Follow.to_params(follow)
     Xandra.execute!(:xandra, Follow.query(:delete), params)
     :ok
@@ -427,7 +440,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def subscriptions(:insert, %Subscription{} = subscription) do
+  def subscriptions(op, data, opts \\ [])
+
+  def subscriptions(:insert, %Subscription{} = subscription, _opts) do
     params = Subscription.to_params(subscription)
     select = Xandra.execute!(:xandra, Subscription.query(:select_one), params)
 
@@ -441,13 +456,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def subscriptions(:select, %Subscription{} = subscription) do
+  def subscriptions(:select, %Subscription{} = subscription, opts) do
     params = Subscription.to_params(subscription)
-    result = Xandra.execute!(:xandra, Subscription.query(:select), params)
+    result = Xandra.execute!(:xandra, Subscription.query(:select), params, opts)
     {:ok, result}
   end
 
-  def subscriptions(:select_one, %Subscription{} = subscription) do
+  def subscriptions(:select_one, %Subscription{} = subscription, _opts) do
     params = Subscription.to_params(subscription)
     select = Xandra.execute!(:xandra, Subscription.query(:select_one), params)
 
@@ -457,7 +472,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def subscriptions(:delete, %Subscription{} = subscription) do
+  def subscriptions(:delete, %Subscription{} = subscription, _opts) do
     params = Subscription.to_params(subscription)
     Xandra.execute!(:xandra, Subscription.query(:delete), params)
     :ok
@@ -485,7 +500,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def promotions(:insert, %Promotion{} = promotion) do
+  def promotions(op, data, opts \\ [])
+
+  def promotions(:insert, %Promotion{} = promotion, _opts) do
     params = Promotion.to_params(promotion)
     select = Xandra.execute!(:xandra, Promotion.query(:select_one), params)
 
@@ -499,13 +516,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def promotions(:select, %Promotion{} = promotion) do
+  def promotions(:select, %Promotion{} = promotion, opts) do
     params = Promotion.to_params(promotion)
-    result = Xandra.execute!(:xandra, Promotion.query(:select), params)
+    result = Xandra.execute!(:xandra, Promotion.query(:select), params, opts)
     {:ok, result}
   end
 
-  def promotions(:select_one, %Promotion{} = promotion) do
+  def promotions(:select_one, %Promotion{} = promotion, _opts) do
     params = Promotion.to_params(promotion)
     select = Xandra.execute!(:xandra, Promotion.query(:select_one), params)
 
@@ -515,7 +532,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def promotions(:delete, %Promotion{} = promotion) do
+  def promotions(:delete, %Promotion{} = promotion, _opts) do
     params = Promotion.to_params(promotion)
     Xandra.execute!(:xandra, Promotion.query(:delete), params)
     :ok
@@ -543,7 +560,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def channels(:insert, %Channel{} = channel) do
+  def channels(op, data, opts \\ [])
+
+  def channels(:insert, %Channel{} = channel, _opts) do
     params = Channel.to_params(channel)
     select = Xandra.execute!(:xandra, Channel.query(:select_one), params)
 
@@ -557,13 +576,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def channels(:select, %Channel{} = channel) do
+  def channels(:select, %Channel{} = channel, opts) do
     params = Channel.to_params(channel)
-    result = Xandra.execute!(:xandra, Channel.query(:select), params)
+    result = Xandra.execute!(:xandra, Channel.query(:select), params, opts)
     {:ok, result}
   end
 
-  def channels(:select_one, %Channel{} = channel) do
+  def channels(:select_one, %Channel{} = channel, _opts) do
     params = Channel.to_params(channel)
     select = Xandra.execute!(:xandra, Channel.query(:select_one), params)
 
@@ -573,7 +592,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def channels(:delete, %Channel{} = channel) do
+  def channels(:delete, %Channel{} = channel, _opts) do
     params = Channel.to_params(channel)
     Xandra.execute!(:xandra, Channel.query(:delete), params)
     :ok
@@ -601,7 +620,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def shows(:insert, %Show{} = show) do
+  def shows(op, data, opts \\ [])
+
+  def shows(:insert, %Show{} = show, _opts) do
     params = Show.to_params(show)
     select = Xandra.execute!(:xandra, Show.query(:select_one), params)
 
@@ -615,13 +636,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def shows(:select, %Show{} = show) do
+  def shows(:select, %Show{} = show, opts) do
     params = Show.to_params(show)
-    result = Xandra.execute!(:xandra, Show.query(:select), params)
+    result = Xandra.execute!(:xandra, Show.query(:select), params, opts)
     {:ok, result}
   end
 
-  def shows(:select_one, %Show{} = show) do
+  def shows(:select_one, %Show{} = show, _opts) do
     params = Show.to_params(show)
     select = Xandra.execute!(:xandra, Show.query(:select_one), params)
 
@@ -631,7 +652,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def shows(:delete, %Show{} = show) do
+  def shows(:delete, %Show{} = show, _opts) do
     params = Show.to_params(show)
     Xandra.execute!(:xandra, Show.query(:delete), params)
     :ok
@@ -659,7 +680,9 @@ defmodule WestEgg.User do
     [{:ok, query} | batch]
   end
 
-  def videos(:insert, %Video{} = video) do
+  def videos(op, data, opts \\ [])
+
+  def videos(:insert, %Video{} = video, _opts) do
     params = Video.to_params(video)
     select = Xandra.execute!(:xandra, Video.query(:select_one), params)
 
@@ -673,13 +696,13 @@ defmodule WestEgg.User do
     end
   end
 
-  def videos(:select, %Video{} = video) do
+  def videos(:select, %Video{} = video, opts) do
     params = Video.to_params(video)
-    result = Xandra.execute!(:xandra, Video.query(:select), params)
+    result = Xandra.execute!(:xandra, Video.query(:select), params, opts)
     {:ok, result}
   end
 
-  def videos(:select_one, %Video{} = video) do
+  def videos(:select_one, %Video{} = video, _opts) do
     params = Video.to_params(video)
     select = Xandra.execute!(:xandra, Video.query(:select_one), params)
 
@@ -689,7 +712,7 @@ defmodule WestEgg.User do
     end
   end
 
-  def videos(:delete, %Video{} = video) do
+  def videos(:delete, %Video{} = video, _opts) do
     params = Video.to_params(video)
     Xandra.execute!(:xandra, Video.query(:delete), params)
     :ok
