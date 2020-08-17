@@ -1,6 +1,6 @@
 defmodule WestEgg.Routers.Users do
   use Plug.Router
-  alias WestEgg.{Auth, Batch, Registry, User, Secrets}
+  alias WestEgg.{Auth, Batch, Error, Registry, User, Secrets}
 
   plug :match
   plug :dispatch
@@ -33,8 +33,7 @@ defmodule WestEgg.Routers.Users do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :created, "ok")
     else
-      {:error, {:exists, :handle, %{handle: handle}}} ->
-        send_resp(conn, :conflict, "handle #{handle} already exists")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -53,14 +52,7 @@ defmodule WestEgg.Routers.Users do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:not_found, :handle, %{handle: handle}}} ->
-        send_resp(conn, :not_found, "handle #{handle} not found")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -72,8 +64,7 @@ defmodule WestEgg.Routers.Users do
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)
     else
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -85,11 +76,7 @@ defmodule WestEgg.Routers.Users do
          :ok <- User.profile(:update, Map.put(profile, :id, id)) do
       send_resp(conn, :accepted, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -109,14 +96,7 @@ defmodule WestEgg.Routers.Users do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :created, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "session not verified")
-
-      {:error, {:exists, :follower, _}} ->
-        send_resp(conn, :conflict, "follower already exists")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -136,11 +116,7 @@ defmodule WestEgg.Routers.Users do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "session not verified")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 

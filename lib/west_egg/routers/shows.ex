@@ -1,6 +1,6 @@
 defmodule WestEgg.Routers.Shows do
   use Plug.Router
-  alias WestEgg.{Auth, Batch, Channel, Registry, Show, User}
+  alias WestEgg.{Auth, Batch, Channel, Error, Registry, Show, User}
 
   plug :match
   plug :dispatch
@@ -42,17 +42,7 @@ defmodule WestEgg.Routers.Shows do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :created, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:exists, :handle, %{handle: handle}}} ->
-        send_resp(conn, :conflict, "handle #{handle} already exists")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
-
-      {:error, {:not_found, :channel, channel}} ->
-        send_resp(conn, :not_found, "channel #{channel} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -81,14 +71,7 @@ defmodule WestEgg.Routers.Shows do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:not_found, :channel, channel}} ->
-        send_resp(conn, :not_found, "channel #{channel} not found")
-
-      {:error, {:not_found, :show, {_, show}}} ->
-        send_resp(conn, :not_found, "show #{show} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -100,11 +83,7 @@ defmodule WestEgg.Routers.Shows do
       |> put_resp_content_type("application/json")
       |> send_resp(:ok, resp)
     else
-      {:error, {:not_found, :channel, channel}} ->
-        send_resp(conn, :not_found, "channel #{channel} not found")
-
-      {:error, {:not_found, :show, {_, show}}} ->
-        send_resp(conn, :not_found, "show #{show} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -117,14 +96,7 @@ defmodule WestEgg.Routers.Shows do
          :ok <- Show.profile(:update, Map.put(profile, :id, id)) do
       send_resp(conn, :accepted, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:not_found, :channel, channel}} ->
-        send_resp(conn, :not_found, "channel #{channel} not found")
-
-      {:error, {:not_found, :show, {_, show}}} ->
-        send_resp(conn, :not_found, "show #{show} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -146,20 +118,7 @@ defmodule WestEgg.Routers.Shows do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :created, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:exists, :show, _}} ->
-        send_resp(conn, :conflict, "user already owns show")
-
-      {:error, {:not_found, :channel, channel}} ->
-        send_resp(conn, :not_found, "channel #{channel} not found")
-
-      {:error, {:not_found, :show, {_, show}}} ->
-        send_resp(conn, :not_found, "show #{show} not found")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
@@ -181,17 +140,7 @@ defmodule WestEgg.Routers.Shows do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
     else
-      {:error, :unauthorized} ->
-        send_resp(conn, :unauthorized, "unauthorized")
-
-      {:error, {:not_found, :channel, channel}} ->
-        send_resp(conn, :not_found, "channel #{channel} not found")
-
-      {:error, {:not_found, :show, {_, show}}} ->
-        send_resp(conn, :not_found, "show #{show} not found")
-
-      {:error, {:not_found, :user, user}} ->
-        send_resp(conn, :not_found, "user #{user} not found")
+      {:error, reason} -> raise Error, reason: reason
     end
   end
 
