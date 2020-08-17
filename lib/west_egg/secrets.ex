@@ -85,7 +85,7 @@ defmodule WestEgg.Secrets do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :login, login}} | batch]
+        [{:error, {:exists, :login, nil}} | batch]
     end
   end
 
@@ -101,7 +101,7 @@ defmodule WestEgg.Secrets do
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, {:not_found, :login, login}} | batch]
+        [{:error, {:not_found, :login, nil}} | batch]
     end
   end
 

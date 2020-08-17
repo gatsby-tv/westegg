@@ -7,6 +7,8 @@ CREATE TABLE videos.profiles
 (id uuid PRIMARY KEY,
 handle text,
 display text,
+channel uuid,
+show uuid,
 since bigint);
 
 CREATE TABLE videos.owners

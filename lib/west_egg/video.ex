@@ -1,13 +1,13 @@
 defmodule WestEgg.Video do
   defmodule Profile do
-    defstruct [:id, :handle, :display, :since]
+    defstruct [:id, :handle, :display, :channel, :show, :since]
 
     use WestEgg.Parameters
     import WestEgg.Query
 
     query :insert, """
-    INSERT INTO videos.profiles (id, handle, display, since)
-    VALUES (:id, :handle, :display, toUnixTimestamp(now()))
+    INSERT INTO videos.profiles (id, handle, display, channel, show, since)
+    VALUES (:id, :handle, :display, :channel, :show, toUnixTimestamp(now()))
     """
 
     query :select, """
@@ -18,7 +18,8 @@ defmodule WestEgg.Video do
     query :update, """
     UPDATE videos.profiles
     SET handle = :handle,
-        display = :display
+        display = :display,
+        show = :show
     WHERE id = :id
     """
 
@@ -87,7 +88,11 @@ defmodule WestEgg.Video do
   end
 
   def profile(:insert, %Profile{} = profile) do
-    params = Profile.to_params(profile)
+    params =
+      profile
+      |> Profile.to_params()
+      |> Map.put_new("show", nil)
+
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
@@ -133,7 +138,11 @@ defmodule WestEgg.Video do
   def profile([{:error, _} | _] = batch, _op, _data), do: batch
 
   def profile(batch, :insert, %Profile{} = profile) do
-    params = Profile.to_params(profile)
+    params =
+      profile
+      |> Profile.to_params()
+      |> Map.put_new("show", nil)
+
     select = Xandra.execute!(:xandra, Profile.query(:select), params)
 
     case Enum.fetch(select, 0) do
@@ -142,7 +151,7 @@ defmodule WestEgg.Video do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :profile, profile}} | batch]
+        [{:error, {:exists, :profile, profile.handle}} | batch]
     end
   end
 
@@ -156,7 +165,7 @@ defmodule WestEgg.Video do
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, {:not_found, :profile, profile}} | batch]
+        [{:error, {:not_found, :profile, profile.handle}} | batch]
     end
   end
 
@@ -214,7 +223,7 @@ defmodule WestEgg.Video do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :owner, owner}} | batch]
+        [{:error, {:exists, :owner, nil}} | batch]
     end
   end
 
@@ -272,7 +281,7 @@ defmodule WestEgg.Video do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :promoter, promoter}} | batch]
+        [{:error, {:exists, :promoter, nil}} | batch]
     end
   end
 

@@ -8,20 +8,26 @@ defmodule WestEgg.Error do
   end
 
   @impl true
-  def exception([{:reason, {:not_found, type, {_, obj}}} | opts]) do
-    msg = "#{type} #{obj} not found"
-    %__MODULE__{code: :not_found, message: Keyword.get(opts, :message, msg)}
-  end
-
-  @impl true
   def exception([{:reason, {:not_found, type, obj}} | opts]) do
-    msg = "#{type} #{obj} not found"
+    msg = if is_nil(obj), do: "#{type} not found", else: "#{type} #{obj} not found"
     %__MODULE__{code: :not_found, message: Keyword.get(opts, :message, msg)}
   end
 
   @impl true
-  def exception([{:reason, {:exists, type, _}} | opts]) do
-    msg = "#{to_string(type)} already exists"
+  def exception([{:reason, {:exists, type, obj}} | opts]) do
+    msg = if is_nil(obj), do: "#{type} already exists", else: "#{type} #{obj} already exists"
     %__MODULE__{code: :conflict, message: Keyword.get(opts, :message, msg)}
+  end
+
+  @impl true
+  def exception([{:reason, {:too_long, type, _}} | opts]) do
+    msg = "#{type} is too long"
+    %__MODULE__{code: :request_entity_too_large, message: Keyword.get(opts, :message, msg)}
+  end
+
+  @impl true
+  def exception([{:reason, {:malformed, type, _}} | opts]) do
+    msg = "malformed #{type}"
+    %__MODULE__{code: :unprocessable_entity, message: Keyword.get(opts, :message, msg)}
   end
 end

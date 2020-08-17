@@ -36,7 +36,16 @@ defmodule WestEgg.Registry do
     """
 
     def new(type, handle) do
-      {:ok, %__MODULE__{id: UUID.uuid4(), handle: "#{@sigils[type]}#{handle}"}}
+      cond do
+        String.length(handle) > 25 ->
+          {:error, {:too_long, :handle, handle}}
+
+        not String.match?(handle, ~r/^[[:alnum:]_]+$/) ->
+          {:error, {:malformed, :handle, handle}}
+
+        true ->
+          {:ok, %__MODULE__{id: UUID.uuid4(), handle: "#{@sigils[type]}#{handle}"}}
+      end
     end
 
     def from_keywords(handles) do
@@ -110,12 +119,21 @@ defmodule WestEgg.Registry do
     def new(type, {scope, handle}) do
       case Registry.Handle.from_keywords([{@scopes[type], scope}]) do
         {:ok, %{id: scope}} ->
-          {:ok,
-           %__MODULE__{
-             id: UUID.uuid4(),
-             scope: scope,
-             handle: "#{@sigils[type]}#{handle}"
-           }}
+          cond do
+            String.length(handle) > 25 ->
+              {:error, {:too_long, :handle, handle}}
+
+            not String.match?(handle, ~r/^[[:alnum:]_]+$/) ->
+              {:error, {:malformed, :handle, handle}}
+
+            true ->
+              {:ok,
+               %__MODULE__{
+                 id: UUID.uuid4(),
+                 scope: scope,
+                 handle: "#{@sigils[type]}#{handle}"
+               }}
+          end
 
         error ->
           error
@@ -124,8 +142,8 @@ defmodule WestEgg.Registry do
 
     def from_keywords(handles) do
       result =
-        Enum.reduce_while(handles, {:ok, []}, fn {type, handle}, {:ok, acc} ->
-          case fetch(type, handle) do
+        Enum.reduce_while(handles, {:ok, []}, fn {type, {scope, handle}}, {:ok, acc} ->
+          case fetch(type, {scope, handle}) do
             {:ok, new} -> {:cont, {:ok, [new | acc]}}
             {:error, {reason, type, handle}} -> {:halt, {:error, {reason, type, handle}}}
             {:error, reason} -> {:halt, {:error, {reason, type, handle}}}
@@ -150,11 +168,6 @@ defmodule WestEgg.Registry do
         error ->
           error
       end
-    end
-
-    defp fetch(_type, id) do
-      handle = %__MODULE__{id: id}
-      Registry.handle(:select, handle)
     end
   end
 
@@ -411,7 +424,7 @@ defmodule WestEgg.Registry do
     case Enum.fetch(select, 0) do
       :error -> do_insert.()
       {:ok, %{"in_use" => false}} -> do_insert.()
-      {:ok, _} -> [{:error, {:exists, :handle, handle}} | batch]
+      {:ok, _} -> [{:error, {:exists, :handle, handle.handle}} | batch]
     end
   end
 
@@ -432,7 +445,7 @@ defmodule WestEgg.Registry do
     case Enum.fetch(select, 0) do
       :error -> do_insert.()
       {:ok, %{"in_use" => false}} -> do_insert.()
-      {:ok, _} -> [{:error, {:exists, :handle, handle}} | batch]
+      {:ok, _} -> [{:error, {:exists, :handle, handle.handle}} | batch]
     end
   end
 
@@ -456,7 +469,7 @@ defmodule WestEgg.Registry do
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, {:not_found, :handle, handle}} | batch]
+        [{:error, {:not_found, :handle, handle.handle}} | batch]
     end
   end
 
@@ -480,7 +493,7 @@ defmodule WestEgg.Registry do
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, {:not_found, :handle, handle}} | batch]
+        [{:error, {:not_found, :handle, handle.handle}} | batch]
     end
   end
 

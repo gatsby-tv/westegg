@@ -10,7 +10,7 @@ defmodule WestEgg.Routers.Users do
       profile =
         conn.params
         |> User.Profile.from_binary_map()
-        |> Map.merge(Map.from_struct(handle))
+        |> Map.put(:id, handle.id)
 
       add_hash = &{&1, Map.fetch!(Argon2.add_hash(&1), :password_hash)}
 
@@ -19,7 +19,7 @@ defmodule WestEgg.Routers.Users do
         |> Secrets.Login.from_binary_map()
         |> Map.get_and_update(:password, add_hash)
         |> elem(1)
-        |> Map.merge(Map.from_struct(handle))
+        |> Map.put(:id, handle.id)
 
       Batch.new()
       |> Registry.handle(:insert, handle)
@@ -115,6 +115,30 @@ defmodule WestEgg.Routers.Users do
          {:ok, batch} <- get_batch.(user.id, session.id) do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/followers" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, followers} <- User.followers(:select, %User.Follower{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(followers, &User.Follower.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/follows" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(user: handle),
+         {:ok, follows} <- User.follows(:select, %User.Follow{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(follows, &User.Follow.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
     else
       {:error, reason} -> raise Error, reason: reason
     end

@@ -200,7 +200,7 @@ defmodule WestEgg.Channel do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :profile, profile}} | batch]
+        [{:error, {:exists, :profile, profile.handle}} | batch]
     end
   end
 
@@ -214,7 +214,7 @@ defmodule WestEgg.Channel do
         [{:ok, query} | batch]
 
       :error ->
-        [{:error, {:not_found, :profile, profile}} | batch]
+        [{:error, {:not_found, :profile, profile.handle}} | batch]
     end
   end
 
@@ -272,7 +272,7 @@ defmodule WestEgg.Channel do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :owner, owner}} | batch]
+        [{:error, {:exists, :owner, nil}} | batch]
     end
   end
 
@@ -330,7 +330,7 @@ defmodule WestEgg.Channel do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :subscriber, subscriber}} | batch]
+        [{:error, {:exists, :subscriber, nil}} | batch]
     end
   end
 
@@ -388,7 +388,7 @@ defmodule WestEgg.Channel do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :show, show}} | batch]
+        [{:error, {:exists, :show, nil}} | batch]
     end
   end
 
@@ -446,7 +446,7 @@ defmodule WestEgg.Channel do
         [{:ok, query} | batch]
 
       {:ok, _} ->
-        [{:error, {:exists, :video, video}} | batch]
+        [{:error, {:exists, :video, nil}} | batch]
     end
   end
 

@@ -1,6 +1,6 @@
 defmodule WestEgg.Routers.Videos do
   use Plug.Router
-  alias WestEgg.{Auth, Batch, Error, Registry, User, Video}
+  alias WestEgg.{Auth, Batch, Channel, Error, Registry, Show, User, Video}
 
   plug :match
   plug :dispatch
@@ -14,11 +14,31 @@ defmodule WestEgg.Routers.Videos do
       |> Registry.Handle.from_keywords()
     end
 
+    get_channel = fn %{channel: channel} = profile when not is_nil(channel) ->
+      case Registry.Handle.from_keywords(channel: channel) do
+        {:ok, %{id: id}} -> Map.put(profile, :channel, id)
+        {:error, reason} -> raise Error, reason: reason
+      end
+    end
+
+    get_show = fn
+      %{show: nil} = profile ->
+        profile
+
+      %{show: show} = profile ->
+        case Registry.Handle.from_keywords(show: show) do
+          {:ok, %{id: id}} -> Map.put(profile, :show, id)
+          {:error, reason} -> raise Error, reason: reason
+        end
+    end
+
     get_batch = fn handle, owners ->
       profile =
         conn.params
         |> Video.Profile.from_binary_map()
-        |> Map.merge(Map.from_struct(handle))
+        |> Map.put(:id, handle.id)
+        |> get_channel.()
+        |> get_show.()
 
       insert_owners =
         &Enum.reduce(&2, &1, fn owner, batch ->
@@ -27,9 +47,35 @@ defmodule WestEgg.Routers.Videos do
           |> User.videos(:insert, %User.Video{id: owner.id, video: handle.id})
         end)
 
+      insert_channel = fn batch, channel when not is_nil(channel) ->
+        case Registry.Handle.from_keywords(channel: channel) do
+          {:ok, channel} ->
+            Channel.videos(batch, :insert, %Channel.Video{id: channel.id, video: handle.id})
+
+          {:error, reason} ->
+            raise Error, reason: reason
+        end
+      end
+
+      insert_show = fn
+        batch, _, nil ->
+          batch
+
+        batch, channel, show ->
+          case Registry.ScopedHandle.from_keywords(show: {channel, show}) do
+            {:ok, show} ->
+              Show.videos(batch, :insert, %Show.Video{id: show.id, video: handle.id})
+
+            {:error, reason} ->
+              raise Error, reason: reason
+          end
+      end
+
       Batch.new()
       |> Registry.handle(:insert, handle)
       |> Video.profile(:insert, profile)
+      |> insert_channel.(profile.channel)
+      |> insert_show.(profile.channel, profile.show)
       |> insert_owners.(owners)
       |> Batch.compile()
     end
@@ -53,19 +99,34 @@ defmodule WestEgg.Routers.Videos do
         |> User.videos(:delete, %User.Video{id: owner, video: &3})
       end)
 
-    get_batch = fn handle, owners ->
+    delete_channel = fn batch, channel, id ->
+      Channel.videos(batch, :delete, %Channel.Video{id: channel, video: id})
+    end
+
+    delete_show = fn
+      batch, nil, _id ->
+        batch
+
+      batch, show, id ->
+        Show.videos(batch, :delete, %Show.Video{id: show, video: id})
+    end
+
+    get_batch = fn handle, profile, owners ->
       Batch.new()
       |> Registry.handle(:delete, handle)
       |> Video.profile(:delete, %Video.Profile{id: handle.id})
       |> delete_owners.(owners, handle.id)
+      |> delete_channel.(profile.channel, handle.id)
+      |> delete_show.(profile.show, handle.id)
       |> Batch.compile()
     end
 
     with :ok <- Auth.verified?(conn),
          {:ok, handle} <- Registry.Handle.from_keywords(video: handle),
          :ok <- Auth.owns?(conn, Video, handle.id),
+         {:ok, profile} <- Video.profile(:select, %Video.Profile{id: handle.id}),
          {:ok, owners} <- Video.owners(:select, %Video.Owner{id: handle.id}),
-         {:ok, batch} <- get_batch.(handle, owners) do
+         {:ok, batch} <- get_batch.(handle, profile, owners) do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
     else
@@ -86,12 +147,31 @@ defmodule WestEgg.Routers.Videos do
   end
 
   put "/:handle/profile" do
-    profile = Video.Profile.from_binary_map(conn.params)
+    get_show = fn
+      %{show: nil} = profile ->
+        {:ok, profile}
+
+      %{id: id, show: show} = profile ->
+        with {:ok, %{channel: channel}} <- Video.profile(:select, %Video.Profile{id: id}),
+             {:ok, %{id: show}} <- Registry.ScopedHandle.from_keywords(show: {channel, show}) do
+          {:ok, Map.put(profile, :show, show)}
+        else
+          error -> error
+        end
+    end
+
+    get_profile = fn id ->
+      conn.params
+      |> Video.Profile.from_binary_map()
+      |> Map.put(:id, id)
+      |> get_show.()
+    end
 
     with {:ok, %{id: id}} <- Registry.Handle.from_keywords(video: handle),
          :ok <- Auth.verified?(conn),
          :ok <- Auth.owns?(conn, Video, id),
-         :ok <- Video.profile(:update, Map.put(profile, :id, id)) do
+         {:ok, profile} <- get_profile.(id),
+         :ok <- Video.profile(:update, profile) do
       send_resp(conn, :accepted, "ok")
     else
       {:error, reason} -> raise Error, reason: reason
@@ -140,6 +220,18 @@ defmodule WestEgg.Routers.Videos do
     end
   end
 
+  get "/:handle/owners" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(video: handle),
+         {:ok, owners} <- Video.owners(:select, %Video.Owner{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(owners, &Video.Owner.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
   post "/:handle/promoter" do
     session = get_session(conn, "id")
 
@@ -179,4 +271,18 @@ defmodule WestEgg.Routers.Videos do
       {:error, reason} -> raise Error, reason: reason
     end
   end
+
+  get "/:handle/promoters" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(video: handle),
+         {:ok, promoters} <- Video.promoters(:select, %Video.Promoter{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(promoters, &Video.Promoter.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  match _, do: send_resp(conn, :not_found, "unknown request")
 end

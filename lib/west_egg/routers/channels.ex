@@ -18,7 +18,7 @@ defmodule WestEgg.Routers.Channels do
       profile =
         conn.params
         |> Channel.Profile.from_binary_map()
-        |> Map.merge(Map.from_struct(handle))
+        |> Map.put(:id, handle.id)
 
       insert_owners =
         &Enum.reduce(&2, &1, fn owner, batch ->
@@ -140,6 +140,18 @@ defmodule WestEgg.Routers.Channels do
     end
   end
 
+  get "/:handle/owners" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(channel: handle),
+         {:ok, owners} <- Channel.owners(:select, %Channel.Owner{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(owners, &Channel.Owner.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
   post "/:handle/subscriber" do
     session = get_session(conn, "id")
 
@@ -175,6 +187,18 @@ defmodule WestEgg.Routers.Channels do
          {:ok, batch} <- get_batch.(channel.id, user.id) do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:handle/subscribers" do
+    with {:ok, %{id: id}} <- Registry.Handle.from_keywords(channel: handle),
+         {:ok, subscribers} <- Channel.subscribers(:select, %Channel.Subscriber{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(subscribers, &Channel.Owner.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
     else
       {:error, reason} -> raise Error, reason: reason
     end

@@ -18,7 +18,7 @@ defmodule WestEgg.Routers.Shows do
       profile =
         conn.params
         |> Show.Profile.from_binary_map()
-        |> Map.merge(Map.from_struct(handle))
+        |> Map.put(:id, handle.id)
 
       insert_owners =
         &Enum.reduce(&2, &1, fn owner, batch ->
@@ -139,6 +139,18 @@ defmodule WestEgg.Routers.Shows do
          {:ok, batch} <- get_batch.(show.id, owner.id) do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :ok, "ok")
+    else
+      {:error, reason} -> raise Error, reason: reason
+    end
+  end
+
+  get "/:scope/:handle/owners" do
+    with {:ok, %{id: id}} <- Registry.ScopedHandle.from_keywords(show: {scope, handle}),
+         {:ok, owners} <- Show.owners(:select, %Show.Owner{id: id}),
+         {:ok, resp} <- Poison.encode(Enum.map(owners, &Show.Owner.from_binary_map/1)) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(:ok, resp)
     else
       {:error, reason} -> raise Error, reason: reason
     end
