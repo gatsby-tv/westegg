@@ -9,6 +9,11 @@ handle text,
 display text,
 since bigint);
 
+CREATE TABLE shows.statistics
+(id uuid PRIMARY KEY,
+owners counter,
+videos counter);
+
 CREATE TABLE shows.owners
 (id uuid,
 owner uuid,

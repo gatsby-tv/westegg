@@ -11,6 +11,12 @@ channel uuid,
 show uuid,
 since bigint);
 
+CREATE TABLE videos.statistics
+(id uuid PRIMARY KEY,
+owners counter,
+promoters counter,
+votes counter);
+
 CREATE TABLE videos.owners
 (id uuid,
 owner uuid,

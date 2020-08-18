@@ -28,6 +28,27 @@ defmodule WestEgg.Show do
     """
   end
 
+  defmodule Statistics do
+    defstruct [:id, owners: 0, videos: 0]
+
+    use WestEgg.Parameters
+    import WestEgg.Query
+
+    query :increment, """
+    UPDATE shows.statistics
+    SET owners = owners + :owners,
+        videos = videos + :videos
+    WHERE id = :id
+    """
+
+    query :decrement, """
+    UPDATE shows.statistics
+    SET owners = owners - :owners,
+        videos = videos - :videos
+    WHERE id = :id
+    """
+  end
+
   defmodule Owner do
     defstruct [:id, :owner, :since]
 
@@ -167,6 +188,34 @@ defmodule WestEgg.Show do
   def profile(batch, :delete, %Profile{} = profile) do
     params = Profile.to_params(profile)
     query = &Xandra.Batch.add(&1, Profile.query(:delete), params)
+    [{:ok, query} | batch]
+  end
+
+  def statistics(op, data, opts \\ [])
+
+  def statistics(:increment, %Statistics{} = statistics, _opts) do
+    params = Statistics.to_params(statistics)
+    Xandra.execute!(:xandra, Statistics.query(:increment), params)
+    :ok
+  end
+
+  def statistics(:decrement, %Statistics{} = statistics, _opts) do
+    params = Statistics.to_params(statistics)
+    Xandra.execute!(:xandra, Statistics.query(:decrement), params)
+    :ok
+  end
+
+  def statistics([{:error, _} | _] = batch, _op, _data), do: batch
+
+  def statistics(batch, :increment, %Statistics{} = statistics) do
+    params = Statistics.to_params(statistics)
+    query = &Xandra.Batch.add(&1, Statistics.query(:increment), params)
+    [{:ok, query} | batch]
+  end
+
+  def statistics(batch, :decrement, %Statistics{} = statistics) do
+    params = Statistics.to_params(statistics)
+    query = &Xandra.Batch.add(&1, Statistics.query(:decrement), params)
     [{:ok, query} | batch]
   end
 

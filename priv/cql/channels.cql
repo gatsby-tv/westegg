@@ -9,6 +9,13 @@ handle text,
 display text,
 since bigint);
 
+CREATE TABLE channels.statistics
+(id uuid PRIMARY KEY,
+owners counter,
+subscribers counter,
+shows counter,
+videos counter);
+
 CREATE TABLE channels.owners
 (id uuid,
 owner uuid,

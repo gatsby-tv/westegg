@@ -28,6 +28,52 @@ defmodule WestEgg.User do
     """
   end
 
+  defmodule Statistics do
+    defstruct [
+      :id,
+      followers: 0,
+      follows: 0,
+      subscriptions: 0,
+      promotions: 0,
+      channels: 0,
+      shows: 0,
+      videos: 0,
+      karma: 0,
+      votes: 0
+    ]
+
+    use WestEgg.Parameters
+    import WestEgg.Query
+
+    query :increment, """
+    UPDATE users.statistics
+    SET followers = followers + :followers,
+        follows = follows + :follows,
+        subscriptions = subscriptions + :subscriptions,
+        promotions = promotions + :promotions,
+        channels = channels + :channels,
+        shows = shows + :shows,
+        videos = videos + :videos,
+        karma = karma + :karma,
+        votes = votes + :votes
+    WHERE id = :id
+    """
+
+    query :decrement, """
+    UPDATE users.statistics
+    SET followers = followers - :followers,
+        follows = follows - :follows,
+        subscriptions = subscriptions - :subscriptions,
+        promotions = promotions - :promotions,
+        channels = channels - :channels,
+        shows = shows - :shows,
+        videos = videos - :videos,
+        karma = karma - :karma,
+        votes = votes - :votes
+    WHERE id = :id
+    """
+  end
+
   defmodule Follower do
     defstruct [:id, :follower, :since]
 
@@ -317,6 +363,34 @@ defmodule WestEgg.User do
   def profile(batch, :delete, %Profile{} = profile) do
     params = Profile.to_params(profile)
     query = &Xandra.Batch.add(&1, Profile.query(:delete), params)
+    [{:ok, query} | batch]
+  end
+
+  def statistics(op, data, opts \\ [])
+
+  def statistics(:increment, %Statistics{} = statistics, _opts) do
+    params = Statistics.to_params(statistics)
+    Xandra.execute!(:xandra, Statistics.query(:increment), params)
+    :ok
+  end
+
+  def statistics(:decrement, %Statistics{} = statistics, _opts) do
+    params = Statistics.to_params(statistics)
+    Xandra.execute!(:xandra, Statistics.query(:decrement), params)
+    :ok
+  end
+
+  def statistics([{:error, _} | _] = batch, _op, _data), do: batch
+
+  def statistics(batch, :increment, %Statistics{} = statistics) do
+    params = Statistics.to_params(statistics)
+    query = &Xandra.Batch.add(&1, Statistics.query(:increment), params)
+    [{:ok, query} | batch]
+  end
+
+  def statistics(batch, :decrement, %Statistics{} = statistics) do
+    params = Statistics.to_params(statistics)
+    query = &Xandra.Batch.add(&1, Statistics.query(:decrement), params)
     [{:ok, query} | batch]
   end
 

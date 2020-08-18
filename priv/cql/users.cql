@@ -9,6 +9,18 @@ handle text,
 display text,
 since bigint);
 
+CREATE TABLE users.statistics
+(id uuid PRIMARY KEY,
+followers counter,
+follows counter,
+subscriptions counter,
+promotions counter,
+channels counter,
+shows counter,
+videos counter,
+karma counter,
+votes counter);
+
 CREATE TABLE users.followers
 (id uuid,
 follower uuid,
