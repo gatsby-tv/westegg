@@ -10,7 +10,7 @@ defmodule WestEgg.Auth do
          true <- get_session(conn, "id") == id do
       :ok
     else
-      _ -> {:error, :unauthorized}
+      _ -> {:error, :forbidden}
     end
   end
 
@@ -29,7 +29,7 @@ defmodule WestEgg.Auth do
 
     case type.owners(:select_one, owner) do
       {:ok, _} -> :ok
-      _ -> {:error, :unauthorized}
+      _ -> {:error, :forbidden}
     end
   end
 end

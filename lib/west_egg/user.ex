@@ -400,13 +400,13 @@ defmodule WestEgg.User do
     params = Follower.to_params(follower)
     select = Xandra.execute!(:xandra, Follower.query(:select_one), params)
 
-    case Enum.fetch(select, 0) do
-      :error ->
-        Xandra.execute!(:xandra, Follower.query(:insert), params)
-        :ok
-
-      {:ok, _} ->
-        {:error, :exists}
+    with true <- follower.id != follower.follower,
+         :error <- Enum.fetch(select, 0) do
+      Xandra.execute!(:xandra, Follower.query(:insert), params)
+      :ok
+    else
+      false -> {:error, :conflict}
+      {:ok, _} -> {:error, :exists}
     end
   end
 
@@ -438,13 +438,13 @@ defmodule WestEgg.User do
     params = Follower.to_params(follower)
     select = Xandra.execute!(:xandra, Follower.query(:select_one), params)
 
-    case Enum.fetch(select, 0) do
-      :error ->
-        query = &Xandra.Batch.add(&1, Follower.query(:insert), params)
-        [{:ok, query} | batch]
-
-      {:ok, _} ->
-        [{:error, {:exists, :follower, nil}} | batch]
+    with true <- follower.id != follower.follower,
+         :error <- Enum.fetch(select, 0) do
+      query = &Xandra.Batch.add(&1, Follower.query(:insert), params)
+      [{:ok, query} | batch]
+    else
+      false -> [{:error, {:conflict, :follower, nil}} | batch]
+      {:ok, _} -> [{:error, {:exists, :follower, nil}} | batch]
     end
   end
 
@@ -460,13 +460,13 @@ defmodule WestEgg.User do
     params = Follow.to_params(follow)
     select = Xandra.execute!(:xandra, Follow.query(:select_one), params)
 
-    case Enum.fetch(select, 0) do
-      :error ->
-        Xandra.execute!(:xandra, Follow.query(:insert), params)
-        :ok
-
-      {:ok, _} ->
-        {:error, :exists}
+    with true <- follow.id != follow.follow,
+         :error <- Enum.fetch(select, 0) do
+      Xandra.execute!(:xandra, Follow.query(:insert), params)
+      :error
+    else
+      false -> {:error, :conflict}
+      {:ok, _} -> {:error, :exists}
     end
   end
 
@@ -498,13 +498,13 @@ defmodule WestEgg.User do
     params = Follow.to_params(follow)
     select = Xandra.execute!(:xandra, Follow.query(:select_one), params)
 
-    case Enum.fetch(select, 0) do
-      :error ->
-        query = &Xandra.Batch.add(&1, Follow.query(:insert), params)
-        [{:ok, query} | batch]
-
-      {:ok, _} ->
-        [{:error, {:exists, :follow, nil}} | batch]
+    with true <- follow.id != follow.follow,
+         :error <- Enum.fetch(select, 0) do
+      query = &Xandra.Batch.add(&1, Follow.query(:insert), params)
+      [{:ok, query} | batch]
+    else
+      false -> [{:error, {:conflict, :follow, nil}} | batch]
+      {:ok, _} -> [{:error, {:exists, :follow, nil}} | batch]
     end
   end
 

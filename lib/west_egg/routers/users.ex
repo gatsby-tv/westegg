@@ -96,7 +96,11 @@ defmodule WestEgg.Routers.Users do
       Xandra.execute!(:xandra, batch)
       send_resp(conn, :created, "ok")
     else
-      {:error, reason} -> raise Error, reason: reason
+      {:error, {:conflict, :follower, _} = reason} ->
+        raise Error, reason: reason, message: "attempt to follow oneself"
+
+      {:error, reason} ->
+        raise Error, reason: reason
     end
   end
 
