@@ -1,6 +1,6 @@
 defmodule WestEgg.Routers.Users do
   use Plug.Router
-  alias WestEgg.{Auth, Batch, Error, Registry, User, Secrets}
+  alias WestEgg.{Auth, Batch, Channel, Show, Video Error, Registry, User, Secrets}
 
   plug :match
   plug :dispatch
@@ -25,12 +25,12 @@ defmodule WestEgg.Routers.Users do
       |> Registry.handle(:insert, handle)
       |> User.profile(:insert, profile)
       |> Secrets.login(:insert, login)
-      |> Batch.compile()
+      |> Batch.compile(:logged)
     end
 
     with {:ok, handle} <- Registry.Handle.new(:user, handle),
          {:ok, batch} <- get_batch.(handle) do
-      Xandra.execute!(:xandra, batch)
+      Batch.execute!(batch)
       send_resp(conn, :created, "ok")
     else
       {:error, reason} -> raise Error, reason: reason
@@ -38,18 +38,67 @@ defmodule WestEgg.Routers.Users do
   end
 
   delete "/:handle" do
-    get_batch = fn id, handle ->
-      Batch.new()
-      |> Registry.handle(:delete, %Registry.Handle{id: id, handle: handle})
-      |> User.profile(:delete, %User.Profile{id: id})
-      |> Secrets.login(:delete, %Secrets.Login{id: id})
-      |> Batch.compile()
+    get_batch = fn
+      :logged, id, handle, channels, shows, videos ->
+        delete_owners = fn batch, type, objects ->
+          key =
+            type
+            |> Module.split()
+            |> Enum.fetch!(-1)
+            |> String.downcase()
+
+          Enum.reduce(objects, batch, fn %{^key => object}, batch ->
+            owner =
+              type
+              |> Module.concat(Owner)
+              |> struct(%{id: object, owner: id})
+
+            type.owners(batch, :delete, owner)
+          end)
+        end
+
+        Batch.new()
+        |> Registry.handle(:delete, %Registry.Handle{id: id, handle: handle})
+        |> User.profile(:delete, %User.Profile{id: id})
+        |> Secrets.login(:delete, %Secrets.Login{id: id})
+        |> delete_owners.(Channel, channels)
+        |> delete_owners.(Show, shows)
+        |> delete_owners.(Video, videos)
+        |> Batch.compile(:logged)
+
+      :counter, _id, _handle, channels, shows, videos ->
+        decrement_owners = fn batch, type, objects ->
+          key =
+            type
+            |> Module.split()
+            |> Enum.fetch!(-1)
+            |> String.downcase()
+
+          Enum.reduce(objects, batch, fn %{^key => object}, batch ->
+            statistics =
+              type
+              |> Module.concat(Statistics)
+              |> struct(%{id: object, owner: 1})
+
+            type.statistics(batch, :decrement, statistics)
+          end)
+        end
+
+        Batch.new()
+        |> decrement_owners.(Channel, channels)
+        |> decrement_owners.(Show, shows)
+        |> decrement_owners.(Video, videos)
+        |> Batch.compile(:counter)
     end
 
     with {:ok, user} <- Registry.Handle.from_keywords(user: handle),
          :ok <- Auth.verified?(conn, as: user.id),
-         {:ok, batch} <- get_batch.(user.id, user.handle) do
-      Xandra.execute!(:xandra, batch)
+         {:ok, channels} <- User.channels(:select, %User.Channel{id: user.id}),
+         {:ok, shows} <- User.shows(:select, %User.Show{id: user.id}),
+         {:ok, videos} <- User.videos(:select, %User.Video{id: user.id}),
+         {:ok, logged} <- get_batch.(:logged, user.id, user.handle, channels, shows, videos),
+         {:ok, counter} <- get_batch.(:counter, user.id, user.handle, channels, shows, videos) do
+      Batch.execute!([logged, counter])
       send_resp(conn, :ok, "ok")
     else
       {:error, reason} -> raise Error, reason: reason
@@ -83,17 +132,25 @@ defmodule WestEgg.Routers.Users do
   post "/:handle/follower" do
     session = get_session(conn, "id")
 
-    get_batch = fn follow, follower ->
-      Batch.new()
-      |> User.followers(:insert, %User.Follower{id: follow, follower: follower})
-      |> User.follows(:insert, %User.Follow{id: follower, follow: follow})
-      |> Batch.compile()
+    get_batch = fn
+      :logged, follow, follower ->
+        Batch.new()
+        |> User.followers(:insert, %User.Follower{id: follow, follower: follower})
+        |> User.follows(:insert, %User.Follow{id: follower, follow: follow})
+        |> Batch.compile(:logged)
+
+      :counter, follow, follower ->
+        Batch.new()
+        |> User.statistics(:increment, %User.Statistics{id: follow, followers: 1})
+        |> User.statistics(:increment, %User.Statistics{id: follower, follows: 1})
+        |> Batch.compile(:counter)
     end
 
     with :ok <- Auth.verified?(conn),
          {:ok, [user, session]} <- Registry.Handle.from_keywords(user: handle, user: session),
-         {:ok, batch} <- get_batch.(user.id, session.id) do
-      Xandra.execute!(:xandra, batch)
+         {:ok, logged} <- get_batch.(:logged, user.id, session.id),
+         {:ok, counter} <- get_batch.(:counter, user.id, session.id) do
+      Batch.execute!([logged, counter])
       send_resp(conn, :created, "ok")
     else
       {:error, {:conflict, :follower, _} = reason} ->
@@ -107,17 +164,25 @@ defmodule WestEgg.Routers.Users do
   delete "/:handle/follower" do
     session = get_session(conn, "id")
 
-    get_batch = fn follow, follower ->
-      Batch.new()
-      |> User.followers(:delete, %User.Follower{id: follow, follower: follower})
-      |> User.follows(:delete, %User.Follow{id: follower, follow: follow})
-      |> Batch.compile()
+    get_batch = fn
+      :logged, follow, follower ->
+        Batch.new()
+        |> User.followers(:delete, %User.Follower{id: follow, follower: follower})
+        |> User.follows(:delete, %User.Follow{id: follower, follow: follow})
+        |> Batch.compile(:logged)
+
+      :counter, follow, follower ->
+        Batch.new()
+        |> User.statistics(:decrement, %User.Statistics{id: follow, followers: 1})
+        |> User.statistics(:decrement, %User.Statistics{id: follower, follows: 1})
+        |> Batch.compile(:counter)
     end
 
     with :ok <- Auth.verified?(conn),
          {:ok, [user, session]} <- Registry.Handle.from_keywords(user: handle, user: session),
-         {:ok, batch} <- get_batch.(user.id, session.id) do
-      Xandra.execute!(:xandra, batch)
+         {:ok, logged} <- get_batch.(:logged, user.id, session.id),
+         {:ok, counter} <- get_batch.(:counter, user.id, session.id) do
+      Batch.execute!([logged, counter])
       send_resp(conn, :ok, "ok")
     else
       {:error, reason} -> raise Error, reason: reason

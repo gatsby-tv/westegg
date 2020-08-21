@@ -11,4 +11,14 @@ defmodule WestEgg.Batch do
       end
     end)
   end
+
+  def execute!(batches, opts \\ [])
+
+  def execute!(batches, opts) do
+    Xandra.run(:xandra, fn conn ->
+      batches
+      |> List.wrap()
+      |> Enum.each(&Xandra.execute!(conn, &1, opts))
+    end)
+  end
 end
