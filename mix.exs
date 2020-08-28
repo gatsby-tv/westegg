@@ -22,7 +22,8 @@ defmodule WestEgg.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:xandra, "~> 0.13"},
+      {:daisy, git: "https://github.com/gatsby-tv/daisy.git"},
+      {:redix, "~> 0.11"},
       {:uuid, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:argon2_elixir, "~> 2.0"},

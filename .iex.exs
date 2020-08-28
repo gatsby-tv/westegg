@@ -1,1 +1,2 @@
-alias WestEgg.{Registry, User, Channel, Batch, Plugs}
+alias WestEgg.{Users, Channels, Registry}
+import Daisy.Query
