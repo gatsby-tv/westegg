@@ -1,5 +1,9 @@
 use Mix.Config
 
+config :snowflake,
+  machine_id: 0,
+  epoch: 1420070400000
+
 config :daisy,
   clusters: [
     [

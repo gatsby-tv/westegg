@@ -24,7 +24,7 @@ defmodule WestEgg.MixProject do
     [
       {:daisy, git: "https://github.com/gatsby-tv/daisy.git"},
       {:redix, "~> 0.11"},
-      {:uuid, "~> 1.1"},
+      {:snowflake, "~> 1.0.0"},
       {:plug_cowboy, "~> 2.0"},
       {:argon2_elixir, "~> 2.0"},
       {:poison, "~> 4.0"},
