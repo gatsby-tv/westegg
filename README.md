@@ -1,21 +1,10 @@
 # WestEgg
 
-**TODO: Add description**
+West Egg is the backend for the Gatsby hub site and contains indexing data on users, channels, videos and more.
 
-## Installation
+## Run development build
+1. Install NodeJS/NPM
+2. Run `npm install`
+3. Run `npm start`
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `west_egg` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:west_egg, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/west_egg](https://hexdocs.pm/west_egg).
-
+## TODO: Build and deploy production
