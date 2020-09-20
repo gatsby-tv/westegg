@@ -30,4 +30,13 @@ export default class User extends Base {
 
   @Column({ length: ENCRYPTED_PASSWORD_MAX_LENGTH })
   public password: string;
+
+  toJSON() {
+    return {
+      id: this.id,
+      handle: this.handle,
+      displayName: this.displayName,
+      email: this.email
+    };
+  }
 }

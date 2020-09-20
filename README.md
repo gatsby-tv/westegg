@@ -25,6 +25,7 @@ POSTGRES_PORT=5432
 POSTGRES_USER=gatsby
 POSTGRES_PASSWORD=gatsby
 POSTGRES_DB=gatsby
+JWT_SECRET=localhost
 ```
 5. Run the server `npm start`
 

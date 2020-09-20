@@ -6,6 +6,8 @@ export type SignupRequest = {
   email: string
 };
 
-export type SignupResponse = {
-  jwt: string
+export type LoginRequest = {
+  handle?: string,
+  email?: string,
+  password: string
 };

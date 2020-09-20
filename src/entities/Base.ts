@@ -1,7 +1,9 @@
 import { BaseEntity, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
-export default class Base extends BaseEntity {
+export default abstract class Base extends BaseEntity {
   @PrimaryGeneratedColumn()
   public id!: string;
+
+  public abstract toJSON(): object;
 }

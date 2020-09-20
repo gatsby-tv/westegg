@@ -84,9 +84,9 @@ export const validateSignup = async (req: Request, res: Response, next: () => vo
 
     // Validate password
     valiatePassword(signup.password, signup.confirmPassword);
-  } catch (e) {
+  } catch (error) {
     // Send bad request if failed to validate
-    res.status(400).send(e.message);
+    return res.status(400).json({ error: error.message });
   }
 
   next();
