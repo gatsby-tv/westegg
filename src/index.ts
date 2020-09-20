@@ -26,7 +26,9 @@ app.use("/auth", auth);
 
 // Unhandled errors
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  res.status(500).send(error.message);
+  if (!res.headersSent) {
+    res.status(500).send(error.message);
+  }
 });
 
 // Start server

@@ -17,7 +17,7 @@ router.post("/signup", validateSignup, async (req, res, next) => {
 
     // Save user and encrypted password to db
     const user = new User(signup.handle, signup.displayName, signup.email, encryptedPassword);
-    await db.getConnection().manager.save(user);
+    await user.save();
     res.sendStatus(201);
   } catch (e) {
     next(e);

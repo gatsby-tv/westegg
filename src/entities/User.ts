@@ -1,5 +1,5 @@
 import { Entity, Column } from "typeorm";
-import BaseEntity from "./BaseEntity";
+import Base from "./Base";
 
 export const HANDLE_MAX_LENGTH = 16;
 export const DISPLAY_NAME_MAX_LENGTH = 64;
@@ -9,7 +9,7 @@ export const PASSWORD_MAX_LENGTH = 64;
 export const ENCRYPTED_PASSWORD_MAX_LENGTH = 256;
 
 @Entity()
-export default class User extends BaseEntity {
+export default class User extends Base {
 
   constructor(handle: string, displayName: string, email: string, password: string) {
     super();

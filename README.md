@@ -3,7 +3,7 @@
 West Egg is the backend for the Gatsby hub site and contains indexing data on users, channels, videos and more.
 
 ## Run development build
-1. Install NodeJS/NPM and Docker
+1. Install NodeJS 12 and Docker
 2. Install dependencies `npm install`
 3. Run postgres docker image locally
 ```

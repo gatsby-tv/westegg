@@ -4,6 +4,7 @@
 import { Request, Response } from "express";
 import { SignupRequest } from "../types";
 import validator from "validator";
+import User from "../entities/User";
 import {
   HANDLE_MAX_LENGTH,
   DISPLAY_NAME_MAX_LENGTH,
@@ -12,7 +13,13 @@ import {
   PASSWORD_MAX_LENGTH
 } from "../entities/User";
 
-const validateHandle = (handle: string) => {
+const validateHandle = async (handle: string) => {
+
+  // Check if handle is already in use
+  if (await User.findOne({ handle })) {
+    throw new Error(`Handle ${handle} is already in use!`);
+  }
+
   if (handle.length > HANDLE_MAX_LENGTH) {
     throw new Error(`Handle must be shorter than ${HANDLE_MAX_LENGTH} characters!`);
   }
@@ -28,7 +35,13 @@ const validateDisplayName = (displayName: string) => {
   }
 };
 
-const validateEmail = (email: string) => {
+const validateEmail = async (email: string) => {
+
+  // Check if email is already in use
+  if (await User.findOne({ email })) {
+    throw new Error(`Email ${email} is already in use!`);
+  }
+
   if (email.length > EMAIL_MAX_LENGTH) {
     throw new Error(`Email must be shorter than ${EMAIL_MAX_LENGTH} characters!`);
   }
@@ -55,20 +68,26 @@ const valiatePassword = (password: string, confirmPassword: string) => {
   }
 };
 
-export const validateSignup = (req: Request, res: Response, next: () => void) => {
-  const signup: SignupRequest = req.body;
+export const validateSignup = async (req: Request, res: Response, next: () => void) => {
 
-  // Validate handle
-  validateHandle(signup.handle);
+  try {
+    const signup: SignupRequest = req.body;
 
-  // Validate display name
-  validateDisplayName(signup.displayName);
+    // Validate handle
+    await validateHandle(signup.handle);
 
-  // Validate email
-  validateEmail(signup.email);
+    // Validate display name
+    validateDisplayName(signup.displayName);
 
-  // Validate password
-  valiatePassword(signup.password, signup.confirmPassword);
+    // Validate email
+    await validateEmail(signup.email);
+
+    // Validate password
+    valiatePassword(signup.password, signup.confirmPassword);
+  } catch (e) {
+    // Send bad request if failed to validate
+    res.status(400).send(e.message);
+  }
 
   next();
 };
