@@ -29,4 +29,9 @@ JWT_SECRET=localhost
 ```
 5. Run the server `npm start`
 
+## Generate a migration
+Run this every time a change to an entity is made or a new entity is created
+
+`npm run typeorm:cli -- migration:generate -n MyMigration`
+
 ## TODO: Build and deploy production

@@ -17,7 +17,12 @@ router.post("/signup", validateSignup, async (req, res) => {
   const encryptedPassword = await bcrypt.hash(signup.password, salt);
 
   // Save user and encrypted password to db
-  const user = new User(signup.handle, signup.displayName, signup.email, encryptedPassword);
+  const user = new User(
+    signup.handle,
+    signup.displayName,
+    signup.email,
+    encryptedPassword
+  );
   await user.save();
 
   // Sign token for created user and send to client

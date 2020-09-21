@@ -14,14 +14,15 @@ import {
 } from "../entities/User";
 
 const validateHandle = async (handle: string) => {
-
   // Check if handle is already in use
   if (await User.findOne({ handle })) {
     throw new Error(`Handle ${handle} is already in use!`);
   }
 
   if (handle.length > HANDLE_MAX_LENGTH) {
-    throw new Error(`Handle must be shorter than ${HANDLE_MAX_LENGTH} characters!`);
+    throw new Error(
+      `Handle must be shorter than ${HANDLE_MAX_LENGTH} characters!`
+    );
   }
 
   if (!validator.isAlphanumeric(handle)) {
@@ -31,19 +32,22 @@ const validateHandle = async (handle: string) => {
 
 const validateDisplayName = (displayName: string) => {
   if (displayName.length > DISPLAY_NAME_MAX_LENGTH) {
-    throw new Error(`Display name must be shorter than ${DISPLAY_NAME_MAX_LENGTH} characters!`);
+    throw new Error(
+      `Display name must be shorter than ${DISPLAY_NAME_MAX_LENGTH} characters!`
+    );
   }
 };
 
 const validateEmail = async (email: string) => {
-
   // Check if email is already in use
   if (await User.findOne({ email })) {
     throw new Error(`Email ${email} is already in use!`);
   }
 
   if (email.length > EMAIL_MAX_LENGTH) {
-    throw new Error(`Email must be shorter than ${EMAIL_MAX_LENGTH} characters!`);
+    throw new Error(
+      `Email must be shorter than ${EMAIL_MAX_LENGTH} characters!`
+    );
   }
 
   if (!validator.isEmail(email)) {
@@ -59,17 +63,27 @@ const valiatePassword = (password: string, confirmPassword: string) => {
 
   // Check password contains at least one number, one lowercase letter, and one capital letter
   if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/)) {
-    throw new Error("Password must contain at least one number, one lowercase letter, and one capital letter!");
+    throw new Error(
+      "Password must contain at least one number, one lowercase letter, and one capital letter!"
+    );
   }
 
   // Check length of password
-  if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
-    throw new Error(`Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters long!`);
+  if (
+    password.length < PASSWORD_MIN_LENGTH ||
+    password.length > PASSWORD_MAX_LENGTH
+  ) {
+    throw new Error(
+      `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters long!`
+    );
   }
 };
 
-export const validateSignup = async (req: Request, res: Response, next: () => void) => {
-
+export const validateSignup = async (
+  req: Request,
+  res: Response,
+  next: () => void
+) => {
   try {
     const signup: SignupRequest = req.body;
 
