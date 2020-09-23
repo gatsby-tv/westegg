@@ -1,4 +1,5 @@
 import { Entity, Column, OneToMany } from "typeorm";
+import { IUser } from "../types";
 import BaseEntity from "./BaseEntity";
 import Channel from "./Channel";
 
@@ -10,7 +11,7 @@ export const PASSWORD_MAX_LENGTH = 64;
 export const ENCRYPTED_PASSWORD_MAX_LENGTH = 256;
 
 @Entity()
-export default class User extends BaseEntity {
+export default class User extends BaseEntity implements IUser {
   constructor(
     handle: string,
     displayName: string,

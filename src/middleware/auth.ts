@@ -1,8 +1,9 @@
 /**
- * Validate login/singup reqeusts and if users can access other routes.
+ * Validate login/singup requests and if users can access other routes.
  */
 import { Request, Response } from "express";
-import { SignupRequest } from "../types";
+import { AuthenticatedRequest, IUser, SignupRequest } from "../types";
+import jwt from "jsonwebtoken";
 import validator from "validator";
 import User from "../entities/User";
 import {
@@ -106,5 +107,30 @@ export const validateSignup = async (
   next();
 };
 
-// TODO: isAuthenticated
+export const isAuthenticated = async (
+  req: Request,
+  res: Response,
+  next: () => void
+) => {
+  try {
+    const request: AuthenticatedRequest = req.body;
+
+    // Verify the token is authentic
+    // TODO: Promisify this and use the async overload
+    // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
+    const token: IUser = jwt.verify(
+      request.token,
+      process.env.JWT_SECRET!
+    ) as IUser;
+
+    // Add the decoded token to the request
+    request.decodedToken = token;
+
+    next();
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(401);
+  }
+};
+
 // TODO: hasVerifiedEmail

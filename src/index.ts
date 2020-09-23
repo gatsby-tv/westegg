@@ -6,9 +6,15 @@ import db from "./db";
 
 // Import routes
 import auth from "./routes/auth";
+import channel from "./routes/channel";
 
 const app = express();
 const port = process.env.PORT || 8080;
+
+// Set Base64 JWT secret
+process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
+  "base64"
+);
 
 // Add json body parser
 app.use(bodyParser.json());
@@ -29,6 +35,7 @@ app.use((req, res, next) => {
 
 // Add routes to app
 app.use("/auth", auth);
+app.use("/channel", channel);
 
 // Unhandled errors
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
@@ -42,7 +49,6 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   const connection = await db.connect();
   await connection.runMigrations();
   app.listen(port, () => {
-    // tslint:disable-next-line
     console.log(`Server started at http://localhost:${port}/`);
   });
 })();

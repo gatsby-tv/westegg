@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
-import BaseEntity from "./BaseEntity";
+import Uploadable from "./Uploadable";
 import User from "./User";
 
 export const HANDLE_MAX_LENGTH = 16;
@@ -10,7 +10,7 @@ export const DISPLAY_NAME_MAX_LENGTH = 64;
  */
 
 @Entity()
-export default class Channel extends BaseEntity {
+export default class Channel extends Uploadable {
   constructor(handle: string, displayName: string, owner: User) {
     super();
     this.handle = handle;
@@ -33,7 +33,6 @@ export default class Channel extends BaseEntity {
   owner: User;
 
   // TODO:
-  // videos: Video[]
   // shows: Show[]
   // series: Series[]
   // sequences: Sequence[]
