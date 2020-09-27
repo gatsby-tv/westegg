@@ -124,7 +124,7 @@ export const isAuthenticated = async (
     ) as IUser;
 
     // Add the decoded token to the request
-    request.decodedToken = token;
+    request.user = token;
 
     next();
   } catch (error) {

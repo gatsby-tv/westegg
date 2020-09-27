@@ -1,4 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
+import Show from "./Show";
 import Uploadable from "./Uploadable";
 import User from "./User";
 
@@ -8,7 +9,6 @@ export const DISPLAY_NAME_MAX_LENGTH = 64;
 /**
  * A channel is the only entity that can upload videos, users either own or have access to channels.
  */
-
 @Entity()
 export default class Channel extends Uploadable {
   constructor(handle: string, displayName: string, owner: User) {
@@ -32,10 +32,12 @@ export default class Channel extends Uploadable {
   @JoinColumn({ name: "owner" })
   owner: User;
 
+  @OneToMany((type) => Show, (show) => show.channel)
+  shows?: Show[];
+
   // TODO:
-  // shows: Show[]
-  // series: Series[]
-  // sequences: Sequence[]
+  // series?: Series[]
+  // sequences?: Sequence[]
 
   toJSON() {
     return {
