@@ -2,11 +2,11 @@
   "name": "west_egg",
   "version": "1.0.0",
   "description": "The place where Gatsby lives.",
-  "main": "build/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "format:check": "prettier --check \"./src/**/*.ts\"",
     "format:write": "prettier --write \"./src/**/*.ts\"",
-    "build": "rm -rf ./build && npm run format:check && tsc",
+    "build": "rm -rf ./dist && npm run format:write && tsc",
     "start": "npm run build && node .",
     "typeorm:cli": "ts-node ./node_modules/typeorm/cli -f ./src/ormconfig.ts"
   },
@@ -36,7 +36,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
-    "pg": "^8.3.3",
+    "mongodb": "^3.6.2",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.26",
     "validator": "^13.1.17"

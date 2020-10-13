@@ -5,11 +5,11 @@ import "reflect-metadata";
 import db from "./db";
 
 // Import routes
-import auth from "./routes/auth";
-import channel from "./routes/channel";
+// import auth from "./routes/auth";
+// import channel from "./routes/channel";
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3001;
 
 // Set Base64 JWT secret
 process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
@@ -34,8 +34,8 @@ app.use((req, res, next) => {
 });
 
 // Add routes to app
-app.use("/auth", auth);
-app.use("/channel", channel);
+// app.use("/auth", auth);
+// app.use("/channel", channel);
 
 // Unhandled errors
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
@@ -47,7 +47,7 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 // Start server
 (async () => {
   const connection = await db.connect();
-  await connection.runMigrations();
+  // await connection.runMigrations();
   app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}/`);
   });

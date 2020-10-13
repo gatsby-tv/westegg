@@ -5,26 +5,29 @@ West Egg is the backend for the Gatsby hub site and contains indexing data on us
 ## Run development build
 1. Install NodeJS 12 and Docker
 2. Install dependencies `npm install`
-3. Run postgres docker image locally
+3. Run mongo docker image locally
 ```
 docker run -d \
-  --name gatsby_postgres \
-  -e POSTGRES_USER=gatsby \
-  -e POSTGRES_PASSWORD=gatsby \
-  -e POSTGRES_DB=gatsby \
-  -e PGDATA=/var/lib/postgresql/data/pgdata \
-  -v gatsby_db:/var/lib/postgresql/data \
-  -p 5432:5432 \
-  postgres
+  --name gatsby_mongo \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=root \
+  -e MONGO_API_USERNAME=gatsby \
+  -e MONGO_API_PASSWORD=gatsby \
+  -e MONGO_INITDB_DATABASE=gatsby \
+  -v db:/data/db \
+  -v ./mongo:/docker-entrypoint-initdb.d \
+  -p 27017:27017 \
+  mongo
 ```
 4. Copy `default.env` as `.env` and fill out the environment variables, eg.
 ```
 # DB Configuration
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=gatsby
-POSTGRES_PASSWORD=gatsby
-POSTGRES_DB=gatsby
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_API_USERNAME=gatsby
+MONGO_API_PASSWORD=gatsby
+MONGO_DB=gatsby
+
 JWT_SECRET=localhost
 ```
 5. Run the server `npm start`

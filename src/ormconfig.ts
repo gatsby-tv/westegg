@@ -1,12 +1,13 @@
 import { ConnectionOptions } from "typeorm";
 
 const config: ConnectionOptions = {
-  type: "postgres",
-  host: process.env.POSTGRES_HOST,
-  port: Number(process.env.POSTGRES_PORT),
-  username: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
+  type: "mongodb",
+  host: process.env.MONGO_HOST,
+  port: Number(process.env.MONGO_PORT),
+  username: process.env.MONGO_USER,
+  password: process.env.MONGO_PASSWORD,
+  database: process.env.MONGO_DB,
+  useUnifiedTopology: true,
   entities: [__dirname + "/entities/**/*{.ts,.js}"],
   migrations: [__dirname + "/migrations/**/*{.ts,.js}"],
   cli: {

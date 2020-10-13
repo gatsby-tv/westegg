@@ -1,47 +1,52 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
-import Season from "./Season";
-import Uploadable from "./Uploadable";
-import Video from "./Video";
+// import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+// import Show from "./Show";
+// import Uploadable from "./Uploadable";
+// import Video from "./Video";
 
-@Entity()
-export default class Episode extends Video {
-  constructor(
-    index: number,
-    title: string,
-    description: string,
-    views: number,
-    dateUploaded: Date,
-    hash: string,
-    thumbnailHash: string,
-    uploadable: Uploadable
-  ) {
-    super(
-      title,
-      description,
-      views,
-      dateUploaded,
-      hash,
-      thumbnailHash,
-      uploadable
-    );
-    this.index = index;
-  }
+// @Entity()
+// export default class Episode extends Video {
+//   constructor(
+//     season: number,
+//     index: number,
+//     title: string,
+//     description: string,
+//     views: number,
+//     dateUploaded: Date,
+//     hash: string,
+//     thumbnailHash: string,
+//     uploadable: Uploadable
+//   ) {
+//     super(
+//       title,
+//       description,
+//       views,
+//       dateUploaded,
+//       hash,
+//       thumbnailHash,
+//       uploadable
+//     );
+//     this.season = season;
+//     this.index = index;
+//   }
 
-  @Column({ type: "numeric" })
-  public index: number;
+//   @Column({ type: "numeric" })
+//   public season: number;
 
-  @ManyToOne((type) => Season, (season) => season.videos)
-  @JoinColumn({ name: "season" })
-  public season?: Season;
+//   @Column({ type: "numeric" })
+//   public index: number;
 
-  @OneToMany((type) => Episode, (episode) => episode.season)
-  public videos?: Episode[];
+//   @OneToMany((type) => Episode, (episode) => episode.season)
+//   public videos?: Episode[];
 
-  toJSON() {
-    const video = super.toJSON();
-    return {
-      index: this.index,
-      ...video
-    };
-  }
-}
+//   @ManyToOne((type) => Show, (show) => show.episodes)
+//   @JoinColumn({ name: "show" })
+//   public show?: Show;
+
+//   toJSON() {
+//     const video = super.toJSON();
+//     return {
+//       index: this.index,
+//       ...video
+//     };
+//   }
+// }
