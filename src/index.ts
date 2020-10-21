@@ -5,8 +5,8 @@ import "reflect-metadata";
 import db from "./db";
 
 // Import routes
-// import auth from "./routes/auth";
-// import channel from "./routes/channel";
+import auth from "./routes/auth";
+import channel from "./routes/channel";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -34,10 +34,10 @@ app.use((req, res, next) => {
 });
 
 // Add routes to app
-// app.use("/auth", auth);
-// app.use("/channel", channel);
+app.use("/auth", auth);
+app.use("/channel", channel);
 
-// Unhandled errors
+// TODO: Unhandled errors
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   if (!res.headersSent) {
     res.status(500).json({ error: error.message });
@@ -46,8 +46,7 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 
 // Start server
 (async () => {
-  const connection = await db.connect();
-  // await connection.runMigrations();
+  await db.connect();
   app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}/`);
   });

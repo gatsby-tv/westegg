@@ -1,62 +1,76 @@
-// import { Router } from "express";
-// import { SignupRequest, LoginRequest } from "../types";
-// import { validateSignup } from "../middleware/auth";
-// import bcrypt from "bcrypt";
-// import User from "../entities/User";
-// import jwt from "jsonwebtoken";
+import { Router } from "express";
+import { SignupRequest, LoginRequest } from "../types";
+import bcrypt from "bcrypt";
+import User from "../entities/User";
+import jwt from "jsonwebtoken";
+import { getManager as db } from "typeorm";
+import { validateSignup } from "../middleware/auth";
 
-// const router = Router();
-// const LOGIN_EXPIRE = "2w";
-// const LOGIN_ERROR = new Error("Invalid credentials!");
+const router = Router();
+const LOGIN_EXPIRE = "2w";
+const LOGIN_ERROR = new Error("Invalid credentials!");
 
-// router.post("/signup", validateSignup, async (req, res) => {
-//   const signup: SignupRequest = req.body;
+router.post("/signup", validateSignup, async (req, res) => {
+  const signup: SignupRequest = req.body;
 
-//   // Encrypt password
-//   const salt = await bcrypt.genSalt();
-//   const encryptedPassword = await bcrypt.hash(signup.password, salt);
+  // Encrypt password
+  const salt = await bcrypt.genSalt();
+  const encryptedPassword = await bcrypt.hash(signup.password, salt);
 
-//   // Save user and encrypted password to db
-//   const user = new User(
-//     signup.handle,
-//     signup.displayName,
-//     signup.email,
-//     encryptedPassword
-//   );
-//   await user.save();
+  // Save user and encrypted password to db
+  const user = new User(
+    signup.handle,
+    signup.displayName,
+    signup.email,
+    encryptedPassword
+  );
+  await user.save();
 
-//   // Sign token for created user and send to client
-//   const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
-//     expiresIn: LOGIN_EXPIRE
-//   });
-//   res.status(201).json({ token });
-// });
+  // Remove password before sending back to client
+  delete user.password;
 
-// // router.post("/login", async (req, res) => {
-// //   const login: LoginRequest = req.body;
-// //   let user: User | undefined;
+  // Sign token for created user and send to client
+  const token = jwt.sign({ ...user }, process.env.JWT_SECRET!, {
+    expiresIn: LOGIN_EXPIRE
+  });
+  res.status(201).json({ token });
+});
 
-// //   // Check if logging in with handle or email
-// //   try {
-// //     if (login.handle) {
-// //       user = await User.findOne({ handle: login.handle });
-// //     } else if (login.email) {
-// //       user = await User.findOne({ email: login.email });
-// //     } else {
-// //       throw new Error("Please provide a handle or email to login!");
-// //     }
-// //     if (!user) throw LOGIN_ERROR;
-// //   } catch (error) {
-// //     return res.status(400).json({ error: error.message });
-// //   }
+router.post("/login", async (req, res) => {
+  const login: LoginRequest = req.body;
+  let user: User | undefined;
 
-// //   // Compare passwords and send token to client
-// //   if (await bcrypt.compare(login.password, user.password!)) {
-// //     const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
-// //       expiresIn: LOGIN_EXPIRE
-// //     });
-// //     res.status(200).json({ token });
-// //   }
-// // });
+  try {
+    // Check if logging in with handle or email
+    if (login.handle) {
+      user = await db().findOne(User, { handle: login.handle });
+    } else if (login.email) {
+      user = await db().findOne(User, { email: login.email });
+    } else {
+      throw new Error("Please provide a handle or email to login!");
+    }
+    // User wasn't found
+    if (!user) throw LOGIN_ERROR;
 
-// // export default router;
+    // Compare passwords and send token to client
+    if (
+      user.password &&
+      (await bcrypt.compare(login.password, user.password))
+    ) {
+      // Remove password before sending back to client
+      delete user.password;
+
+      const token = jwt.sign({ ...user }, process.env.JWT_SECRET!, {
+        expiresIn: LOGIN_EXPIRE
+      });
+      res.status(200).json({ token });
+    } else {
+      // Password didn't match or wasn't found
+      throw LOGIN_ERROR;
+    }
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
+export default router;

@@ -1,24 +1,43 @@
-// Entity types
-export interface IUser {
+import { ObjectID } from "typeorm";
+import User from "./entities/User";
+
+// Abstract entity types
+export interface IHandled {
   handle: string;
+}
+
+export interface INamed {
   displayName: string;
-  email: string;
+}
+
+export interface IUploadable {
+  videos: IVideo[];
+}
+
+// Concrete entity types
+export interface IChannel extends IHandled, INamed, IUploadable {}
+
+export interface IVideo {
+  title: string;
+  description: string;
+  views: number;
+  dateUploaded: Date;
+  hash: string;
+  thumbnailHash: string;
 }
 
 // Request types
-export type SignupRequest = {
-  handle: string;
-  displayName: string;
+export interface SignupRequest extends IHandled, INamed {
+  email: string;
   password: string;
   confirmPassword: string;
-  email: string;
-};
+}
 
-export type LoginRequest = {
+export interface LoginRequest {
   handle?: string;
   email?: string;
   password: string;
-};
+}
 
 /**
  * Requests that can only be made when logged in as a user.
@@ -27,7 +46,7 @@ export type LoginRequest = {
 export interface AuthenticatedRequest {
   token: string;
   // IUser should not be sent by the client, this is decoded from token sent
-  user?: IUser;
+  user?: User;
 }
 
 export interface CreateChannelRequest extends AuthenticatedRequest {

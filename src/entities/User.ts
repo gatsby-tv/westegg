@@ -1,33 +1,23 @@
-import { Entity, Column, ObjectIdColumn, ObjectID } from "typeorm";
-import { IUser } from "../types";
-// import Channel from "./Channel";
-
-// export const HANDLE_MAX_LENGTH = 16;
-// export const DISPLAY_NAME_MAX_LENGTH = 64;
-// export const EMAIL_MAX_LENGTH = 64;
-// export const PASSWORD_MIN_LENGTH = 8;
-// export const PASSWORD_MAX_LENGTH = 64;
-// export const ENCRYPTED_PASSWORD_MAX_LENGTH = 256;
+import { Entity, Column } from "typeorm";
+import { IHandled, INamed } from "../types";
+import BaseEntity from "./BaseEntity";
+import Channel from "./Channel";
 
 @Entity()
-export default class User implements IUser {
+export default class User extends BaseEntity implements IHandled, INamed {
   constructor(
-    id: ObjectID,
     handle: string,
     displayName: string,
     email: string,
     password: string
   ) {
-    this.id = id;
+    super();
     this.handle = handle;
     this.displayName = displayName;
     this.email = email;
     this.password = password;
-    // this.channels = [];
+    this.channels = [];
   }
-
-  @ObjectIdColumn()
-  id: ObjectID;
 
   @Column()
   public handle: string;
@@ -38,9 +28,10 @@ export default class User implements IUser {
   @Column()
   public email: string;
 
+  // Allow null/undefined to delete when sending IUser back to the client
   @Column()
-  public password: string;
+  public password?: string;
 
-  // @Column()
-  // public channels: string[];
+  @Column((type) => Channel)
+  public channels: Channel[];
 }

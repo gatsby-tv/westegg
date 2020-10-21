@@ -1,11 +1,10 @@
 import {
   BaseEntity as TypeORMBaseEntity,
-  PrimaryGeneratedColumn
+  ObjectID,
+  ObjectIdColumn
 } from "typeorm";
 
 export default abstract class BaseEntity extends TypeORMBaseEntity {
-  @PrimaryGeneratedColumn("uuid")
-  public id?: string;
-
-  public abstract toJSON(): object;
+  @ObjectIdColumn()
+  public _id?: ObjectID;
 }
