@@ -1,5 +1,4 @@
-import { ObjectID } from "typeorm";
-import User from "./entities/User";
+import { IUser } from "./entities/User";
 
 // Abstract entity types
 export interface IHandled {
@@ -10,21 +9,9 @@ export interface INamed {
   displayName: string;
 }
 
-export interface IUploadable {
-  videos: IVideo[];
-}
-
-// Concrete entity types
-export interface IChannel extends IHandled, INamed, IUploadable {}
-
-export interface IVideo {
-  title: string;
-  description: string;
-  views: number;
-  dateUploaded: Date;
-  hash: string;
-  thumbnailHash: string;
-}
+// export interface IUploadable {
+//   videos: Video[];
+// }
 
 // Request types
 export interface SignupRequest extends IHandled, INamed {
@@ -46,7 +33,7 @@ export interface LoginRequest {
 export interface AuthenticatedRequest {
   token: string;
   // IUser should not be sent by the client, this is decoded from token sent
-  user?: User;
+  user?: IUser;
 }
 
 export interface CreateChannelRequest extends AuthenticatedRequest {

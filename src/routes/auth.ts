@@ -1,9 +1,8 @@
 import { Router } from "express";
 import { SignupRequest, LoginRequest } from "../types";
 import bcrypt from "bcrypt";
-import User from "../entities/User";
+import { User, IUser } from "../entities/User";
 import jwt from "jsonwebtoken";
-import { getManager as db } from "typeorm";
 import { validateSignup } from "../middleware/auth";
 
 const router = Router();
@@ -18,12 +17,12 @@ router.post("/signup", validateSignup, async (req, res) => {
   const encryptedPassword = await bcrypt.hash(signup.password, salt);
 
   // Save user and encrypted password to db
-  const user = new User(
-    signup.handle,
-    signup.displayName,
-    signup.email,
-    encryptedPassword
-  );
+  let user = await User.create({
+    handle: signup.handle,
+    displayName: signup.displayName,
+    email: signup.email,
+    password: encryptedPassword
+  });
   await user.save();
 
   // Remove password before sending back to client
@@ -38,14 +37,14 @@ router.post("/signup", validateSignup, async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const login: LoginRequest = req.body;
-  let user: User | undefined;
+  let user;
 
   try {
     // Check if logging in with handle or email
     if (login.handle) {
-      user = await db().findOne(User, { handle: login.handle });
+      user = await User.findOne({ handle: login.handle });
     } else if (login.email) {
-      user = await db().findOne(User, { email: login.email });
+      user = await User.findOne(User, { email: login.email });
     } else {
       throw new Error("Please provide a handle or email to login!");
     }

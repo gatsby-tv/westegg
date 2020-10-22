@@ -4,9 +4,9 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest, SignupRequest } from "../types";
 import validator from "validator";
-import User from "../entities/User";
+import { IUser, User } from "../entities/User";
 import { validateDisplayName } from "./named";
-import { validateHandle } from "./handled";
+import { validateUserHandle } from "./handled";
 import jwt from "jsonwebtoken";
 
 const EMAIL_MAX_LENGTH = 64;
@@ -66,7 +66,7 @@ export const validateSignup = async (
     const signup: SignupRequest = req.body;
 
     // Validate handle
-    await validateHandle(User, signup.handle);
+    await validateUserHandle(signup.handle);
 
     // Validate display name
     validateDisplayName(signup.displayName);
@@ -95,10 +95,10 @@ export const isAuthenticated = async (
     // Verify the token is authentic
     // TODO: Promisify this and use the async overload
     // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
-    const token: User = jwt.verify(
+    const token: IUser = jwt.verify(
       request.token,
       process.env.JWT_SECRET!
-    ) as User;
+    ) as IUser;
 
     // Add the decoded token to the request
     request.user = token;
