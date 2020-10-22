@@ -1,39 +1,36 @@
-// import { Router } from "express";
-// import { getMongoRepository, ObjectID } from "typeorm";
-// import Channel from "../entities/Channel";
-// import User from "../entities/User";
-// import { validateCreateChannel } from "../middleware/channel";
-// import { isAuthenticated } from "../middleware/auth";
-// import { CreateChannelRequest } from "../types";
+import { Router } from "express";
+import { validateCreateChannel } from "../middleware/channel";
+import { isAuthenticated } from "../middleware/auth";
+import { CreateChannelRequest } from "../types";
+import { User } from "../entities/User";
+import { Channel } from "../entities/Channel";
 
-// const router = Router();
+const router = Router();
 
-// router.post("/", isAuthenticated, validateCreateChannel, async (req, res) => {
-//   try {
-//     const request: CreateChannelRequest = req.body;
+router.post("/", isAuthenticated, validateCreateChannel, async (req, res) => {
+  try {
+    const request: CreateChannelRequest = req.body;
 
-//     // Add the channel to the user document
-//     const userRepo = getMongoRepository(User);
-//     const user = await userRepo.findOne({ handle: request.user?.handle });
+    // Get the user making the request
+    const user = await User.findOne({ handle: request.user?.handle });
 
-//     // Create the new channel
-//     const channel = new Channel(
-//       request.handle,
-//       request.displayName,
-//       user?._id!
-//     );
-//     await channel.save();
+    // Create the new channel
+    const channel = await Channel.create({
+      handle: request.handle,
+      displayName: request.displayName,
+      videos: [],
+      owner: user?._id
+    });
+    await channel.save();
 
-//     // Save channel FK to the user
-//     await userRepo.updateOne(
-//       { _id: user?._id },
-//       { $push: { channels: channel._id } }
-//     );
+    // Update the user with the channel FK
+    user?.channels.push(channel._id);
+    user?.save();
 
-//     res.sendStatus(201);
-//   } catch (error) {
-//     return res.status(400).json({ error: error.message });
-//   }
-// });
+    res.sendStatus(201);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
 
-// export default router;
+export default router;

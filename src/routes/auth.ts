@@ -21,15 +21,17 @@ router.post("/signup", validateSignup, async (req, res) => {
     handle: signup.handle,
     displayName: signup.displayName,
     email: signup.email,
-    password: encryptedPassword
+    password: encryptedPassword,
+    channels: []
   });
   await user.save();
 
   // Remove password before sending back to client
-  delete user.password;
+  let json = user.toJSON();
+  delete json.password;
 
   // Sign token for created user and send to client
-  const token = jwt.sign({ ...user }, process.env.JWT_SECRET!, {
+  const token = jwt.sign(json, process.env.JWT_SECRET!, {
     expiresIn: LOGIN_EXPIRE
   });
   res.status(201).json({ token });
@@ -57,9 +59,10 @@ router.post("/login", async (req, res) => {
       (await bcrypt.compare(login.password, user.password))
     ) {
       // Remove password before sending back to client
-      delete user.password;
+      let json = user.toJSON();
+      delete json.password;
 
-      const token = jwt.sign({ ...user }, process.env.JWT_SECRET!, {
+      const token = jwt.sign(json, process.env.JWT_SECRET!, {
         expiresIn: LOGIN_EXPIRE
       });
       res.status(200).json({ token });

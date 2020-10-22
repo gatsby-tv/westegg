@@ -1,4 +1,5 @@
 import validator from "validator";
+import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 
 const HANDLE_MIN_LENGTH = 3;
@@ -19,6 +20,15 @@ const validateHandle = async (handle: string) => {
 export const validateUserHandle = async (handle: string) => {
   // Validate if handle in use
   if (await User.findOne({ handle })) {
+    throw new Error(`Handle ${handle} is already in use!`);
+  }
+
+  validateHandle(handle);
+};
+
+export const validateChannelHandle = async (handle: string) => {
+  // Validate if handle in use
+  if (await Channel.findOne({ handle })) {
     throw new Error(`Handle ${handle} is already in use!`);
   }
 
