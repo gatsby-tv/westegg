@@ -18,7 +18,6 @@ router.post("/", isAuthenticated, validateCreateChannel, async (req, res) => {
     const channel = await Channel.create({
       handle: request.handle,
       displayName: request.displayName,
-      videos: [],
       owner: user?._id
     });
     await channel.save();

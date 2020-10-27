@@ -13,7 +13,7 @@ const validateHandle = async (handle: string) => {
   }
 
   if (!validator.isAlphanumeric(handle)) {
-    throw new Error("Display name can only contain alphanumeric characters!");
+    throw new Error("Handle can only contain alphanumeric characters!");
   }
 };
 
@@ -23,7 +23,7 @@ export const validateUserHandle = async (handle: string) => {
     throw new Error(`Handle ${handle} is already in use!`);
   }
 
-  validateHandle(handle);
+  await validateHandle(handle);
 };
 
 export const validateChannelHandle = async (handle: string) => {
@@ -32,5 +32,5 @@ export const validateChannelHandle = async (handle: string) => {
     throw new Error(`Handle ${handle} is already in use!`);
   }
 
-  validateHandle(handle);
+  await validateHandle(handle);
 };

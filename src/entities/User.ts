@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { IHandled, INamed } from "../types";
-import { ChannelRef, UserRef } from "./refs";
+import { UploadableRef, UserRef } from "./refs";
 
 // Interface
 interface IUser extends IHandled, INamed {
@@ -16,7 +16,7 @@ const UserSchemaFields: Record<keyof IUser, any> = {
   displayName: String,
   email: String,
   password: String,
-  channels: [{ type: Schema.Types.ObjectId, ref: ChannelRef }]
+  channels: [{ type: Schema.Types.ObjectId, ref: UploadableRef }]
 };
 
 const UserSchema = new Schema(UserSchemaFields);

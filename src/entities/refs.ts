@@ -1,3 +1,4 @@
 export const UserRef = "User";
 export const VideoRef = "Video";
-export const ChannelRef = "Channel";
+export const UploadableRef = "Uploadable";
+export const EpisodeRef = "Episode";

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { VideoRef } from "./refs";
+import { IUploadable } from "./Uploadable";
+import { UploadableRef, VideoRef } from "./refs";
 
 // Interface
 interface IVideo {
@@ -9,6 +10,7 @@ interface IVideo {
   dateUploaded: Date;
   hash: string;
   thumbnailHash: string;
+  uploadable: IUploadable;
 }
 
 // DB Implementation
@@ -18,7 +20,8 @@ const VideoSchemaFields: Record<keyof IVideo, any> = {
   views: Number,
   dateUploaded: Date,
   hash: String,
-  thumbnailHash: String
+  thumbnailHash: String,
+  uploadable: [{ type: Schema.Types.ObjectId, ref: UploadableRef }]
 };
 
 const VideoSchema = new Schema(VideoSchemaFields);

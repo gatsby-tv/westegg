@@ -10,9 +10,9 @@ export interface INamed {
   displayName: string;
 }
 
-export interface IUploadable {
-  videos: Schema.Types.ObjectId[];
-}
+// export interface IUploadable {
+//   videos: Schema.Types.ObjectId[];
+// }
 
 // Request types
 export interface SignupRequest extends IHandled, INamed {
