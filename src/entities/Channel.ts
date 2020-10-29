@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { IHandled, INamed } from "../types";
-import { UploadableRef, UserRef } from "./refs";
+import { ChannelRef, UploadableCollection, UserRef } from "./refs";
 import { UploadableSchema } from "./Uploadable";
 
 // Interface
@@ -24,7 +24,8 @@ const ChannelSchema = new Schema(UploadableSchema);
 ChannelSchema.add(ChannelSchemaFields);
 
 const Channel = mongoose.model<IChannel & Document>(
-  UploadableRef,
-  ChannelSchema
+  ChannelRef,
+  ChannelSchema,
+  UploadableCollection
 );
 export { IChannel, Channel };

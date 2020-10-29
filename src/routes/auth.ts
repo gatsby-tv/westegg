@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { SignupRequest, LoginRequest } from "../types";
 import bcrypt from "bcrypt";
-import { User, IUser } from "../entities/User";
+import { User } from "../entities/User";
 import jwt from "jsonwebtoken";
 import { validateSignup } from "../middleware/auth";
 

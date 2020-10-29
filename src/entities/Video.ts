@@ -21,7 +21,7 @@ const VideoSchemaFields: Record<keyof IVideo, any> = {
   dateUploaded: Date,
   hash: String,
   thumbnailHash: String,
-  uploadable: [{ type: Schema.Types.ObjectId, ref: UploadableRef }]
+  uploadable: { type: Schema.Types.ObjectId, ref: UploadableRef }
 };
 
 const VideoSchema = new Schema(VideoSchemaFields);

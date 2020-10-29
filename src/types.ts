@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { IUser } from "./entities/User";
+import { IUserToken } from "./entities/User";
 
 // Abstract entity types
 export interface IHandled {
@@ -29,15 +29,28 @@ export interface LoginRequest {
 
 /**
  * Requests that can only be made when logged in as a user.
- * Token sent initially as string, then decoded to IUser object.
+ * Token sent initially as string, then decoded to IUserToken object.
  */
 export interface AuthenticatedRequest {
   token: string;
-  // IUser should not be sent by the client, this is decoded from token sent
-  user?: IUser;
+  // IUserToken should not be sent by the client, this is decoded from token sent
+  user?: IUserToken;
 }
 
 export interface CreateChannelRequest extends AuthenticatedRequest {
   handle: string;
   displayName: string;
+}
+
+export interface UpdateChannelRequest extends AuthenticatedRequest {
+  channel: Schema.Types.ObjectId;
+}
+
+export interface UploadVideoRequest extends UpdateChannelRequest {
+  title: string;
+  description: string;
+  hash: string;
+  thumbnailHash: string;
+  // Channel, Show, Series, or Sequence to upload to
+  uploadable: Schema.Types.ObjectId;
 }

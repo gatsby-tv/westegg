@@ -1,5 +1,5 @@
-import { Schema } from "mongoose";
-import { VideoRef } from "./refs";
+import mongoose, { Schema, Document } from "mongoose";
+import { UploadableCollection, UploadableRef, VideoRef } from "./refs";
 
 // Interface
 interface IUploadable {
@@ -13,4 +13,9 @@ const UploadableSchemaFields: Record<keyof IUploadable, any> = {
 
 const UploadableSchema = new Schema(UploadableSchemaFields);
 
-export { IUploadable, UploadableSchema };
+const Uploadable = mongoose.model<IUploadable & Document>(
+  UploadableRef,
+  UploadableSchema,
+  UploadableCollection
+);
+export { IUploadable, Uploadable, UploadableSchema };

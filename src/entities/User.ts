@@ -10,6 +10,14 @@ interface IUser extends IHandled, INamed {
   channels: Array<Schema.Types.ObjectId>;
 }
 
+// JWT token with mongo entity id and version
+interface IUserToken extends IUser {
+  _id: Schema.Types.ObjectId;
+  __v: number;
+  iat: Date;
+  exp: Date;
+}
+
 // DB Implementation
 const UserSchemaFields: Record<keyof IUser, any> = {
   handle: String,
@@ -22,4 +30,4 @@ const UserSchemaFields: Record<keyof IUser, any> = {
 const UserSchema = new Schema(UserSchemaFields);
 
 const User = mongoose.model<IUser & Document>(UserRef, UserSchema);
-export { IUser, User };
+export { IUser, IUserToken, User };

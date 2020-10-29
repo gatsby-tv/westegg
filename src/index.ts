@@ -6,6 +6,7 @@ import db from "./db";
 // Import routes
 import auth from "./routes/auth";
 import channel from "./routes/channel";
+import video from "./routes/video";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 // Add routes to app
 app.use("/auth", auth);
 app.use("/channel", channel);
+app.use("/video", video);
 
 // TODO: Unhandled errors
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
