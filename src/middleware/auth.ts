@@ -1,43 +1,22 @@
 /**
- * Validate login/singup requests and if users can access other routes.
+ * Validate login/signup requests and if users can access other routes.
  */
 import { Request, Response } from "express";
-import { AuthenticatedRequest, IUser, SignupRequest } from "../types";
-import jwt from "jsonwebtoken";
-import validator from "validator";
-import User from "../entities/User";
 import {
-  HANDLE_MAX_LENGTH,
-  DISPLAY_NAME_MAX_LENGTH,
-  EMAIL_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
-  PASSWORD_MAX_LENGTH
-} from "../entities/User";
+  AuthenticatedRequest,
+  SignupRequest,
+  UpdateChannelRequest
+} from "../types";
+import validator from "validator";
+import { IUserToken, User } from "../entities/User";
+import { validateDisplayName } from "./named";
+import { validateUserHandle } from "./handled";
+import jwt from "jsonwebtoken";
+import { Channel } from "../entities/Channel";
 
-const validateHandle = async (handle: string) => {
-  // Check if handle is already in use
-  if (await User.findOne({ handle })) {
-    throw new Error(`Handle ${handle} is already in use!`);
-  }
-
-  if (handle.length > HANDLE_MAX_LENGTH) {
-    throw new Error(
-      `Handle must be shorter than ${HANDLE_MAX_LENGTH} characters!`
-    );
-  }
-
-  if (!validator.isAlphanumeric(handle)) {
-    throw new Error("Display name can only contain alphanumeric characters!");
-  }
-};
-
-const validateDisplayName = (displayName: string) => {
-  if (displayName.length > DISPLAY_NAME_MAX_LENGTH) {
-    throw new Error(
-      `Display name must be shorter than ${DISPLAY_NAME_MAX_LENGTH} characters!`
-    );
-  }
-};
+const EMAIL_MAX_LENGTH = 64;
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 64;
 
 const validateEmail = async (email: string) => {
   // Check if email is already in use
@@ -56,9 +35,12 @@ const validateEmail = async (email: string) => {
   }
 };
 
-const valiatePassword = (password: string, confirmPassword: string) => {
+const validatePassword = (
+  password: string | undefined,
+  confirmPassword: string
+) => {
   // Check passwords match
-  if (password !== confirmPassword) {
+  if (!password || password !== confirmPassword) {
     throw new Error("Passwords do not match!");
   }
 
@@ -89,7 +71,7 @@ export const validateSignup = async (
     const signup: SignupRequest = req.body;
 
     // Validate handle
-    await validateHandle(signup.handle);
+    await validateUserHandle(signup.handle);
 
     // Validate display name
     validateDisplayName(signup.displayName);
@@ -98,7 +80,7 @@ export const validateSignup = async (
     await validateEmail(signup.email);
 
     // Validate password
-    valiatePassword(signup.password, signup.confirmPassword);
+    validatePassword(signup.password, signup.confirmPassword);
   } catch (error) {
     // Send bad request if failed to validate
     return res.status(400).json({ error: error.message });
@@ -118,17 +100,38 @@ export const isAuthenticated = async (
     // Verify the token is authentic
     // TODO: Promisify this and use the async overload
     // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
-    const token: IUser = jwt.verify(
+    const token: IUserToken = jwt.verify(
       request.token,
       process.env.JWT_SECRET!
-    ) as IUser;
+    ) as IUserToken;
 
     // Add the decoded token to the request
     request.user = token;
 
     next();
   } catch (error) {
-    console.log(error);
+    return res.sendStatus(401);
+  }
+};
+
+export const ownsChannel = async (
+  req: Request,
+  res: Response,
+  next: () => void
+) => {
+  try {
+    const request: UpdateChannelRequest = req.body;
+
+    // Get the channel we want to modify
+    const channel = await Channel.findOne({ _id: request.channel });
+    if (channel?.owner.toString() !== request.user?._id.toString()) {
+      throw new Error(
+        "User does not have permission to update the requested channel!"
+      );
+    }
+
+    next();
+  } catch (error) {
     return res.sendStatus(401);
   }
 };

@@ -1,13 +1,21 @@
-/**
- * Abstract entity that can be extended to implement another entity that can you can upload videos to.
- * An example of this would be a channel, many videos can be uploaded to one channel, so a channel is Uploadable.
- */
-import { Entity, OneToMany } from "typeorm";
-import BaseEntity from "./BaseEntity";
-import Video from "./Video";
+import mongoose, { Schema, Document } from "mongoose";
+import { UploadableCollection, UploadableRef, VideoRef } from "./refs";
 
-@Entity()
-export default abstract class Uploadable extends BaseEntity {
-  @OneToMany((type) => Video, (video) => video.uploadable)
-  public videos?: Video[];
+// Interface
+interface IUploadable {
+  videos: Schema.Types.ObjectId[];
 }
+
+// DB Implementation (Abstract)
+const UploadableSchemaFields: Record<keyof IUploadable, any> = {
+  videos: [{ type: Schema.Types.ObjectId, ref: VideoRef }]
+};
+
+const UploadableSchema = new Schema(UploadableSchemaFields);
+
+const Uploadable = mongoose.model<IUploadable & Document>(
+  UploadableRef,
+  UploadableSchema,
+  UploadableCollection
+);
+export { IUploadable, Uploadable, UploadableSchema };

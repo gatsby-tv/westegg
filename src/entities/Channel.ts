@@ -1,50 +1,31 @@
-import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
-import Show from "./Show";
-import Uploadable from "./Uploadable";
-import User from "./User";
+import mongoose, { Schema, Document } from "mongoose";
+import { IHandled, INamed } from "../types";
+import { ChannelRef, UploadableCollection, UserRef } from "./refs";
+import { UploadableSchema } from "./Uploadable";
 
-export const HANDLE_MAX_LENGTH = 16;
-export const DISPLAY_NAME_MAX_LENGTH = 64;
-
-/**
- * A channel is the only entity that can upload videos, users either own or have access to channels.
- */
-@Entity()
-export default class Channel extends Uploadable {
-  constructor(handle: string, displayName: string, owner: User) {
-    super();
-    this.handle = handle;
-    this.displayName = displayName;
-    this.owner = owner;
-  }
-
-  @Column({ type: "varchar", length: HANDLE_MAX_LENGTH })
-  public handle: string;
-
-  @Column({
-    type: "varchar",
-    length: DISPLAY_NAME_MAX_LENGTH,
-    name: "display_name"
-  })
-  public displayName: string;
-
-  @ManyToOne((type) => User, (user) => user.channels)
-  @JoinColumn({ name: "owner" })
-  owner: User;
-
-  @OneToMany((type) => Show, (show) => show.channel)
-  shows?: Show[];
-
+// Interface
+interface IChannel extends IHandled, INamed {
+  owner: Schema.Types.ObjectId;
   // TODO:
-  // series?: Series[]
-  // sequences?: Sequence[]
-
-  toJSON() {
-    return {
-      id: this.id,
-      handle: this.handle,
-      displayName: this.displayName,
-      owner: this.owner.toJSON()
-    };
-  }
+  // shows
+  // serieses
+  // sequences
+  // collaborators
 }
+
+// DB Implementation
+const ChannelSchemaFields: Record<keyof IChannel, any> = {
+  handle: String,
+  displayName: String,
+  owner: { type: Schema.Types.ObjectId, ref: UserRef }
+};
+
+const ChannelSchema = new Schema(UploadableSchema);
+ChannelSchema.add(ChannelSchemaFields);
+
+const Channel = mongoose.model<IChannel & Document>(
+  ChannelRef,
+  ChannelSchema,
+  UploadableCollection
+);
+export { IChannel, Channel };
