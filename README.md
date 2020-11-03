@@ -24,17 +24,15 @@ docker run -d \
 # DB Configuration
 MONGO_HOST=localhost
 MONGO_PORT=27017
-MONGO_API_USERNAME=gatsby
-MONGO_API_PASSWORD=gatsby
-MONGO_DB=gatsby
+MONGO_ROOT_PASS=root
+MONGO_API_PASS=gatsby
 
 JWT_SECRET=localhost
 ```
 5. Run the server `npm start`
 
-## Generate a migration
-Run this every time a change to an entity is made or a new entity is created
-
-`npm run typeorm:cli -- migration:generate -n MyMigration`
+## Run development build (docker-compose)
+1. Install docker and docker-compose
+2. Run `docker-compose up --build`
 
 ## TODO: Build and deploy production
