@@ -1,6 +1,6 @@
 import { Schema } from "mongoose";
 import { IUserToken } from "./entities/User";
-import { IHandled, INamed } from "./types";
+import { IFiltered, IHandled, INamed } from "./types";
 
 // Request types
 
@@ -12,7 +12,7 @@ import { IHandled, INamed } from "./types";
  */
 export interface AuthenticatedRequest {
   token: string;
-  // IUserToken should not be sent by the client, this is decoded from token sent
+  // IUserToken should not be sent by the client, this is decoded from token sent and appended by the backend
   user?: IUserToken;
 }
 
@@ -21,6 +21,21 @@ export interface AuthenticatedRequest {
  */
 export interface UpdateChannelRequest extends AuthenticatedRequest {
   channel: Schema.Types.ObjectId;
+}
+
+/**
+ * Requests that return many items from the db, filtered by a key/value pair
+ */
+export interface FilteredListRequest {
+  filter?: IFiltered;
+}
+
+/**
+ * Requests that return a list, but only a specific chunk (page)
+ */
+export interface PagedListRequest {
+  page: number;
+  perPage: number;
 }
 
 // Routed Requests
@@ -52,6 +67,21 @@ export interface CreateChannelRequest extends AuthenticatedRequest {
 }
 
 /**
+ * GET /channel
+ */
+export interface GetChannelRequest {
+  id?: Schema.Types.ObjectId;
+  handle: string;
+}
+
+/**
+ * GET /channel/list
+ */
+export interface GetChannelListRequest
+  extends FilteredListRequest,
+    PagedListRequest {}
+
+/**
  * POST /video
  */
 export interface UploadVideoRequest extends UpdateChannelRequest {
@@ -63,11 +93,23 @@ export interface UploadVideoRequest extends UpdateChannelRequest {
   uploadable: Schema.Types.ObjectId;
 }
 
+/**
+ * GET /video
+ */
+export interface GetVideoRequest {
+  id?: Schema.Types.ObjectId;
+  hash: string;
+}
+
+/**
+ * GET /video/list
+ */
+export interface GetVideoListRequest
+  extends FilteredListRequest,
+    PagedListRequest {}
+
 // TODO:
-// GET /channel
 // PUT /channel
 // DELETE /channel
-// GET /video
-// GET /video/list
 // PUT /video
 // DELETE /video
