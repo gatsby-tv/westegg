@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validateCreateChannel } from "../middleware/channel";
 import { isAuthenticated } from "../middleware/auth";
-import { CreateChannelRequest } from "../types";
+import { CreateChannelRequest } from "../requestTypes";
 import { User } from "../entities/User";
 import { Channel } from "../entities/Channel";
 

@@ -6,7 +6,7 @@ import {
   AuthenticatedRequest,
   SignupRequest,
   UpdateChannelRequest
-} from "../types";
+} from "../requestTypes";
 import validator from "validator";
 import { IUserToken, User } from "../entities/User";
 import { validateDisplayName } from "./named";

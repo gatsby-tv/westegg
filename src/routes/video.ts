@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { isAuthenticated, ownsChannel } from "../middleware/auth";
-import { UploadVideoRequest } from "../types";
+import { UploadVideoRequest } from "../requestTypes";
 import { validateVideoUpload } from "../middleware/video";
 import { Video } from "../entities/Video";
 import { Uploadable } from "../entities/Uploadable";

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { CreateChannelRequest } from "../types";
+import { CreateChannelRequest } from "../requestTypes";
 import { validateChannelHandle } from "./handled";
 import { validateDisplayName } from "./named";
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { SignupRequest, LoginRequest } from "../types";
+import { SignupRequest, LoginRequest } from "../requestTypes";
 import bcrypt from "bcrypt";
 import { User } from "../entities/User";
 import jwt from "jsonwebtoken";

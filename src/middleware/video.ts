@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UploadVideoRequest } from "../types";
+import { UploadVideoRequest } from "../requestTypes";
 
 const TITLE_MIN_LENGTH = 1;
 const TITLE_MAX_LENGTH = 256;
