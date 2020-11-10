@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import { ErrorCode, WestEggError } from "../errors";
 import { UploadVideoRequest } from "../requestTypes";
+import { ErrorResponse } from "../responseTypes";
 
 const TITLE_MIN_LENGTH = 1;
 const TITLE_MAX_LENGTH = 256;
@@ -19,19 +21,21 @@ export const validateVideoUpload = async (
       request.title.length < TITLE_MIN_LENGTH ||
       request.title.length > TITLE_MAX_LENGTH
     ) {
-      throw new Error(
+      throw new WestEggError(
+        ErrorCode.VIDEO_TITLE_OUT_OF_RANGE,
         `Title must be between ${TITLE_MIN_LENGTH} and ${TITLE_MAX_LENGTH} characters!`
       );
     }
 
     if (request.title.length > DESCRIPTION_MAX_LENGTH) {
-      throw new Error(
+      throw new WestEggError(
+        ErrorCode.VIDEO_DESCRIPTION_OUT_OF_RANGE,
         `Description must be less than ${DESCRIPTION_MAX_LENGTH} characters!`
       );
     }
 
     next();
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 };

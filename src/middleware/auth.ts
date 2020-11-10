@@ -13,6 +13,8 @@ import { validateDisplayName } from "./named";
 import { validateUserHandle } from "./handled";
 import jwt from "jsonwebtoken";
 import { Channel } from "../entities/Channel";
+import { ErrorResponse } from "../responseTypes";
+import { WestEggError, ErrorCode } from "../errors";
 
 const EMAIL_MAX_LENGTH = 64;
 const PASSWORD_MIN_LENGTH = 8;
@@ -21,17 +23,21 @@ const PASSWORD_MAX_LENGTH = 64;
 const validateEmail = async (email: string) => {
   // Check if email is already in use
   if (await User.findOne({ email })) {
-    throw new Error(`Email ${email} is already in use!`);
+    throw new WestEggError(
+      ErrorCode.EMAIL_IN_USE,
+      `Email ${email} is already in use!`
+    );
   }
 
   if (email.length > EMAIL_MAX_LENGTH) {
-    throw new Error(
+    throw new WestEggError(
+      ErrorCode.EMAIL_OUT_OF_RANGE,
       `Email must be shorter than ${EMAIL_MAX_LENGTH} characters!`
     );
   }
 
   if (!validator.isEmail(email)) {
-    throw new Error("Invalid email!");
+    throw new WestEggError(ErrorCode.INVALID_EMAIL, "Invalid email!");
   }
 };
 
@@ -41,12 +47,16 @@ const validatePassword = (
 ) => {
   // Check passwords match
   if (!password || password !== confirmPassword) {
-    throw new Error("Passwords do not match!");
+    throw new WestEggError(
+      ErrorCode.PASSWORD_DOES_NOT_MATCH,
+      "Passwords do not match!"
+    );
   }
 
   // Check password contains at least one number, one lowercase letter, and one capital letter
   if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/)) {
-    throw new Error(
+    throw new WestEggError(
+      ErrorCode.INVALID_PASSWORD,
       "Password must contain at least one number, one lowercase letter, and one capital letter!"
     );
   }
@@ -56,7 +66,8 @@ const validatePassword = (
     password.length < PASSWORD_MIN_LENGTH ||
     password.length > PASSWORD_MAX_LENGTH
   ) {
-    throw new Error(
+    throw new WestEggError(
+      ErrorCode.PASSWORD_OUT_OF_RANGE,
       `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters long!`
     );
   }
@@ -83,7 +94,7 @@ export const validateSignup = async (
     validatePassword(signup.password, signup.confirmPassword);
   } catch (error) {
     // Send bad request if failed to validate
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 
   next();
@@ -110,7 +121,10 @@ export const isAuthenticated = async (
 
     next();
   } catch (error) {
-    return res.sendStatus(401);
+    const response: ErrorResponse = {
+      error: { name: ErrorCode.UNAUTHORIZED, message: error.message }
+    };
+    return res.status(401).json(response);
   }
 };
 
@@ -132,7 +146,10 @@ export const ownsChannel = async (
 
     next();
   } catch (error) {
-    return res.sendStatus(401);
+    const response: ErrorResponse = {
+      error: { name: ErrorCode.UNAUTHORIZED, message: error.message }
+    };
+    return res.status(401).json(response);
   }
 };
 

@@ -8,6 +8,13 @@ import {
 import { validateVideoUpload } from "../middleware/video";
 import { IVideo, Video } from "../entities/Video";
 import { Uploadable } from "../entities/Uploadable";
+import {
+  ErrorResponse,
+  GetVideoListResponse,
+  GetVideoResponse,
+  UploadVideoResponse
+} from "../responseTypes";
+import { ErrorCode, WestEggError } from "../errors";
 
 const router = Router();
 
@@ -35,9 +42,9 @@ router.post(
       });
       await video.save();
 
-      res.sendStatus(201);
+      res.status(201).json(video.toJSON() as UploadVideoResponse);
     } catch (error) {
-      return res.status(400).json({ error: error.message });
+      return res.status(400).json({ error } as ErrorResponse);
     }
   }
 );
@@ -54,12 +61,16 @@ router.get("/", async (req, res) => {
     }
 
     // If we don't find the Video
-    if (!video) return res.sendStatus(404);
+    if (!video) {
+      return res.status(404).json({
+        error: new WestEggError(ErrorCode.NOT_FOUND, "Video not found!")
+      } as ErrorResponse);
+    }
 
     // Video found
-    return res.status(200).json(video.toJSON());
+    return res.status(200).json(video.toJSON() as GetVideoResponse);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 });
 
@@ -79,9 +90,13 @@ router.get("/list", async (req, res) => {
       videos = await Video.find().skip(request.page).limit(request.perPage);
     }
 
-    return res.status(200).json(videos);
+    return res.status(200).json({
+      videos,
+      page: request.page,
+      perPage: request.perPage
+    } as GetVideoListResponse);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 });
 

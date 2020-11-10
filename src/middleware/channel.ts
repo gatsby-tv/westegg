@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { CreateChannelRequest } from "../requestTypes";
+import { ErrorResponse } from "../responseTypes";
 import { validateChannelHandle } from "./handled";
 import { validateDisplayName } from "./named";
 
@@ -18,7 +19,7 @@ export const validateCreateChannel = async (
     validateDisplayName(request.displayName);
   } catch (error) {
     // Send bad request if failed to validate
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 
   next();

@@ -8,6 +8,13 @@ import {
 } from "../requestTypes";
 import { User } from "../entities/User";
 import { Channel, IChannel } from "../entities/Channel";
+import {
+  CreateChannelResponse,
+  ErrorResponse,
+  GetChannelListResponse,
+  GetChannelResponse
+} from "../responseTypes";
+import { ErrorCode, WestEggError } from "../errors";
 
 const router = Router();
 
@@ -30,9 +37,9 @@ router.post("/", isAuthenticated, validateCreateChannel, async (req, res) => {
     user?.channels.push(channel._id);
     user?.save();
 
-    res.sendStatus(201);
+    res.status(201).json(channel.toJSON() as CreateChannelResponse);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 });
 
@@ -48,12 +55,16 @@ router.get("/", async (req, res) => {
     }
 
     // If we don't find the channel
-    if (!channel) return res.sendStatus(404);
+    if (!channel) {
+      return res.status(404).json({
+        error: new WestEggError(ErrorCode.NOT_FOUND, "Channel not found!")
+      } as ErrorResponse);
+    }
 
     // Channel found
-    return res.status(200).json(channel.toJSON());
+    return res.status(200).json(channel.toJSON() as GetChannelResponse);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 });
 
@@ -73,9 +84,13 @@ router.get("/list", async (req, res) => {
       channels = await Channel.find().skip(request.page).limit(request.perPage);
     }
 
-    return res.status(200).json(channels);
+    return res.status(200).json({
+      channels,
+      page: request.page,
+      perPage: request.perPage
+    } as GetChannelListResponse);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ error } as ErrorResponse);
   }
 });
 
