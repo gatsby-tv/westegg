@@ -14,7 +14,7 @@ const validateHandle = async (handle: string) => {
     );
   }
 
-  if (!validator.isAlphanumeric(handle)) {
+  if (!validator.isAlphanumeric(handle.replace(/_/g, ""))) {
     throw new WestEggError(
       ErrorCode.INVALID_HANDLE,
       "Handle can only contain alphanumeric characters!"

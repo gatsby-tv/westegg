@@ -68,6 +68,10 @@ router.get("/", async (req, res) => {
     }
 
     // Video found
+    // Increment view count (temporary for pre-alpha)
+    // Don't wait for the save to finish intentionally
+    video.views++;
+    video.save();
     return res.status(200).json(video.toJSON() as GetVideoResponse);
   } catch (error) {
     return res.status(400).json({ error } as ErrorResponse);
