@@ -17,6 +17,8 @@ services:
       # Misc config
       JWT_SECRET: ${JWT_SECRET}
       # LOGGING_LEVEL: ${LOGGING_LEVEL}
+    ports:
+     - 3001:3001
     restart: always
     networks:
       - webnet
