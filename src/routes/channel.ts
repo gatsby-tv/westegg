@@ -23,7 +23,9 @@ router.post("/", isAuthenticated, validateCreateChannel, async (req, res) => {
     const request: CreateChannelRequest = req.body;
 
     // Get the user making the request
-    const user = await User.findOne({ handle: request.user?.handle });
+    const user = await User.findOne({
+      handle: req.decodedUserToken!.handle
+    });
 
     // Create the new channel
     const channel = await Channel.create({

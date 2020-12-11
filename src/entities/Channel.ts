@@ -20,7 +20,7 @@ const ChannelSchemaFields: Record<keyof IChannel, any> = {
   owner: { type: Schema.Types.ObjectId, ref: UserRef }
 };
 
-const ChannelSchema = new Schema(UploadableSchema);
+const ChannelSchema = UploadableSchema;
 ChannelSchema.add(ChannelSchemaFields);
 
 const Channel = mongoose.model<IChannel & Document>(

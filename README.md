@@ -15,9 +15,9 @@ docker run -d \
   -e MONGO_API_PASSWORD=gatsby \
   -e MONGO_INITDB_DATABASE=gatsby \
   -v db:/data/db \
-  -v ./mongo:/docker-entrypoint-initdb.d \
+  -v mongo:/docker-entrypoint-initdb.d \
   -p 27017:27017 \
-  mongo
+  mongo:4.4.1
 ```
 4. Copy `default.env` as `.env` and fill out the environment variables, eg.
 ```

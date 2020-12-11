@@ -1,5 +1,4 @@
 import { Schema } from "mongoose";
-import { IUserToken } from "./entities/User";
 import { IFiltered, IHandled, INamed } from "./types";
 
 // Request types
@@ -7,19 +6,9 @@ import { IFiltered, IHandled, INamed } from "./types";
 // Generic Requests (not routed)
 
 /**
- * Requests that can only be made when logged in as a user.
- * Token sent initially as string, then decoded to IUserToken object.
- */
-export interface AuthenticatedRequest {
-  token: string;
-  // IUserToken should not be sent by the client, this is decoded from token sent and appended by the backend
-  user?: IUserToken;
-}
-
-/**
  * Requests that make changes to a channel (upload video, update the display name, etc)
  */
-export interface UpdateChannelRequest extends AuthenticatedRequest {
+export interface UpdateChannelRequest {
   channel: Schema.Types.ObjectId;
 }
 
@@ -61,7 +50,7 @@ export interface LoginRequest {
 /**
  * POST /channel
  */
-export interface CreateChannelRequest extends AuthenticatedRequest {
+export interface CreateChannelRequest {
   handle: string;
   displayName: string;
 }

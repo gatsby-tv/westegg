@@ -6,7 +6,7 @@ import { UploadableRef, UserRef } from "./refs";
 interface IUser extends IHandled, INamed {
   email: string;
   // Password optional to keep out of responses to client
-  password: string;
+  password?: string;
   channels: Array<Schema.Types.ObjectId>;
 }
 

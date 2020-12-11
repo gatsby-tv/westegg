@@ -2,11 +2,7 @@
  * Validate login/signup requests and if users can access other routes.
  */
 import { Request, Response } from "express";
-import {
-  AuthenticatedRequest,
-  SignupRequest,
-  UpdateChannelRequest
-} from "../requestTypes";
+import { SignupRequest, UpdateChannelRequest } from "../requestTypes";
 import validator from "validator";
 import { IUserToken, User } from "../entities/User";
 import { validateDisplayName } from "./named";
@@ -106,18 +102,17 @@ export const isAuthenticated = async (
   next: () => void
 ) => {
   try {
-    const request: AuthenticatedRequest = req.body;
-
+    const encodedToken = req.headers.authorization!.replace("Bearer ", "");
     // Verify the token is authentic
     // TODO: Promisify this and use the async overload
     // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
     const token: IUserToken = jwt.verify(
-      request.token,
+      encodedToken,
       process.env.JWT_SECRET!
     ) as IUserToken;
 
     // Add the decoded token to the request
-    request.user = token;
+    req.decodedUserToken = token;
 
     next();
   } catch (error) {
@@ -138,7 +133,7 @@ export const ownsChannel = async (
 
     // Get the channel we want to modify
     const channel = await Channel.findOne({ _id: request.channel });
-    if (channel?.owner.toString() !== request.user?._id.toString()) {
+    if (channel?.owner.toString() !== req.decodedUserToken!._id.toString()) {
       throw new Error(
         "User does not have permission to update the requested channel!"
       );
