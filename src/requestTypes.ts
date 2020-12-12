@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { IFiltered, IHandled, INamed } from "./types";
+import { IHandled, INamed } from "./types";
 
 // Request types
 
@@ -16,7 +16,8 @@ export interface UpdateChannelRequest {
  * Requests that return many items from the db, filtered by a key/value pair
  */
 export interface FilteredListRequest {
-  filter?: IFiltered;
+  filterKey: string;
+  filterValue: string;
 }
 
 /**
@@ -60,7 +61,7 @@ export interface CreateChannelRequest {
  */
 export interface GetChannelRequest {
   id?: Schema.Types.ObjectId;
-  handle: string;
+  handle?: string;
 }
 
 /**
@@ -102,3 +103,5 @@ export interface GetVideoListRequest
 // DELETE /channel
 // PUT /video
 // DELETE /video
+
+// TODO: Helper middleware that iterates through an interfaces properties and parses a plain object into the interface with understandle errors to send back to client if not correct. Handles casting strings to various primitives.

@@ -1,11 +1,7 @@
 import { Router } from "express";
 import { validateCreateChannel } from "../middleware/channel";
 import { isAuthenticated } from "../middleware/auth";
-import {
-  CreateChannelRequest,
-  GetChannelListRequest,
-  GetChannelRequest
-} from "../requestTypes";
+import { CreateChannelRequest } from "../requestTypes";
 import { User } from "../entities/User";
 import { Channel, IChannel } from "../entities/Channel";
 import {
@@ -47,13 +43,18 @@ router.post("/", isAuthenticated, validateCreateChannel, async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const request: GetChannelRequest = req.body;
+    if (!req.query.id && !req.query.handle) {
+      throw new WestEggError(
+        ErrorCode.BAD_REQUEST,
+        "No id or handle specified!"
+      );
+    }
 
     let channel;
-    if (request.id) {
-      channel = await Channel.findById(request.id);
+    if (req.query.id) {
+      channel = await Channel.findById(req.query.id as string);
     } else {
-      channel = await Channel.findOne({ handle: request.handle });
+      channel = await Channel.findOne({ handle: req.query.handle! as string });
     }
 
     // If we don't find the channel
@@ -72,24 +73,36 @@ router.get("/", async (req, res) => {
 
 router.get("/list", async (req, res) => {
   try {
-    const request: GetChannelListRequest = req.body;
+    let page, perPage;
+    if (!req.query.page && !req.query.perPage) {
+      throw new WestEggError(
+        ErrorCode.BAD_REQUEST,
+        "No page or perPage specified!"
+      );
+    } else {
+      page = parseInt(req.query.page! as string);
+      perPage = parseInt(req.query.perPage! as string);
+    }
 
     let channels: IChannel[] = [];
 
     // Client wants channels with specific values
-    if (request.filter) {
-      const filter = request.filter;
+    if (req.query.filterKey && req.query.filterValue) {
+      const filter = {
+        key: req.query.filterKey as string,
+        value: req.query.filterValue as string
+      };
       channels = await Channel.where(filter.key, filter.value)
-        .skip(request.page)
-        .limit(request.perPage);
+        .skip(page)
+        .limit(perPage);
     } else {
-      channels = await Channel.find().skip(request.page).limit(request.perPage);
+      channels = await Channel.find().skip(page).limit(perPage);
     }
 
     return res.status(200).json({
       channels,
-      page: request.page,
-      perPage: request.perPage
+      page: page,
+      perPage: perPage
     } as GetChannelListResponse);
   } catch (error) {
     return res.status(400).json({ error } as ErrorResponse);
