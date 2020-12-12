@@ -132,7 +132,7 @@ export const ownsChannel = async (
     const request: UpdateChannelRequest = req.body;
 
     // Get the channel we want to modify
-    const channel = await Channel.findOne({ _id: request.channel });
+    const channel = await Channel.findOne({ _id: request.id });
     if (channel?.owner.toString() !== req.decodedUserToken!._id.toString()) {
       throw new Error(
         "User does not have permission to update the requested channel!"

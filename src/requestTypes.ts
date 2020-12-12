@@ -9,7 +9,7 @@ import { IHandled, INamed } from "./types";
  * Requests that make changes to a channel (upload video, update the display name, etc)
  */
 export interface UpdateChannelRequest {
-  channel: Schema.Types.ObjectId;
+  id: Schema.Types.ObjectId;
 }
 
 /**
