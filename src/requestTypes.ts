@@ -88,7 +88,7 @@ export interface UploadVideoRequest extends UpdateChannelRequest {
  */
 export interface GetVideoRequest {
   id?: Schema.Types.ObjectId;
-  hash: string;
+  hash?: string;
 }
 
 /**
