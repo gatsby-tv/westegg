@@ -22,6 +22,7 @@ docker run -d \
 4. Copy `default.env` as `.env` and fill out the environment variables, eg.
 ```
 # DB Configuration
+MONGO_PROTOCOL=mongodb+srv
 MONGO_HOST=localhost
 MONGO_PORT=27017
 MONGO_ROOT_PASS=root

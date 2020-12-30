@@ -2,7 +2,7 @@ import { connect } from "http2";
 import mongoose, { Connection } from "mongoose";
 
 // Create connection string to mongodb
-const connectionString = `mongodb://gatsby:${process.env.MONGO_API_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/gatsby?authSource=admin`;
+const connectionString = `${process.env.MONGO_PROTOCOL}://gatsby:${process.env.MONGO_API_PASS}@${process.env.MONGO_HOST}/gatsby?retryWrites=true&w=majority`;
 
 const db = {
   connect: async () => {
