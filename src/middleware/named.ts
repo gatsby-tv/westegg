@@ -1,12 +1,12 @@
-import { ErrorCode, WestEggError } from "../errors";
+import { ErrorCode, WestEggError } from "@gatsby-tv/types";
 
-const DISPLAY_NAME_MIN_LENGTH = 3;
-const DISPLAY_NAME_MAX_LENGTH = 64;
+const DISPLAY_NAME_MIN_LENGTH = 1;
+const DISPLAY_NAME_MAX_LENGTH = 50;
 
-export const validateDisplayName = (displayName: string) => {
+export const validateName = (name: string) => {
   if (
-    displayName.length < DISPLAY_NAME_MIN_LENGTH ||
-    displayName.length > DISPLAY_NAME_MAX_LENGTH
+    name.length < DISPLAY_NAME_MIN_LENGTH ||
+    name.length > DISPLAY_NAME_MAX_LENGTH
   ) {
     throw new WestEggError(
       ErrorCode.DISPLAY_NAME_OUT_OF_RANGE,

@@ -1,9 +1,9 @@
 import validator from "validator";
-import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
-import { ErrorCode, WestEggError } from "../errors";
+import { ErrorCode, WestEggError } from "@gatsby-tv/types";
+import { Channel } from "../entities/Channel";
 
-const HANDLE_MIN_LENGTH = 3;
+const HANDLE_MIN_LENGTH = 4;
 const HANDLE_MAX_LENGTH = 16;
 
 const validateHandle = async (handle: string) => {
