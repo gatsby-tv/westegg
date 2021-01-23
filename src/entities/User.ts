@@ -1,33 +1,57 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { IHandled, INamed } from "../types";
-import { UploadableRef, UserRef } from "./refs";
+import { IUser } from "@gatsby-tv/types";
+import { ChannelRef, UserRef, VideoRef } from "./refs";
+import { DEFAULT_AVATAR } from "./Base";
 
-// Interface
-interface IUser extends IHandled, INamed {
-  email: string;
-  // Password optional to keep out of responses to client
-  password?: string;
-  channels: Array<Schema.Types.ObjectId>;
-}
+// TODO: Record fields of interface without using any keyword (automatic mapping?)
+// TODO: Include required key
 
-// JWT token with mongo entity id and version
-interface IUserToken extends IUser {
-  _id: Schema.Types.ObjectId;
-  __v: number;
-  iat: Date;
-  exp: Date;
-}
-
-// DB Implementation
-const UserSchemaFields: Record<keyof IUser, any> = {
+const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
+  // Required
   handle: String,
-  displayName: String,
+  name: String,
+  creationDate: Date,
+  // Optional
+  avatar: {
+    type: {
+      hash: String,
+      mimeType: String
+    },
+    default: DEFAULT_AVATAR
+  },
+  verified: { type: Boolean, default: false },
+  description: { type: String, default: "" },
+  followers: { type: Number, default: 0 },
+  channels: { type: [Schema.Types.ObjectId], ref: ChannelRef, default: [] },
+  collaborations: {
+    type: [Schema.Types.ObjectId],
+    ref: ChannelRef,
+    default: []
+  },
   email: String,
-  password: String,
-  channels: [{ type: Schema.Types.ObjectId, ref: UploadableRef }]
+  administering: {
+    type: [Schema.Types.ObjectId],
+    ref: ChannelRef,
+    default: []
+  },
+  moderating: { type: [Schema.Types.ObjectId], ref: ChannelRef, default: [] },
+  invitations: {
+    owners: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+    collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+    admin: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+    moderator: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] }
+  },
+  following: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  subscriptions: {
+    type: [Schema.Types.ObjectId],
+    ref: ChannelRef,
+    default: []
+  },
+  history: { type: [Schema.Types.ObjectId], ref: VideoRef, default: [] },
+  // TODO:
+  settings: {},
+  bookmarks: {}
 };
 
 const UserSchema = new Schema(UserSchemaFields);
-
-const User = mongoose.model<IUser & Document>(UserRef, UserSchema);
-export { IUser, IUserToken, User };
+export const User = mongoose.model<IUser & Document>(UserRef, UserSchema);

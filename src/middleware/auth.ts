@@ -2,19 +2,23 @@
  * Validate login/signup requests and if users can access other routes.
  */
 import { Request, Response } from "express";
-import { SignupRequest, UpdateChannelRequest } from "../requestTypes";
+import {
+  SignupRequest,
+  ErrorResponse,
+  WestEggError,
+  ErrorCode,
+  IToken
+} from "@gatsby-tv/types";
 import validator from "validator";
-import { IUserToken, User } from "../entities/User";
-import { validateDisplayName } from "./named";
+import { User } from "../entities/User";
+import { validateName } from "./named";
 import { validateUserHandle } from "./handled";
 import jwt from "jsonwebtoken";
-import { Channel } from "../entities/Channel";
-import { ErrorResponse } from "../responseTypes";
-import { WestEggError, ErrorCode } from "../errors";
 
 const EMAIL_MAX_LENGTH = 64;
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 64;
+const BEARER_PREFIX = "Bearer ";
 
 const validateEmail = async (email: string) => {
   // Check if email is already in use
@@ -75,19 +79,20 @@ export const validateSignup = async (
   next: () => void
 ) => {
   try {
+    // TODO: Validate the json from the request matches interface
     const signup: SignupRequest = req.body;
 
     // Validate handle
-    await validateUserHandle(signup.handle);
+    await validateUserHandle(signup.account.handle);
 
     // Validate display name
-    validateDisplayName(signup.displayName);
+    validateName(signup.account.name);
 
     // Validate email
     await validateEmail(signup.email);
 
     // Validate password
-    validatePassword(signup.password, signup.confirmPassword);
+    validatePassword(signup.password[0], signup.password[1]);
   } catch (error) {
     // Send bad request if failed to validate
     return res.status(400).json({ error } as ErrorResponse);
@@ -102,14 +107,41 @@ export const isAuthenticated = async (
   next: () => void
 ) => {
   try {
-    const encodedToken = req.headers.authorization!.replace("Bearer ", "");
+    // Checks for auth token header
+    if (!req.headers.authorization) {
+      throw new WestEggError(
+        ErrorCode.UNAUTHORIZED,
+        "No bearer token set in authorization header!"
+      );
+    }
+
+    if (!req.headers.authorization.startsWith(BEARER_PREFIX)) {
+      throw new WestEggError(
+        ErrorCode.UNAUTHORIZED,
+        `Bearer token does not start with prefix \"${BEARER_PREFIX}\"!`
+      );
+    }
+
+    const encodedToken = req.headers.authorization.replace(BEARER_PREFIX, "");
+
+    // Validate jwt secret is present
+    if (!process.env.JWT_SECRET) {
+      console.error("No jwt secret key set in environment!");
+      throw new WestEggError(
+        ErrorCode.INTERNAL_ERROR,
+        "Invalid server configuration!"
+      );
+    }
+
     // Verify the token is authentic
     // TODO: Promisify this and use the async overload
     // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
-    const token: IUserToken = jwt.verify(
+    const token: IToken = jwt.verify(
       encodedToken,
-      process.env.JWT_SECRET!
-    ) as IUserToken;
+      process.env.JWT_SECRET
+    ) as IToken;
+
+    // TODO: Validate token fields
 
     // Add the decoded token to the request
     req.decodedUserToken = token;
@@ -122,30 +154,3 @@ export const isAuthenticated = async (
     return res.status(401).json(response);
   }
 };
-
-export const ownsChannel = async (
-  req: Request,
-  res: Response,
-  next: () => void
-) => {
-  try {
-    const request: UpdateChannelRequest = req.body;
-
-    // Get the channel we want to modify
-    const channel = await Channel.findOne({ _id: request.id });
-    if (channel?.owner.toString() !== req.decodedUserToken!._id.toString()) {
-      throw new Error(
-        "User does not have permission to update the requested channel!"
-      );
-    }
-
-    next();
-  } catch (error) {
-    const response: ErrorResponse = {
-      error: { name: ErrorCode.UNAUTHORIZED, message: error.message }
-    };
-    return res.status(401).json(response);
-  }
-};
-
-// TODO: hasVerifiedEmail

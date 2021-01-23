@@ -1,30 +1,39 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { IUploadable } from "./Uploadable";
-import { UploadableRef, VideoRef } from "./refs";
+import { IBasicVideo } from "@gatsby-tv/types";
+import { ChannelRef, UserRef, VideoRef } from "./refs";
 
-// Interface
-interface IVideo {
-  title: string;
-  description: string;
-  views: number;
-  dateUploaded: Date;
-  hash: string;
-  thumbnailHash: string;
-  uploadable: IUploadable;
-}
-
-// DB Implementation
-const VideoSchemaFields: Record<keyof IVideo, any> = {
+const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
+  // Required
   title: String,
-  description: String,
-  views: Number,
-  dateUploaded: Date,
-  hash: String,
-  thumbnailHash: String,
-  uploadable: { type: Schema.Types.ObjectId, ref: UploadableRef }
+  releaseDate: Date,
+  duration: Number,
+  content: String,
+  channel: { type: Schema.Types.ObjectId, ref: ChannelRef },
+  // TODO: Default thumbnail?
+  thumbnail: {
+    type: {
+      hash: String,
+      mimeType: String
+    }
+  },
+  // Optional
+  description: { type: String, default: "" },
+  views: { type: Number, default: 0 },
+  unlisted: { type: Boolean, default: false },
+  collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  tags: { type: [String], default: [] },
+  explicit: { type: Boolean, default: false },
+  // TODO: Should topic/genre be required?
+  topic: { type: String, default: "" },
+  genre: { type: String, default: "" },
+  contributors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  sponsors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  sponsored: { type: Boolean, default: false },
+  // TODO:
+  contributions: { type: Schema.Types.Mixed, default: {} }
 };
 
 const VideoSchema = new Schema(VideoSchemaFields);
 
-const Video = mongoose.model<IVideo & Document>(VideoRef, VideoSchema);
-export { IVideo, Video };
+const Video = mongoose.model<IBasicVideo & Document>(VideoRef, VideoSchema);
+export { Video };
