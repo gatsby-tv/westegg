@@ -1,9 +1,4 @@
-import {
-  ErrorCode,
-  ErrorResponse,
-  PostVideoRequest,
-  WestEggError
-} from "@gatsby-tv/types";
+import { ErrorMessage, NotFound, PostVideoRequest } from "@gatsby-tv/types";
 import { Router } from "express";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
@@ -12,7 +7,7 @@ import { validatePostVideo } from "../middleware/video";
 
 const router = Router();
 
-router.post("/", isAuthenticated, validatePostVideo, async (req, res) => {
+router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
   try {
     const request: PostVideoRequest = req.body;
 
@@ -20,7 +15,7 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res) => {
     const channel = await Channel.findById(request.channel);
 
     if (!channel) {
-      throw new WestEggError(ErrorCode.NOT_FOUND, "Channel not found!");
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
 
     // Create and save the video
@@ -42,7 +37,7 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res) => {
     // TODO: as PostVideoResponse
     res.status(201).json(video.toJSON());
   } catch (error) {
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 });
 

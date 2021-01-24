@@ -5,28 +5,26 @@ import {
   isLoginEmailRequest,
   isLoginHandleRequest,
   LoginResponse,
-  ErrorResponse
+  Unauthorized,
+  ErrorMessage,
+  BadRequest
 } from "@gatsby-tv/types";
 import bcrypt from "bcrypt";
 import { User } from "../entities/User";
 import jwt from "jsonwebtoken";
 import { validateSignup } from "../middleware/auth";
-import { ErrorCode, WestEggError } from "@gatsby-tv/types";
 import { SignupResponse } from "@gatsby-tv/types";
 import { Password } from "../entities/Password";
 
 const LOGIN_EXPIRE = "2w";
-const LOGIN_ERROR = new WestEggError(
-  ErrorCode.INVALID_CREDENTIALS,
-  "Invalid credentials!"
-);
+const LOGIN_ERROR = new Unauthorized(ErrorMessage.INVALID_CREDENTIALS);
 
 const router = Router();
 
 /**
  * POST /auth/signup
  */
-router.post("/signup", validateSignup, async (req, res) => {
+router.post("/signup", validateSignup, async (req, res, next) => {
   try {
     const signup: SignupRequest = req.body;
 
@@ -59,14 +57,14 @@ router.post("/signup", validateSignup, async (req, res) => {
     });
     res.status(201).json({ token } as SignupResponse);
   } catch (error) {
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 });
 
 /**
  * POST /auth/login
  */
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   try {
     const login: LoginRequest = req.body;
     let user;
@@ -77,10 +75,7 @@ router.post("/login", async (req, res) => {
     } else if (isLoginEmailRequest(req.body)) {
       user = await User.findOne(User, { email: req.body.email });
     } else {
-      throw new WestEggError(
-        ErrorCode.HANDLE_OR_EMAIL_REQUIRED,
-        "Please provide a handle or email to login!"
-      );
+      throw new BadRequest(ErrorMessage.HANDLE_OR_EMAIL_REQUIRED);
     }
     // User wasn't found
     if (!user) throw LOGIN_ERROR;
@@ -103,7 +98,7 @@ router.post("/login", async (req, res) => {
       throw LOGIN_ERROR;
     }
   } catch (error) {
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 });
 
