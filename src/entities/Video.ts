@@ -8,8 +8,7 @@ const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
   releaseDate: Date,
   duration: Number,
   content: String,
-  channel: { type: Schema.Types.ObjectId, ref: ChannelRef },
-  // TODO: Default thumbnail?
+  channel: { type: String, ref: ChannelRef },
   thumbnail: {
     type: {
       hash: String,
@@ -20,14 +19,14 @@ const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
   description: { type: String, default: "" },
   views: { type: Number, default: 0 },
   unlisted: { type: Boolean, default: false },
-  collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  collaborators: { type: [String], ref: UserRef, default: [] },
   tags: { type: [String], default: [] },
   explicit: { type: Boolean, default: false },
   // TODO: Should topic/genre be required?
   topic: { type: String, default: "" },
   genre: { type: String, default: "" },
-  contributors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
-  sponsors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  contributors: { type: [String], ref: UserRef, default: [] },
+  sponsors: { type: [String], ref: UserRef, default: [] },
   sponsored: { type: Boolean, default: false },
   // TODO:
   contributions: { type: Schema.Types.Mixed, default: {} }

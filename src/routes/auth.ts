@@ -7,7 +7,8 @@ import {
   LoginResponse,
   Unauthorized,
   ErrorMessage,
-  BadRequest
+  BadRequest,
+  StatusCode
 } from "@gatsby-tv/types";
 import bcrypt from "bcrypt";
 import { User } from "../entities/User";
@@ -36,26 +37,29 @@ router.post("/signup", validateSignup, async (req, res, next) => {
     // TODO: Is there a better way to handle this "constructor" with typing?
     // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
     let user = new User({
+      _id: signup.account.handle,
       email: signup.email,
       handle: signup.account.handle,
       name: signup.account.name,
       creationDate: Date.now()
     });
-    await user.save();
 
     // Save encrypted password to the db
     let password = new Password({
       user: user._id,
       password: encryptedPassword
     });
-    await password.save();
 
     // Sign token for created user and send to client
     let json = user.toJSON();
     const token = jwt.sign(json, process.env.JWT_SECRET!, {
       expiresIn: LOGIN_EXPIRE
     });
-    res.status(201).json({ token } as SignupResponse);
+
+    await user.save();
+    await password.save();
+
+    res.status(StatusCode.CREATED).json({ token } as SignupResponse);
   } catch (error) {
     next(error);
   }
@@ -71,9 +75,9 @@ router.post("/login", async (req, res, next) => {
 
     // Check if logging in with handle or email
     if (isLoginHandleRequest(req.body)) {
-      user = await User.findOne(User, { handle: req.body.handle });
+      user = await User.findById(req.body.handle);
     } else if (isLoginEmailRequest(req.body)) {
-      user = await User.findOne(User, { email: req.body.email });
+      user = await User.findById(req.body.email);
     } else {
       throw new BadRequest(ErrorMessage.HANDLE_OR_EMAIL_REQUIRED);
     }
@@ -92,7 +96,7 @@ router.post("/login", async (req, res, next) => {
       const token = jwt.sign(json, process.env.JWT_SECRET!, {
         expiresIn: LOGIN_EXPIRE
       });
-      res.status(200).json({ token } as LoginResponse);
+      res.status(StatusCode.OK).json({ token } as LoginResponse);
     } else {
       // Password didn't match or wasn't found
       throw LOGIN_ERROR;

@@ -2,9 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import "dotenv/config";
 import db from "./db";
-import auth from "./routes/auth";
-import channel from "./routes/channel";
-import video from "./routes/video";
 import {
   ErrorResponse,
   InternalError,
@@ -12,6 +9,13 @@ import {
   WestEggError
 } from "@gatsby-tv/types";
 
+// Import routes
+import auth from "./routes/auth";
+import user from "./routes/user";
+import channel from "./routes/channel";
+import video from "./routes/video";
+
+const router = express.Router();
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -42,9 +46,13 @@ app.use((req, res, next) => {
 });
 
 // Add routes to app
-app.use("/auth", auth);
-app.use("/channel", channel);
-app.use("/video", video);
+router.use("/auth", auth);
+router.use("/user", user);
+router.use("/channel", channel);
+router.use("/video", video);
+
+// Set API version
+app.use("/v1", router);
 
 // Handle all errors
 app.use(

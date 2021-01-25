@@ -1,12 +1,49 @@
-import { ErrorMessage, NotFound, PostVideoRequest } from "@gatsby-tv/types";
-import { Router } from "express";
-import { Channel } from "../entities/Channel";
+import {
+  ErrorMessage,
+  GetVideoRequest,
+  NotFound,
+  PostVideoRequest,
+  StatusCode
+} from "@gatsby-tv/types";
+import { Router, Request } from "express";
 import { Video } from "../entities/Video";
+import { Channel } from "../entities/Channel";
 import { isAuthenticated } from "../middleware/auth";
 import { validatePostVideo } from "../middleware/video";
+import * as ExpressCore from "express-serve-static-core";
 
 const router = Router();
 
+/**
+ * GET /video/:hash
+ */
+interface GetVideoRequestParams
+  extends ExpressCore.ParamsDictionary,
+    GetVideoRequest {}
+router.get(
+  "/:id",
+  async (req: Request<GetVideoRequestParams, {}, {}, {}>, res, next) => {
+    try {
+      // TODO: as GetVideoRequest
+      const request = req.params;
+
+      const video = await Video.findById(request.id);
+
+      if (!video) {
+        throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
+      }
+
+      // TODO: as GetVideoRequest
+      res.status(StatusCode.OK).json(video.toJSON());
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /video
+ */
 router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
   try {
     const request: PostVideoRequest = req.body;
@@ -21,10 +58,10 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
     // Create and save the video
     // TODO: Include optional fields
     const video = new Video({
+      content: request.content,
       title: request.title,
       releaseDate: Date.now(),
       duration: request.duration,
-      content: request.content,
       channel: request.channel,
       thumbnail: request.thumbnail
     });
@@ -35,7 +72,7 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
     channel.save();
 
     // TODO: as PostVideoResponse
-    res.status(201).json(video.toJSON());
+    res.status(StatusCode.CREATED).json(video.toJSON());
   } catch (error) {
     next(error);
   }

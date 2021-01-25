@@ -6,8 +6,9 @@ import { DEFAULT_AVATAR } from "./Base";
 // TODO: Record fields of interface without using any keyword (automatic mapping?)
 // TODO: Include required key
 
-const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
+const UserSchemaFields: Record<keyof IUser, any> = {
   // Required
+  _id: String,
   handle: String,
   name: String,
   creationDate: Date,
@@ -22,28 +23,28 @@ const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
   verified: { type: Boolean, default: false },
   description: { type: String, default: "" },
   followers: { type: Number, default: 0 },
-  channels: { type: [Schema.Types.ObjectId], ref: ChannelRef, default: [] },
+  channels: { type: [String], ref: ChannelRef, default: [] },
   collaborations: {
-    type: [Schema.Types.ObjectId],
+    type: [String],
     ref: ChannelRef,
     default: []
   },
   email: String,
   administering: {
-    type: [Schema.Types.ObjectId],
+    type: [String],
     ref: ChannelRef,
     default: []
   },
-  moderating: { type: [Schema.Types.ObjectId], ref: ChannelRef, default: [] },
+  moderating: { type: [String], ref: ChannelRef, default: [] },
   invitations: {
-    owners: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
-    collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
-    admin: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
-    moderator: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] }
+    owners: { type: [String], ref: UserRef, default: [] },
+    collaborators: { type: [String], ref: UserRef, default: [] },
+    admin: { type: [String], ref: UserRef, default: [] },
+    moderator: { type: [String], ref: UserRef, default: [] }
   },
-  following: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  following: { type: [String], ref: UserRef, default: [] },
   subscriptions: {
-    type: [Schema.Types.ObjectId],
+    type: [String],
     ref: ChannelRef,
     default: []
   },
