@@ -43,6 +43,7 @@ export const validatePostVideo = async (
     // TODO: Validate ipfs video/thumbnail hash are correct format
 
     // Check that the video hash doesn't already exist
+    // TODO: Handle content with multiple hashes
     const video = await Video.findOne({ content: request.content });
     if (video) {
       throw new BadRequest(ErrorMessage.VIDEO_ALREADY_EXISTS);

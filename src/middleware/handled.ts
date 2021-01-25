@@ -18,7 +18,7 @@ const validateHandle = async (handle: string) => {
 
 export const validateUserHandle = async (handle: string) => {
   // Validate if handle in use
-  if (await User.findOne({ handle })) {
+  if (await User.findById(handle)) {
     throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
   }
 
@@ -27,7 +27,7 @@ export const validateUserHandle = async (handle: string) => {
 
 export const validateChannelHandle = async (handle: string) => {
   // Validate if handle in use
-  if (await Channel.findOne({ handle })) {
+  if (await Channel.findById(handle)) {
     throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
   }
 
