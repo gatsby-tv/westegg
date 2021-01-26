@@ -5,12 +5,12 @@ import {
   PostVideoRequest,
   StatusCode
 } from "@gatsby-tv/types";
-import { Router, Request } from "express";
-import { Video } from "../entities/Video";
+import { Request, Router } from "express";
+import * as ExpressCore from "express-serve-static-core";
 import { Channel } from "../entities/Channel";
+import { Video } from "../entities/Video";
 import { isAuthenticated } from "../middleware/auth";
 import { validatePostVideo } from "../middleware/video";
-import * as ExpressCore from "express-serve-static-core";
 
 const router = Router();
 

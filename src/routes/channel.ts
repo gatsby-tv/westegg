@@ -1,16 +1,16 @@
-import { Router, Request } from "express";
-import { User } from "../entities/User";
 import {
-  PostChannelRequest,
-  NotFound,
   ErrorMessage,
   GetChannelAccountRequest,
+  NotFound,
+  PostChannelRequest,
   StatusCode
 } from "@gatsby-tv/types";
-import { isAuthenticated } from "../middleware/auth";
-import { Channel } from "../entities/Channel";
-import { validatePostChannel } from "../middleware/channel";
+import { Request, Router } from "express";
 import * as ExpressCore from "express-serve-static-core";
+import { Channel } from "../entities/Channel";
+import { User } from "../entities/User";
+import { isAuthenticated } from "../middleware/auth";
+import { validatePostChannel } from "../middleware/channel";
 
 const router = Router();
 

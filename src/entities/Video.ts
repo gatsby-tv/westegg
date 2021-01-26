@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document } from "mongoose";
 import { IBasicVideo } from "@gatsby-tv/types";
+import mongoose, { Document, Schema } from "mongoose";
 import { ChannelRef, UserRef, VideoRef } from "./refs";
 
 const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {

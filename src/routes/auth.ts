@@ -1,21 +1,21 @@
-import { Router } from "express";
 import {
-  SignupRequest,
-  LoginRequest,
+  BadRequest,
+  ErrorMessage,
   isLoginEmailRequest,
   isLoginHandleRequest,
+  LoginRequest,
   LoginResponse,
-  Unauthorized,
-  ErrorMessage,
-  BadRequest,
-  StatusCode
+  SignupRequest,
+  SignupResponse,
+  StatusCode,
+  Unauthorized
 } from "@gatsby-tv/types";
 import bcrypt from "bcrypt";
-import { User } from "../entities/User";
+import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { validateSignup } from "../middleware/auth";
-import { SignupResponse } from "@gatsby-tv/types";
 import { Password } from "../entities/Password";
+import { User } from "../entities/User";
+import { validateSignup } from "../middleware/auth";
 
 const LOGIN_EXPIRE = "2w";
 const LOGIN_ERROR = new Unauthorized(ErrorMessage.INVALID_CREDENTIALS);

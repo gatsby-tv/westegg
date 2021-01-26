@@ -1,18 +1,17 @@
-import express, { Request, Response, NextFunction } from "express";
-import bodyParser from "body-parser";
-import "dotenv/config";
-import db from "./db";
 import {
   ErrorResponse,
   InternalError,
   StatusCode,
   WestEggError
 } from "@gatsby-tv/types";
-
+import bodyParser from "body-parser";
+import "dotenv/config";
+import express, { NextFunction, Request, Response } from "express";
+import db from "./db";
 // Import routes
 import auth from "./routes/auth";
-import user from "./routes/user";
 import channel from "./routes/channel";
+import user from "./routes/user";
 import video from "./routes/video";
 
 const router = express.Router();

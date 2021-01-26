@@ -1,7 +1,7 @@
-import validator from "validator";
-import { User } from "../entities/User";
 import { BadRequest, ErrorMessage } from "@gatsby-tv/types";
+import validator from "validator";
 import { Channel } from "../entities/Channel";
+import { User } from "../entities/User";
 
 const HANDLE_MIN_LENGTH = 4;
 const HANDLE_MAX_LENGTH = 16;

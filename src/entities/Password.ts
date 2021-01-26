@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document } from "mongoose";
 import { UserID } from "@gatsby-tv/types";
+import mongoose, { Document, Schema } from "mongoose";
 import { PasswordRef, UserRef } from "./refs";
 
 interface IPassword {

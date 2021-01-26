@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from "mongoose";
 import { IUser } from "@gatsby-tv/types";
-import { ChannelRef, UserRef, VideoRef } from "./refs";
+import mongoose, { Document, Schema } from "mongoose";
 import { DEFAULT_AVATAR } from "./Base";
+import { ChannelRef, UserRef, VideoRef } from "./refs";
 
 // TODO: Record fields of interface without using any keyword (automatic mapping?)
 // TODO: Include required key

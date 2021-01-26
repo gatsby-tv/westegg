@@ -1,5 +1,5 @@
 import { IChannel } from "@gatsby-tv/types";
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 import { DEFAULT_AVATAR } from "./Base";
 import { ChannelRef, UserRef, VideoRef } from "./refs";
 

@@ -1,20 +1,19 @@
 /**
  * Validate login/signup requests and if users can access other routes.
  */
-import { NextFunction, Request, Response } from "express";
 import {
-  SignupRequest,
   BadRequest,
-  IToken,
   ErrorMessage,
+  IToken,
+  SignupRequest,
   Unauthorized
 } from "@gatsby-tv/types";
+import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import validator from "validator";
 import { User } from "../entities/User";
-import { validateName } from "./named";
 import { validateUserHandle } from "./handled";
-import jwt from "jsonwebtoken";
-import { exit } from "process";
+import { validateName } from "./named";
 
 const EMAIL_MAX_LENGTH = 64;
 const PASSWORD_MIN_LENGTH = 8;
