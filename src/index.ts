@@ -1,20 +1,31 @@
-import express, { Request, Response, NextFunction } from "express";
+import {
+  ErrorResponse,
+  InternalError,
+  StatusCode,
+  WestEggError
+} from "@gatsby-tv/types";
 import bodyParser from "body-parser";
 import "dotenv/config";
+import express, { NextFunction, Request, Response } from "express";
 import db from "./db";
-
 // Import routes
 import auth from "./routes/auth";
 import channel from "./routes/channel";
+import user from "./routes/user";
 import video from "./routes/video";
 
+const router = express.Router();
 const app = express();
 const port = process.env.PORT || 3001;
 
+// TODO: Check for all environment variables needed
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL: No JWT secret key set!");
+  process.exit(1);
+}
+
 // Set Base64 JWT secret
-process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
-  "base64"
-);
+process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET).toString("base64");
 
 // Add json body parser
 app.use(bodyParser.json());
@@ -34,16 +45,41 @@ app.use((req, res, next) => {
 });
 
 // Add routes to app
-app.use("/auth", auth);
-app.use("/channel", channel);
-app.use("/video", video);
+router.use("/auth", auth);
+router.use("/user", user);
+router.use("/channel", channel);
+router.use("/video", video);
 
-// TODO: Unhandled errors
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  if (!res.headersSent) {
-    res.status(500).json({ error: error.message });
+// Set API version
+app.use("/v1", router);
+
+// Handle all errors
+app.use(
+  (
+    error: WestEggError | Error,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    // Check if response already sent
+    if (res.headersSent) {
+      return;
+    }
+
+    // Check if error is specific with response code
+    if (error instanceof WestEggError) {
+      return res.status(error.statusCode).json({ error } as ErrorResponse);
+    }
+
+    // If not, log and send generic internal error
+    else {
+      console.error(error);
+      return res.status(StatusCode.INTERNAL_ERROR).json({
+        error: new InternalError()
+      } as ErrorResponse);
+    }
   }
-});
+);
 
 // Start server
 (async () => {

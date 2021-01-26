@@ -1,19 +1,19 @@
 /**
  * Validate login/signup requests and if users can access other routes.
  */
-import { Request, Response } from "express";
 import {
+  BadRequest,
+  ErrorMessage,
+  IToken,
   SignupRequest,
-  ErrorResponse,
-  WestEggError,
-  ErrorCode,
-  IToken
+  Unauthorized
 } from "@gatsby-tv/types";
+import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import validator from "validator";
 import { User } from "../entities/User";
-import { validateName } from "./named";
 import { validateUserHandle } from "./handled";
-import jwt from "jsonwebtoken";
+import { validateName } from "./named";
 
 const EMAIL_MAX_LENGTH = 64;
 const PASSWORD_MIN_LENGTH = 8;
@@ -23,21 +23,15 @@ const BEARER_PREFIX = "Bearer ";
 const validateEmail = async (email: string) => {
   // Check if email is already in use
   if (await User.findOne({ email })) {
-    throw new WestEggError(
-      ErrorCode.EMAIL_IN_USE,
-      `Email ${email} is already in use!`
-    );
+    throw new BadRequest(ErrorMessage.EMAIL_IN_USE);
   }
 
   if (email.length > EMAIL_MAX_LENGTH) {
-    throw new WestEggError(
-      ErrorCode.EMAIL_OUT_OF_RANGE,
-      `Email must be shorter than ${EMAIL_MAX_LENGTH} characters!`
-    );
+    throw new BadRequest(ErrorMessage.EMAIL_OUT_OF_RANGE);
   }
 
   if (!validator.isEmail(email)) {
-    throw new WestEggError(ErrorCode.INVALID_EMAIL, "Invalid email!");
+    throw new BadRequest(ErrorMessage.INVALID_EMAIL);
   }
 };
 
@@ -47,18 +41,12 @@ const validatePassword = (
 ) => {
   // Check passwords match
   if (!password || password !== confirmPassword) {
-    throw new WestEggError(
-      ErrorCode.PASSWORD_DOES_NOT_MATCH,
-      "Passwords do not match!"
-    );
+    throw new BadRequest(ErrorMessage.PASSWORD_DOES_NOT_MATCH);
   }
 
   // Check password contains at least one number, one lowercase letter, and one capital letter
   if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/)) {
-    throw new WestEggError(
-      ErrorCode.INVALID_PASSWORD,
-      "Password must contain at least one number, one lowercase letter, and one capital letter!"
-    );
+    throw new BadRequest(ErrorMessage.INVALID_PASSWORD);
   }
 
   // Check length of password
@@ -66,17 +54,14 @@ const validatePassword = (
     password.length < PASSWORD_MIN_LENGTH ||
     password.length > PASSWORD_MAX_LENGTH
   ) {
-    throw new WestEggError(
-      ErrorCode.PASSWORD_OUT_OF_RANGE,
-      `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters long!`
-    );
+    throw new BadRequest(ErrorMessage.PASSWORD_OUT_OF_RANGE);
   }
 };
 
 export const validateSignup = async (
   req: Request,
   res: Response,
-  next: () => void
+  next: NextFunction
 ) => {
   try {
     // TODO: Validate the json from the request matches interface
@@ -94,8 +79,7 @@ export const validateSignup = async (
     // Validate password
     validatePassword(signup.password[0], signup.password[1]);
   } catch (error) {
-    // Send bad request if failed to validate
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 
   next();
@@ -104,33 +88,24 @@ export const validateSignup = async (
 export const isAuthenticated = async (
   req: Request,
   res: Response,
-  next: () => void
+  next: NextFunction
 ) => {
   try {
     // Checks for auth token header
     if (!req.headers.authorization) {
-      throw new WestEggError(
-        ErrorCode.UNAUTHORIZED,
-        "No bearer token set in authorization header!"
-      );
+      throw new Unauthorized(ErrorMessage.NO_BEARER_TOKEN_SET);
     }
 
     if (!req.headers.authorization.startsWith(BEARER_PREFIX)) {
-      throw new WestEggError(
-        ErrorCode.UNAUTHORIZED,
-        `Bearer token does not start with prefix \"${BEARER_PREFIX}\"!`
-      );
+      throw new Unauthorized(ErrorMessage.NO_BEARER_TOKEN_PREFIX);
     }
 
     const encodedToken = req.headers.authorization.replace(BEARER_PREFIX, "");
 
     // Validate jwt secret is present
     if (!process.env.JWT_SECRET) {
-      console.error("No jwt secret key set in environment!");
-      throw new WestEggError(
-        ErrorCode.INTERNAL_ERROR,
-        "Invalid server configuration!"
-      );
+      console.error("FATAL: No JWT secret key set!");
+      process.exit(1);
     }
 
     // Verify the token is authentic
@@ -148,9 +123,6 @@ export const isAuthenticated = async (
 
     next();
   } catch (error) {
-    const response: ErrorResponse = {
-      error: { name: ErrorCode.UNAUTHORIZED, message: error.message }
-    };
-    return res.status(401).json(response);
+    next(error);
   }
 };

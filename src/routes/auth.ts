@@ -1,32 +1,31 @@
-import { Router } from "express";
 import {
-  SignupRequest,
-  LoginRequest,
+  BadRequest,
+  ErrorMessage,
   isLoginEmailRequest,
   isLoginHandleRequest,
+  LoginRequest,
   LoginResponse,
-  ErrorResponse
+  SignupRequest,
+  SignupResponse,
+  StatusCode,
+  Unauthorized
 } from "@gatsby-tv/types";
 import bcrypt from "bcrypt";
-import { User } from "../entities/User";
+import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { validateSignup } from "../middleware/auth";
-import { ErrorCode, WestEggError } from "@gatsby-tv/types";
-import { SignupResponse } from "@gatsby-tv/types";
 import { Password } from "../entities/Password";
+import { User } from "../entities/User";
+import { validateSignup } from "../middleware/auth";
 
 const LOGIN_EXPIRE = "2w";
-const LOGIN_ERROR = new WestEggError(
-  ErrorCode.INVALID_CREDENTIALS,
-  "Invalid credentials!"
-);
+const LOGIN_ERROR = new Unauthorized(ErrorMessage.INVALID_CREDENTIALS);
 
 const router = Router();
 
 /**
  * POST /auth/signup
  */
-router.post("/signup", validateSignup, async (req, res) => {
+router.post("/signup", validateSignup, async (req, res, next) => {
   try {
     const signup: SignupRequest = req.body;
 
@@ -38,49 +37,49 @@ router.post("/signup", validateSignup, async (req, res) => {
     // TODO: Is there a better way to handle this "constructor" with typing?
     // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
     let user = new User({
+      _id: signup.account.handle,
       email: signup.email,
       handle: signup.account.handle,
       name: signup.account.name,
       creationDate: Date.now()
     });
-    await user.save();
 
     // Save encrypted password to the db
     let password = new Password({
       user: user._id,
       password: encryptedPassword
     });
-    await password.save();
 
     // Sign token for created user and send to client
     let json = user.toJSON();
     const token = jwt.sign(json, process.env.JWT_SECRET!, {
       expiresIn: LOGIN_EXPIRE
     });
-    res.status(201).json({ token } as SignupResponse);
+
+    await user.save();
+    await password.save();
+
+    res.status(StatusCode.CREATED).json({ token } as SignupResponse);
   } catch (error) {
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 });
 
 /**
  * POST /auth/login
  */
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   try {
     const login: LoginRequest = req.body;
     let user;
 
     // Check if logging in with handle or email
     if (isLoginHandleRequest(req.body)) {
-      user = await User.findOne(User, { handle: req.body.handle });
+      user = await User.findById(req.body.handle);
     } else if (isLoginEmailRequest(req.body)) {
-      user = await User.findOne(User, { email: req.body.email });
+      user = await User.findById(req.body.email);
     } else {
-      throw new WestEggError(
-        ErrorCode.HANDLE_OR_EMAIL_REQUIRED,
-        "Please provide a handle or email to login!"
-      );
+      throw new BadRequest(ErrorMessage.HANDLE_OR_EMAIL_REQUIRED);
     }
     // User wasn't found
     if (!user) throw LOGIN_ERROR;
@@ -97,13 +96,13 @@ router.post("/login", async (req, res) => {
       const token = jwt.sign(json, process.env.JWT_SECRET!, {
         expiresIn: LOGIN_EXPIRE
       });
-      res.status(200).json({ token } as LoginResponse);
+      res.status(StatusCode.OK).json({ token } as LoginResponse);
     } else {
       // Password didn't match or wasn't found
       throw LOGIN_ERROR;
     }
   } catch (error) {
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 });
 

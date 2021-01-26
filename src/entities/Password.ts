@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
 import { UserID } from "@gatsby-tv/types";
-import { PasswordRef } from "./refs";
+import mongoose, { Document, Schema } from "mongoose";
+import { PasswordRef, UserRef } from "./refs";
 
 interface IPassword {
   user: UserID;
@@ -9,7 +9,7 @@ interface IPassword {
 
 const PasswordSchemaFields: Record<keyof Omit<IPassword, "_id">, any> = {
   // Required
-  user: Schema.Types.ObjectId,
+  user: { type: String, ref: UserRef },
   password: String
 };
 

@@ -1,10 +1,12 @@
 import {
-  ErrorCode,
-  ErrorResponse,
+  ErrorMessage,
+  GetVideoRequest,
+  NotFound,
   PostVideoRequest,
-  WestEggError
+  StatusCode
 } from "@gatsby-tv/types";
-import { Router } from "express";
+import { Request, Router } from "express";
+import * as ExpressCore from "express-serve-static-core";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
 import { isAuthenticated } from "../middleware/auth";
@@ -12,7 +14,37 @@ import { validatePostVideo } from "../middleware/video";
 
 const router = Router();
 
-router.post("/", isAuthenticated, validatePostVideo, async (req, res) => {
+/**
+ * GET /video/:hash
+ */
+interface GetVideoRequestParams
+  extends ExpressCore.ParamsDictionary,
+    GetVideoRequest {}
+router.get(
+  "/:id",
+  async (req: Request<GetVideoRequestParams, {}, {}, {}>, res, next) => {
+    try {
+      // TODO: as GetVideoRequest
+      const request = req.params;
+
+      const video = await Video.findById(request.id);
+
+      if (!video) {
+        throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
+      }
+
+      // TODO: as GetVideoRequest
+      res.status(StatusCode.OK).json(video.toJSON());
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /video
+ */
+router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
   try {
     const request: PostVideoRequest = req.body;
 
@@ -20,16 +52,16 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res) => {
     const channel = await Channel.findById(request.channel);
 
     if (!channel) {
-      throw new WestEggError(ErrorCode.NOT_FOUND, "Channel not found!");
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
 
     // Create and save the video
     // TODO: Include optional fields
     const video = new Video({
+      content: request.content,
       title: request.title,
       releaseDate: Date.now(),
       duration: request.duration,
-      content: request.content,
       channel: request.channel,
       thumbnail: request.thumbnail
     });
@@ -40,9 +72,9 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res) => {
     channel.save();
 
     // TODO: as PostVideoResponse
-    res.status(201).json(video.toJSON());
+    res.status(StatusCode.CREATED).json(video.toJSON());
   } catch (error) {
-    return res.status(400).json({ error } as ErrorResponse);
+    next(error);
   }
 });
 
