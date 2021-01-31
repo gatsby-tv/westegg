@@ -65,7 +65,6 @@ router.post(
 
       // Create the new channel
       const channel = new Channel({
-        _id: request.handle,
         handle: request.handle,
         name: request.name,
         creationDate: Date.now(),

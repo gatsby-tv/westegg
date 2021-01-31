@@ -5,6 +5,7 @@ import { ChannelRef, UserRef, VideoRef } from "./refs";
 
 // TODO: Record fields of interface without using any keyword (automatic mapping?)
 // TODO: Include required key
+// TODO: Create unique index for handle in mongo
 
 const UserSchemaFields: Record<keyof IUser, any> = {
   // Required
@@ -49,7 +50,11 @@ const UserSchemaFields: Record<keyof IUser, any> = {
     default: []
   },
   history: { type: [Schema.Types.ObjectId], ref: VideoRef, default: [] },
+  banned: { type: Boolean, default: false },
+  trusted: { type: Boolean, default: false },
   // TODO:
+  banner: {},
+  promotions: {},
   settings: {},
   bookmarks: {}
 };

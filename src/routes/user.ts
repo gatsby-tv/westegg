@@ -18,6 +18,8 @@ const ipfs = IPFSClient({
 /**
  * GET /user/:handle
  */
+// TODO: Can be :id or :handle
+// TODO: All other requests use :id, same behavior for channel
 interface GetUserAccountRequestParams
   extends ExpressCore.ParamsDictionary,
     GetUserAccountRequest {}
@@ -58,19 +60,6 @@ router.put("/:handle", async (req, res, next) => {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
-    // Update avatar
-    if (request.avatar) {
-      // TODO: Validate mime type is allowed
-      // TODO: use ipfs block stat or ipfs files stat
-      // TODO: Validate file contents
-      // TODO: Validate file size
-      // Pin on IPFS node/cluster
-      await ipfs.pin.add(request.avatar.hash);
-      // TODO: Unpin old avatar if pinned successfully
-      // Add new avatar metadata to user
-      user.avatar = request.avatar;
-    }
-
     // TODO: Handle
     // TODO: Name
     // TODO: Description
@@ -83,5 +72,19 @@ router.put("/:handle", async (req, res, next) => {
     next(error);
   }
 });
+
+// TODO: Write PutAvatarUserRequest
+// // Update avatar
+// if (request.avatar) {
+//   // TODO: Validate mime type is allowed
+//   // TODO: use ipfs block stat or ipfs files stat
+//   // TODO: Validate file contents
+//   // TODO: Validate file size
+//   // Pin on IPFS node/cluster
+//   await ipfs.pin.add(request.avatar.hash);
+//   // TODO: Unpin old avatar if pinned successfully
+//   // Add new avatar metadata to user
+//   user.avatar = request.avatar;
+// }
 
 export default router;

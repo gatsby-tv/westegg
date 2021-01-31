@@ -8,6 +8,7 @@ import bodyParser from "body-parser";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import db from "./db";
+import { validateEnvironment } from "./environment";
 // Import routes
 import auth from "./routes/auth";
 import channel from "./routes/channel";
@@ -18,14 +19,13 @@ const router = express.Router();
 const app = express();
 const port = process.env.PORT || 3001;
 
-// TODO: Check for all environment variables needed
-if (!process.env.JWT_SECRET) {
-  console.error("FATAL: No JWT secret key set!");
-  process.exit(1);
-}
+// Validate environment variables are set and proper format
+validateEnvironment();
 
 // Set Base64 JWT secret
-process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET).toString("base64");
+process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
+  "base64"
+);
 
 // Add json body parser
 app.use(bodyParser.json());

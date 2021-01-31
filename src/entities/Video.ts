@@ -27,8 +27,8 @@ const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
   genre: { type: String, default: "" },
   contributors: { type: [String], ref: UserRef, default: [] },
   sponsors: { type: [String], ref: UserRef, default: [] },
-  sponsored: { type: Boolean, default: false },
   // TODO:
+  promotions: {},
   contributions: { type: Schema.Types.Mixed, default: {} }
 };
 

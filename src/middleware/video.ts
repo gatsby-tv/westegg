@@ -33,9 +33,7 @@ export const validatePostVideo = async (
     // Check if the user making the request is an owner
     // TODO: Better permission checking here
     if (
-      !channel.owners
-        .map((id) => id.toString())
-        .includes(req.decodedUserToken._id)
+      !channel.owners.map((id) => id.toString()).includes(req.decodedToken!._id)
     ) {
       throw new Forbidden(ErrorMessage.USER_FORBIDDEN_TO_PERFORM_ACTION);
     }

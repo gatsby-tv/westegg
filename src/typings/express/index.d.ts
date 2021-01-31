@@ -1,9 +1,9 @@
-import { IUserToken } from "../../entities/User";
+import { Token } from "@gatsby-tv/types";
 
 declare global {
   declare namespace Express {
     interface Request {
-      decodedUserToken?: IUserToken;
+      decodedToken?: Token;
     }
   }
 }
