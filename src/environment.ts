@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 export enum Environment {
   DEV = "dev",
   STAGING = "staging",
@@ -21,7 +23,7 @@ export function validateEnvironment() {
 
     // Warn on "dev" environment set
     if (Environment.DEV === process.env.ENVIRONMENT) {
-      console.warn("Environment set to dev, DO NOT RUN IN PRODUCTION!");
+      logger.warn("Environment set to dev, DO NOT RUN IN PRODUCTION!");
     }
 
     // Validate JWT secret key is set
@@ -35,7 +37,7 @@ export function validateEnvironment() {
 
     // TODO: Validate IPFS url format
   } catch (error) {
-    console.error(`FATAL: ${error}`);
+    logger.error(`FATAL: ${error}`);
     process.exit(1);
   }
 }

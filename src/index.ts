@@ -9,6 +9,7 @@ import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import db from "./db";
 import { validateEnvironment } from "./environment";
+import { logger } from "./logger";
 // Import routes
 import auth from "./routes/auth";
 import channel from "./routes/channel";
@@ -73,7 +74,7 @@ app.use(
 
     // If not, log and send generic internal error
     else {
-      console.error(error);
+      logger.error(error);
       return res.status(StatusCode.INTERNAL_ERROR).json({
         error: new InternalError()
       } as ErrorResponse);
@@ -85,6 +86,6 @@ app.use(
 (async () => {
   await db.connect();
   app.listen(port, () => {
-    console.log(`Server started at http://localhost:${port}/`);
+    logger.info(`Server started at http://localhost:${port}/`);
   });
 })();
