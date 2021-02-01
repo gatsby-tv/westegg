@@ -16,7 +16,7 @@ services:
       MONGO_API_DB: gatsby
       # Misc config
       JWT_SECRET: ${JWT_SECRET}
-      ENVIRONMENT: ${ENVIRONMENT}
+      WESTEGG_ENV: ${WESTEGG_ENV}
     ports:
      - 3001:3001
     restart: always

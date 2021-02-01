@@ -47,7 +47,7 @@ router.post(
  * GET /auth/devtoken
  * ONLY ENABLE ON DEV
  */
-if (Environment.DEV === process.env.ENVIRONMENT) {
+if (Environment.DEV === process.env.WESTEGG_ENV) {
   router.get("/devtoken", (req, res, next) => {
     try {
       const key = req.query.key as string;

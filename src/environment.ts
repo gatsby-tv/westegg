@@ -11,10 +11,10 @@ export function validateEnvironment() {
   try {
     // Check environment is properly set
     if (
-      !process.env.ENVIRONMENT ||
-      (Environment.DEV !== process.env.ENVIRONMENT &&
-        Environment.STAGING !== process.env.ENVIRONMENT &&
-        Environment.PRODUCTION !== process.env.ENVIRONMENT)
+      !process.env.WESTEGG_ENV ||
+      (Environment.DEV !== process.env.WESTEGG_ENV &&
+        Environment.STAGING !== process.env.WESTEGG_ENV &&
+        Environment.PRODUCTION !== process.env.WESTEGG_ENV)
     ) {
       throw new Error(
         'Environment not set to "dev", "staging", or "production"!'
@@ -22,7 +22,7 @@ export function validateEnvironment() {
     }
 
     // Warn on "dev" environment set
-    if (Environment.DEV === process.env.ENVIRONMENT) {
+    if (Environment.DEV === process.env.WESTEGG_ENV) {
       logger.warn("Environment set to dev, DO NOT RUN IN PRODUCTION!");
     }
 
