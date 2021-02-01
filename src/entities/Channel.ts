@@ -7,10 +7,10 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   // Required
   handle: String,
   name: String,
-  owners: { type: [String], ref: UserRef },
+  owners: { type: [Schema.Types.ObjectId], ref: UserRef },
   creationDate: Date,
   // Optional
-  subscribers: { type: [String], ref: UserRef, default: [] },
+  subscribers: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
   avatar: {
     type: {
       hash: String,
@@ -20,10 +20,14 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   },
   verified: { type: Boolean, default: false },
   description: { type: String, default: "" },
-  collaborators: { type: [String], ref: UserRef, default: [] },
-  contributors: { type: [String], ref: UserRef, default: [] },
-  publicAdmins: { type: [String], ref: UserRef, default: [] },
-  publicModerators: { type: [String], ref: UserRef, default: [] },
+  collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  contributors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  publicAdmins: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  publicModerators: {
+    type: [Schema.Types.ObjectId],
+    ref: UserRef,
+    default: []
+  },
   trusted: { type: Boolean, default: false },
   videos: { type: [Schema.Types.ObjectId], ref: VideoRef, default: [] },
   banned: { type: Boolean, default: false },

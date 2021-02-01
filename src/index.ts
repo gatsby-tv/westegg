@@ -5,6 +5,7 @@ import {
   WestEggError
 } from "@gatsby-tv/types";
 import bodyParser from "body-parser";
+import busboy from "connect-busboy";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import db from "./db";
@@ -50,6 +51,14 @@ router.use("/auth", auth);
 router.use("/user", user);
 router.use("/channel", channel);
 router.use("/video", video);
+
+// Busboy file upload middleware
+router.use(
+  busboy({
+    // 2MiB Buffer
+    highWaterMark: 2 * 1024 * 1024
+  })
+);
 
 // Set API version
 app.use("/v1", router);

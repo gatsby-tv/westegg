@@ -9,7 +9,9 @@ export const logger = winston.createLogger({
     winston.format.printf((info) =>
       colorizer.colorize(
         info.level,
-        `${info.timestamp} ${info.level.toUpperCase()}: ${info.message}`
+        `${info.timestamp} ${info.level.toUpperCase()}: ${info.message}${
+          info.stack ? info.stack : ""
+        }`
       )
     )
   ),

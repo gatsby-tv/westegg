@@ -9,7 +9,7 @@ import { ChannelRef, UserRef, VideoRef } from "./refs";
 
 const UserSchemaFields: Record<keyof IUser, any> = {
   // Required
-  _id: String,
+  _id: Schema.Types.ObjectId,
   handle: String,
   name: String,
   creationDate: Date,
@@ -24,28 +24,28 @@ const UserSchemaFields: Record<keyof IUser, any> = {
   verified: { type: Boolean, default: false },
   description: { type: String, default: "" },
   followers: { type: Number, default: 0 },
-  channels: { type: [String], ref: ChannelRef, default: [] },
+  channels: { type: [Schema.Types.ObjectId], ref: ChannelRef, default: [] },
   collaborations: {
-    type: [String],
+    type: [Schema.Types.ObjectId],
     ref: ChannelRef,
     default: []
   },
   email: String,
   administering: {
-    type: [String],
+    type: [Schema.Types.ObjectId],
     ref: ChannelRef,
     default: []
   },
-  moderating: { type: [String], ref: ChannelRef, default: [] },
+  moderating: { type: [Schema.Types.ObjectId], ref: ChannelRef, default: [] },
   invitations: {
-    owners: { type: [String], ref: UserRef, default: [] },
-    collaborators: { type: [String], ref: UserRef, default: [] },
-    admin: { type: [String], ref: UserRef, default: [] },
-    moderator: { type: [String], ref: UserRef, default: [] }
+    owners: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+    collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+    admin: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+    moderator: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] }
   },
-  following: { type: [String], ref: UserRef, default: [] },
+  following: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
   subscriptions: {
-    type: [String],
+    type: [Schema.Types.ObjectId],
     ref: ChannelRef,
     default: []
   },

@@ -1,12 +1,14 @@
 import {
   BadRequest,
   ErrorMessage,
+  NotFound,
   PostAuthSignupRequest,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { isAuthenticated, validateSignup } from "../middleware/auth";
@@ -43,12 +45,54 @@ router.post(
   }
 );
 
+// TODO: /auth/user/:id/exists
+
+/**
+ * GET /auth/user/handle/:handle/exists
+ */
+router.get("/user/handle/:handle/exists", async (req, res, next) => {
+  try {
+    // TODO: as GetAuthUserHandleExistsRequest
+    const request = req.params;
+    const user = await User.findOne({ handle: request.handle });
+
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
+    // TODO: as GetAuthUserHandleExistsResponse
+    res.status(StatusCode.OK).json(user.toJSON());
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /auth/channel/handle/:handle/exists
+ */
+router.get("/channel/handle/:handle/exists", async (req, res, next) => {
+  try {
+    // TODO: GetAuthChannelHandleExistsRequest
+    const request = req.params;
+    const channel = await Channel.findOne({ handle: request.handle });
+
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
+
+    // TODO: as GetAuthChannelHandleExistsResponse
+    res.status(StatusCode.OK).json(channel.toJSON());
+  } catch (error) {
+    next(error);
+  }
+});
+
 /**
  * GET /auth/devtoken
  * ONLY ENABLE ON DEV
  */
 if (Environment.DEV === process.env.WESTEGG_ENV) {
-  router.get("/devtoken", (req, res, next) => {
+  router.get("/devtoken", async (req, res, next) => {
     try {
       const key = req.query.key as string;
       if (!key) {

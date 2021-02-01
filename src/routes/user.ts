@@ -50,18 +50,36 @@ router.get(
   }
 );
 
-// TODO: Write PutAvatarUserRequest
-// // Update avatar
-// if (request.avatar) {
-//   // TODO: Validate mime type is allowed
-//   // TODO: use ipfs block stat or ipfs files stat
-//   // TODO: Validate file contents
-//   // TODO: Validate file size
-//   // Pin on IPFS node/cluster
-//   await ipfs.pin.add(request.avatar.hash);
-//   // TODO: Unpin old avatar if pinned successfully
-//   // Add new avatar metadata to user
-//   user.avatar = request.avatar;
-// }
+// TODO: GET /user/:id/feeds
+// TODO: GET /user/:id/promotions
+// TODO: PUT /user/:id/handle
+
+/**
+ * TODO: PUT /user/:id/avatar
+ */
+router.put("/:id/avatar", (req, res, next) => {
+  try {
+    // req.pipe(req.busboy);
+    // console.log(req.busboy);
+    // req.busboy.on("file", (fieldname, file, filename) => {
+    //   console.log(fieldname);
+    //   console.log(filename);
+    // });
+    //   // TODO: Validate mime type is allowed
+    //   // TODO: use ipfs block stat or ipfs files stat
+    //   // TODO: Validate file contents
+    //   // TODO: Validate file size
+    //   // Pin on IPFS node/cluster
+    //   await ipfs.pin.add(request.avatar.hash);
+    //   // TODO: Unpin old avatar if pinned successfully
+    //   // Add new avatar metadata to user
+    //   user.avatar = request.avatar;
+  } catch (error) {
+    next(error);
+  }
+});
+
+// TODO: PUT /user/:id/banner
+// TODO: PUT /user/:id/subscription
 
 export default router;
