@@ -21,7 +21,7 @@ export function validateEnvironment() {
 
     // Warn on "dev" environment set
     if (Environment.DEV === process.env.ENVIRONMENT) {
-      console.warn("Environment set to dev, DO NOT RUN ON PRODUCTION!");
+      console.warn("Environment set to dev, DO NOT RUN IN PRODUCTION!");
     }
 
     // Validate JWT secret key is set

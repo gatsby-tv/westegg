@@ -2,12 +2,12 @@ import {
   ErrorMessage,
   GetUserAccountRequest,
   NotFound,
-  PutUserRequest,
   StatusCode
 } from "@gatsby-tv/types";
 import { Request, Router } from "express";
 import * as ExpressCore from "express-serve-static-core";
 import IPFSClient from "ipfs-http-client";
+import { Types } from "mongoose";
 import { User } from "../entities/User";
 
 const router = Router();
@@ -16,21 +16,27 @@ const ipfs = IPFSClient({
 });
 
 /**
- * GET /user/:handle
+ * GET /user/{:id, :handle}
  */
-// TODO: Can be :id or :handle
-// TODO: All other requests use :id, same behavior for channel
 interface GetUserAccountRequestParams
   extends ExpressCore.ParamsDictionary,
     GetUserAccountRequest {}
 router.get(
-  "/:handle",
+  // :unique can be either :id or :handle
+  "/:unique",
   async (req: Request<GetUserAccountRequestParams, {}, {}, {}>, res, next) => {
     try {
       // TODO: as GetUserAccountRequest
       const request = req.params;
 
-      const user = await User.findById(request.handle);
+      let user;
+      try {
+        const id = new Types.ObjectId(request.unique);
+        user = await User.findById(id);
+      } catch (error) {
+        // Not a mongo object id, try with handle
+        user = await User.findOne({ handle: request.unique });
+      }
 
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
@@ -43,35 +49,6 @@ router.get(
     }
   }
 );
-
-/**
- * PUT /user/:handle
- */
-// TODO: Add auth middleware
-router.put("/:handle", async (req, res, next) => {
-  try {
-    const request: PutUserRequest = req.body;
-    const handle = req.params.handle;
-
-    // Get the user to update
-    const user = await User.findById(handle);
-
-    if (!user) {
-      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
-    }
-
-    // TODO: Handle
-    // TODO: Name
-    // TODO: Description
-
-    // Save user
-    await user.save();
-    // TODO: as PutUserResponse
-    res.status(StatusCode.OK).json(user.toJSON());
-  } catch (error) {
-    next(error);
-  }
-});
 
 // TODO: Write PutAvatarUserRequest
 // // Update avatar

@@ -54,6 +54,7 @@ export const isAuthenticated = async (
 
     // Verify the token is authentic
     // TODO: Promisify this and use the async overload
+    // TODO: Add try/catch to for token validation
     // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
     const token: Token = jwt.verify(
       encodedToken,
