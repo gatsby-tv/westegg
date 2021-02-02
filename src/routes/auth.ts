@@ -99,7 +99,10 @@ if (Environment.DEV === process.env.WESTEGG_ENV) {
         throw new BadRequest(ErrorMessage.BAD_REQUEST);
       }
       const secret = Buffer.from(key).toString("base64");
-      const token = jwt.sign({ _id: new Types.ObjectId() }, secret, {
+
+      // Get optional id query param from request, if not there generate new
+      let id = req.query.id || new Types.ObjectId();
+      const token = jwt.sign({ _id: id }, secret, {
         expiresIn: "2w"
       });
       res.status(StatusCode.OK).json({ token });

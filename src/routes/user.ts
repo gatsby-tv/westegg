@@ -6,14 +6,10 @@ import {
 } from "@gatsby-tv/types";
 import { Request, Router } from "express";
 import * as ExpressCore from "express-serve-static-core";
-import IPFSClient from "ipfs-http-client";
 import { Types } from "mongoose";
 import { User } from "../entities/User";
 
 const router = Router();
-const ipfs = IPFSClient({
-  url: process.env.IPFS_URL || "http://localhost:5001"
-});
 
 /**
  * GET /user/{:id, :handle}
@@ -57,23 +53,9 @@ router.get(
 /**
  * TODO: PUT /user/:id/avatar
  */
-router.put("/:id/avatar", (req, res, next) => {
+router.put("/:id/avatar", async (req, res, next) => {
   try {
-    // req.pipe(req.busboy);
-    // console.log(req.busboy);
-    // req.busboy.on("file", (fieldname, file, filename) => {
-    //   console.log(fieldname);
-    //   console.log(filename);
-    // });
-    //   // TODO: Validate mime type is allowed
-    //   // TODO: use ipfs block stat or ipfs files stat
-    //   // TODO: Validate file contents
-    //   // TODO: Validate file size
-    //   // Pin on IPFS node/cluster
-    //   await ipfs.pin.add(request.avatar.hash);
-    //   // TODO: Unpin old avatar if pinned successfully
-    //   // Add new avatar metadata to user
-    //   user.avatar = request.avatar;
+    throw new Error("Unsupported endpoint!");
   } catch (error) {
     next(error);
   }
