@@ -8,6 +8,7 @@ import { Request, Router } from "express";
 import * as ExpressCore from "express-serve-static-core";
 import { Types } from "mongoose";
 import { User } from "../entities/User";
+import { upload } from "../file";
 
 const router = Router();
 
@@ -53,9 +54,25 @@ router.get(
 /**
  * TODO: PUT /user/:id/avatar
  */
-router.put("/:id/avatar", async (req, res, next) => {
+// TODO: Add auth middleware
+router.put("/:id/avatar", upload, async (req, res, next) => {
   try {
-    throw new Error("Unsupported endpoint!");
+    // TODO: as PutUserAvatarRequest
+    const request = req.params;
+
+    const user = await User.findById(request.id);
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
+    // TODO: Unpin the old avatar (not case where two users have same exact avatar hash?)
+
+    // Get the file uploaded and add to the user
+    user.avatar = req.ipfsContent!;
+    user.save();
+
+    // TODO: as PutUserAvatarResponse
+    res.status(StatusCode.CREATED).json(user.toJSON());
   } catch (error) {
     next(error);
   }

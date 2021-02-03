@@ -1,7 +1,11 @@
-import { StatusCode } from "@gatsby-tv/types";
+import { IPFSContent } from "@gatsby-tv/types";
 import Busboy from "busboy";
 import { NextFunction, Request, Response } from "express";
-import IPFSClient from "ipfs-http-client";
+import fs from "fs";
+// Quick hack to import other ipfs http client types while typescript support is still wip
+// @ts-ignore
+import IPFSClient, { globSource, UnixFSEntry } from "ipfs-http-client";
+import path from "path";
 
 const ipfs = IPFSClient({
   url: process.env.IPFS_URL || "http://localhost:5001"
@@ -12,6 +16,8 @@ enum SupportedMimeType {
   PNG = "image/png"
 }
 
+const TMP_DIR = "/tmp";
+
 export const upload = async (
   req: Request,
   res: Response,
@@ -19,11 +25,13 @@ export const upload = async (
 ) => {
   try {
     const busboy = new Busboy({ headers: req.headers });
+    let tmpFilePath: fs.PathLike;
+    let tmpFileMimeType: SupportedMimeType;
 
     // TODO: Promisify
     busboy.on(
       "file",
-      async (
+      (
         fieldname,
         file: NodeJS.ReadableStream,
         filename,
@@ -31,23 +39,33 @@ export const upload = async (
         mimeType
       ) => {
         // TODO: Validate mime type is allowed
-        // TODO: use ipfs block stat or ipfs files stat
         // TODO: Validate file contents
         // TODO: Validate file size
 
-        // TODO: Save file to tmp dir
-        // file.pipe();
-
-        // TODO: Pin tmp file to ipfs node/cluster
-        // await ipfs.pin.add(file.);
+        // Save file to tmp dir
+        tmpFileMimeType = <SupportedMimeType>mimeType;
+        tmpFilePath = path.join(TMP_DIR, `${Date.now()}_${filename}`);
+        file.pipe(fs.createWriteStream(tmpFilePath));
       }
     );
 
     // TODO: Promisify
-    busboy.on("finish", () => {
-      res.status(StatusCode.CREATED);
+    busboy.on("finish", async () => {
+      // Pin tmp file to ipfs node/cluster
+      const file: UnixFSEntry = await ipfs.add(globSource(tmpFilePath));
+      await ipfs.pin.add(file.cid);
+      const ipfsContent: IPFSContent = {
+        hash: file.cid.toString(),
+        mimeType: tmpFileMimeType
+      };
+      req.ipfsContent = ipfsContent;
+      // TODO: Clean up tmp file
+
+      // Pass ipfs content to endpoint
+      next();
     });
 
+    // Transfer http multipart file to busboy over stream
     req.pipe(busboy);
   } catch (error) {
     next(error);
