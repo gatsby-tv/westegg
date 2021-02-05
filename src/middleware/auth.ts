@@ -1,6 +1,3 @@
-/**
- * Validate login/signup requests and if users can access other routes.
- */
 import {
   ErrorMessage,
   PostAuthSignupRequest,
@@ -20,7 +17,6 @@ export const validateSignup = async (
   next: NextFunction
 ) => {
   try {
-    // TODO: Validate the json from the request matches interface
     const signup: PostAuthSignupRequest = req.body;
 
     // Validate handle

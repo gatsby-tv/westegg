@@ -8,7 +8,9 @@ import { Request, Router } from "express";
 import * as ExpressCore from "express-serve-static-core";
 import { Types } from "mongoose";
 import { User } from "../entities/User";
-import { upload } from "../file";
+import { isAuthenticated } from "../middleware/auth";
+import { upload } from "../middleware/multipart";
+import { validatePutUserHandleRequest } from "../middleware/user";
 
 const router = Router();
 
@@ -49,10 +51,37 @@ router.get(
 
 // TODO: GET /user/:id/feeds
 // TODO: GET /user/:id/promotions
-// TODO: PUT /user/:id/handle
 
 /**
- * TODO: PUT /user/:id/avatar
+ * PUT /user/:id/handle
+ */
+router.put(
+  "/:id/handle",
+  isAuthenticated,
+  validatePutUserHandleRequest,
+  async (req, res, next) => {
+    try {
+      // TODO: as PutUserHandleRequest
+      const request = req.body;
+
+      const user = await User.findById(req.params.id);
+      if (!user) {
+        throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+      }
+
+      user.handle = request.handle;
+      await user.save();
+
+      // TODO: as PutUserHandleResponse
+      res.status(StatusCode.CREATED).json(user.toJSON());
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * PUT /user/:id/avatar
  */
 // TODO: Add auth middleware
 router.put("/:id/avatar", upload, async (req, res, next) => {
