@@ -28,7 +28,6 @@ export const upload = async (
     let tmpFilePath: fs.PathLike;
     let tmpFileMimeType: SupportedMimeType;
 
-    // TODO: Promisify
     busboy.on(
       "file",
       (
@@ -38,31 +37,38 @@ export const upload = async (
         encoding,
         mimeType
       ) => {
-        // TODO: Validate mime type is allowed
-        // TODO: Validate file contents
-        // TODO: Validate file size
+        try {
+          // TODO: Validate mime type is allowed
+          // TODO: Validate file contents
+          // TODO: Validate file size
 
-        // Save file to tmp dir
-        tmpFileMimeType = <SupportedMimeType>mimeType;
-        tmpFilePath = path.join(TMP_DIR, `${Date.now()}_${filename}`);
-        file.pipe(fs.createWriteStream(tmpFilePath));
+          // Save file to tmp dir
+          tmpFileMimeType = <SupportedMimeType>mimeType;
+          tmpFilePath = path.join(TMP_DIR, `${Date.now()}_${filename}`);
+          file.pipe(fs.createWriteStream(tmpFilePath));
+        } catch (error) {
+          next(error);
+        }
       }
     );
 
-    // TODO: Promisify
     busboy.on("finish", async () => {
-      // Pin tmp file to ipfs node/cluster
-      const file: UnixFSEntry = await ipfs.add(globSource(tmpFilePath));
-      await ipfs.pin.add(file.cid);
-      const ipfsContent: IPFSContent = {
-        hash: file.cid.toString(),
-        mimeType: tmpFileMimeType
-      };
-      req.ipfsContent = ipfsContent;
-      // TODO: Clean up tmp file
+      try {
+        // Pin tmp file to ipfs node/cluster
+        const file: UnixFSEntry = await ipfs.add(globSource(tmpFilePath));
+        await ipfs.pin.add(file.cid);
+        const ipfsContent: IPFSContent = {
+          hash: file.cid.toString(),
+          mimeType: tmpFileMimeType
+        };
+        req.ipfsContent = ipfsContent;
+        // TODO: Clean up tmp file
 
-      // Pass ipfs content to endpoint
-      next();
+        // Pass ipfs content to endpoint
+        next();
+      } catch (error) {
+        next(error);
+      }
     });
 
     // Transfer http multipart file to busboy over stream
