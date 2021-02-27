@@ -1,11 +1,15 @@
 import {
   ErrorMessage,
+  IChannel,
+  IUser,
+  IVideo,
   PostAuthSignupRequest,
   Token,
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { compareMongoIDs } from "../utilities";
 import { validateUserHandle } from "./handled";
 import { validateName } from "./named";
 
@@ -65,3 +69,54 @@ export const isAuthenticated = async (
     next(error);
   }
 };
+
+export enum ResourceAction {
+  GET = "GET",
+  POST = "POST",
+  PUT = "PUT",
+  DELETE = "DELETE"
+}
+
+type Resource = IUser | IChannel | IVideo;
+
+// TODO: Move these to types/utilities and use better props for this?
+function isUser(resource: Resource): resource is IUser {
+  return (resource as IUser).channels !== undefined;
+}
+
+function isChannel(resource: Resource): resource is IChannel {
+  return (resource as IChannel).videos !== undefined;
+}
+
+function isVideo(resource: Resource): resource is IVideo {
+  return (resource as IVideo).views !== undefined;
+}
+
+/**
+ * Check if a user has permission to perform an action on a resource (other user/channel/video/etc).
+ *
+ * @param {IUser} actor The user performing an operation on the resource.
+ * @param {Resource} resource A user/channel/video/etc that the actor is trying to perform an action on.
+ * @param {ResourceAction} method The action the actor is attempting to perform on the resource.
+ */
+export function hasPermission(
+  actor: IUser,
+  resource: Resource,
+  method: ResourceAction
+): boolean {
+  if (isUser(resource)) {
+    let user: IUser = resource as IUser;
+    // Check if the actor is the same user
+    // No need to check for method here, owner can perform all actions
+    if (compareMongoIDs(actor._id, user._id)) {
+      return true;
+    }
+    // TODO:
+  } else if (isChannel(resource)) {
+    // TODO:
+  } else if (isVideo(resource)) {
+    // TODO:
+  }
+
+  return false;
+}

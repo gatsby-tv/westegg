@@ -1,9 +1,9 @@
 import {
   BadRequest,
   ErrorMessage,
-  Forbidden,
   NotFound,
-  PostVideoRequest
+  PostVideoRequest,
+  Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
 import { Channel } from "../entities/Channel";
@@ -35,7 +35,7 @@ export const validatePostVideo = async (
     if (
       !channel.owners.map((id) => id.toString()).includes(req.decodedToken!._id)
     ) {
-      throw new Forbidden(ErrorMessage.USER_FORBIDDEN_TO_PERFORM_ACTION);
+      throw new Unauthorized(ErrorMessage.USER_FORBIDDEN_TO_PERFORM_ACTION);
     }
 
     // TODO: Validate ipfs video/thumbnail hash are correct format

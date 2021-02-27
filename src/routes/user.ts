@@ -7,10 +7,14 @@ import {
 import { Request, Router } from "express";
 import * as ExpressCore from "express-serve-static-core";
 import { Types } from "mongoose";
+import { getCachedUserById } from "../cache";
 import { User } from "../entities/User";
 import { isAuthenticated } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
-import { validatePutUserHandleRequest } from "../middleware/user";
+import {
+  hasPermissionToPutUserRequest,
+  validatePutUserHandleRequest
+} from "../middleware/user";
 
 const router = Router();
 
@@ -58,6 +62,7 @@ router.get(
 router.put(
   "/:id/handle",
   isAuthenticated,
+  hasPermissionToPutUserRequest,
   validatePutUserHandleRequest,
   async (req, res, next) => {
     try {
@@ -83,31 +88,84 @@ router.put(
 /**
  * PUT /user/:id/avatar
  */
-// TODO: Add auth middleware
-router.put("/:id/avatar", upload, async (req, res, next) => {
-  try {
-    // TODO: as PutUserAvatarRequest
-    const request = req.params;
+router.put(
+  "/:id/avatar",
+  isAuthenticated,
+  hasPermissionToPutUserRequest,
+  upload,
+  async (req, res, next) => {
+    try {
+      // TODO: as PutUserAvatarRequest
+      const request = req.params;
 
-    const user = await User.findById(request.id);
-    if (!user) {
-      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+      const user = await User.findById(request.id);
+      if (!user) {
+        throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+      }
+
+      // TODO: Unpin the old avatar (not case where two users have same exact avatar hash?)
+
+      // Get the file uploaded and add to the user
+      user.avatar = req.ipfsContent!;
+      user.save();
+
+      // TODO: as PutUserAvatarResponse
+      res.status(StatusCode.CREATED).json(user.toJSON());
+    } catch (error) {
+      next(error);
     }
-
-    // TODO: Unpin the old avatar (not case where two users have same exact avatar hash?)
-
-    // Get the file uploaded and add to the user
-    user.avatar = req.ipfsContent!;
-    user.save();
-
-    // TODO: as PutUserAvatarResponse
-    res.status(StatusCode.CREATED).json(user.toJSON());
-  } catch (error) {
-    next(error);
   }
-});
+);
 
-// TODO: PUT /user/:id/banner
-// TODO: PUT /user/:id/subscription
+/**
+ * PUT /user/:id/banner
+ */
+router.put(
+  "/:id/banner",
+  isAuthenticated,
+  hasPermissionToPutUserRequest,
+  upload,
+  async (req, res, next) => {
+    try {
+      // TODO: as PutUserBannerRequestParams
+      const request = req.params;
+
+      const user = await User.findById(request.id);
+      if (!user) {
+        throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+      }
+
+      // TODO: Unpin the old banner (not in case where two users have the same banner)
+      user.banner = req.ipfsContent!;
+      user.save();
+
+      res.status(StatusCode.CREATED).json(user.toJSON());
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * PUT /user/:id/subscription
+ */
+router.put(
+  "/:id/subscription",
+  isAuthenticated,
+  hasPermissionToPutUserRequest,
+  async (req, res, next) => {
+    try {
+      // TODO: as PutUserSubscriptionRequestParams
+      const user = await getCachedUserById(req.params.id);
+      // TODO: as PutUserSubscriptionRequest
+      user.subscriptions.push(req.body.subscription);
+      user.save();
+
+      res.status(StatusCode.CREATED).json(user.toJSON());
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 export default router;
