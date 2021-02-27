@@ -16,7 +16,7 @@ import { validatePostChannel } from "../middleware/channel";
 const router = Router();
 
 /**
- * GET /chanel/{:id, :handle}
+ * GET /channel/{:id, :handle}
  */
 interface GetChannelAccountRequestParams
   extends ExpressCore.ParamsDictionary,
