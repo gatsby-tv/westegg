@@ -13,6 +13,7 @@ import { logger } from "./logger";
 // Import routes
 import auth from "./routes/auth";
 import channel from "./routes/channel";
+import listing from "./routes/listing";
 import user from "./routes/user";
 import video from "./routes/video";
 
@@ -50,6 +51,7 @@ router.use("/auth", auth);
 router.use("/user", user);
 router.use("/channel", channel);
 router.use("/video", video);
+router.use("/listing", listing);
 
 // Set API version
 app.use("/v1", router);
