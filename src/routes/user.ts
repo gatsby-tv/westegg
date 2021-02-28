@@ -178,6 +178,7 @@ router.put(
       // TODO: as PutUserSubscriptionRequestParams
       const user = await getCachedUserById(req.params.id);
       // TODO: as PutUserSubscriptionRequest
+      // TODO: Prevent subscription to the same channel twice (set)
       user.subscriptions.push(req.body.subscription);
       user.save();
 

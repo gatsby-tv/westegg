@@ -113,6 +113,13 @@ export function hasPermission(
     }
     // TODO:
   } else if (isChannel(resource)) {
+    let channel: IChannel = resource as IChannel;
+    for (let owner of channel.owners) {
+      // Check if the actor is one of the channel owners, no need to check method, owners can perform all actions
+      if (compareMongoIDs(actor._id, owner)) {
+        return true;
+      }
+    }
     // TODO:
   } else if (isVideo(resource)) {
     // TODO:

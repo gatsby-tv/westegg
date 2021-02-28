@@ -146,7 +146,7 @@ router.put(
     try {
       // TODO: as PutChannelHandleRequest
       const request = req.body;
-      const channel = await getCachedChannelById(request.id);
+      const channel = await getCachedChannelById(req.params.id);
 
       channel.handle = request.handle;
       await channel.save();

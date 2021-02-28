@@ -1,11 +1,10 @@
 import {
   ErrorMessage,
-  NotFound,
   PostChannelRequest,
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
-import { Channel } from "../entities/Channel";
+import { getCachedChannelById } from "../cache";
 import { User } from "../entities/User";
 import { hasPermission, ResourceAction } from "./auth";
 import { validateChannelHandle } from "./handled";
@@ -46,13 +45,10 @@ export const hasPermissionToPutChannelRequest = async (
     const actor = await User.findById(req.decodedToken!._id);
 
     // Get the channel to update
-    const user = await Channel.findById(req.params.id);
-    if (!user) {
-      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
-    }
+    const channel = await getCachedChannelById(req.params.id);
 
     // Check if the actor (user performing the request) has permission to update the channel
-    if (!hasPermission(actor!, user, ResourceAction.PUT)) {
+    if (!hasPermission(actor!, channel, ResourceAction.PUT)) {
       throw new Unauthorized(ErrorMessage.USER_FORBIDDEN_TO_PERFORM_ACTION);
     }
 
@@ -71,6 +67,12 @@ export const validatePutChannelHandleRequest = async (
   next: NextFunction
 ) => {
   try {
+    // TODO: as PutChannelHandleRequest
+    const request = req.body;
+
+    // Validate handle
+    await validateChannelHandle(request.handle);
+    next();
   } catch (error) {
     next(error);
   }
