@@ -53,8 +53,27 @@ router.get(
   }
 );
 
-// TODO: GET /user/:id/feeds
-// TODO: GET /user/:id/promotions
+/**
+ * GET /user/:id/feeds TODO: Should this be private?
+ */
+router.get("/:id/feeds", async (req, res, next) => {
+  try {
+    // TODO: as GetUserFeedsRequestParams
+    const user = await getCachedUserById(req.params.id);
+    // TODO: Should this be a combination of subscriptions and followed users?
+    res.status(StatusCode.OK).json([user.subscriptions, user.following]);
+  } catch (error) {
+    next(error);
+  }
+});
+/**
+ * GET /user/:id/promotions TODO: Should this be private?
+ */
+router.get("/:id/promotions", async (req, res, next) => {
+  // TODO: as GetUserPromotionsParams
+  const user = await getCachedUserById(req.params.id);
+  res.status(StatusCode.OK).json(user.promotions);
+});
 
 /**
  * PUT /user/:id/handle
@@ -139,6 +158,7 @@ router.put(
       user.banner = req.ipfsContent!;
       user.save();
 
+      // TODO: as PutUserBannerResponse
       res.status(StatusCode.CREATED).json(user.toJSON());
     } catch (error) {
       next(error);
@@ -161,6 +181,7 @@ router.put(
       user.subscriptions.push(req.body.subscription);
       user.save();
 
+      // TODO: as PutUserSubscriptionResponse
       res.status(StatusCode.CREATED).json(user.toJSON());
     } catch (error) {
       next(error);
