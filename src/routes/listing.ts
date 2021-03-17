@@ -1,12 +1,11 @@
 import {
   Browsable,
+  Channel as ChannelType,
   GetListingFeaturedChannelsResponse,
   GetListingNewVideosResponse,
   GetListingPopularVideosResponse,
-  GetListingTopicsResponse,
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsResponse,
-  IChannelAccount,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
@@ -21,11 +20,11 @@ router.get("/featured/channels", async (req, res, next) => {
   try {
     // TODO: Should get actual list of featured channels, for now just get first 10
     const channels = (await Channel.find().limit(10)).map(
-      (entity) => entity as IChannelAccount
+      (entity) => entity as ChannelType
     );
     res
       .status(StatusCode.OK)
-      .json({ channels } as GetListingFeaturedChannelsResponse);
+      .json(channels as GetListingFeaturedChannelsResponse);
   } catch (error) {
     next(error);
   }
@@ -41,7 +40,7 @@ router.get("/videos/recommended", async (req, res, next) => {
     const content: Browsable[] = [];
     res
       .status(StatusCode.OK)
-      .json({ content } as GetUserListingRecommendedResponse);
+      .json(content as GetUserListingRecommendedResponse);
   } catch (error) {
     next(error);
   }
@@ -55,9 +54,7 @@ router.get("/videos/popular", async (req, res, next) => {
     // TODO: Issue here converting IVideo entity to Browsable
     // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
     const content: Browsable[] = [];
-    res
-      .status(StatusCode.OK)
-      .json({ content } as GetListingPopularVideosResponse);
+    res.status(StatusCode.OK).json(content as GetListingPopularVideosResponse);
   } catch (error) {
     next(error);
   }
@@ -71,7 +68,7 @@ router.get("/videos/new", async (req, res, next) => {
     // TODO: Issue here converting IVideo entity to Browsable
     // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
     const content: Browsable[] = [];
-    res.status(StatusCode.OK).json({ content } as GetListingNewVideosResponse);
+    res.status(StatusCode.OK).json(content as GetListingNewVideosResponse);
   } catch (error) {
     next(error);
   }
@@ -87,23 +84,7 @@ router.get("/subscriptions", async (req, res, next) => {
     const content: Browsable[] = [];
     res
       .status(StatusCode.OK)
-      .json({ content } as GetUserListingSubscriptionsResponse);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /listing/topics
- */
-router.get("/topics", async (req, res, next) => {
-  try {
-    // TODO: Issue here converting IVideo entity to Browsable
-    // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
-    const content: Browsable[] = [];
-    res.status(StatusCode.OK).json({
-      topics: [{ topic: "Empty", content }]
-    } as GetListingTopicsResponse);
+      .json(content as GetUserListingSubscriptionsResponse);
   } catch (error) {
     next(error);
   }
