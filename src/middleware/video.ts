@@ -25,7 +25,6 @@ export const validatePostVideo = async (
     const channel = await Channel.findById(request.channel);
 
     // Check the channel to upload the video to exists
-    // TODO: We're making two calls for the same thing in validate methods, how do we get around this?
     if (!channel) {
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }

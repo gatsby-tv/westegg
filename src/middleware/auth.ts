@@ -111,7 +111,6 @@ export function hasPermission(
     if (compareMongoIDs(actor._id, user._id)) {
       return true;
     }
-    // TODO:
   } else if (isChannel(resource)) {
     let channel: IChannel = resource as IChannel;
     for (let owner of channel.owners) {

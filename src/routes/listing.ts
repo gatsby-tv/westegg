@@ -1,4 +1,5 @@
 import {
+  BasicVideo,
   Browsable,
   Channel as ChannelType,
   GetListingFeaturedChannelsResponse,
@@ -6,10 +7,15 @@ import {
   GetListingPopularVideosResponse,
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsResponse,
+  IBasicVideo,
+  SerialVideo,
+  Show,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
+import { getCachedChannelById } from "../cache";
 import { Channel } from "../entities/Channel";
+import { Video } from "../entities/Video";
 
 const router = Router();
 
@@ -30,14 +36,38 @@ router.get("/featured/channels", async (req, res, next) => {
   }
 });
 
+// Convert IBasicVideo to BasicVideo
+async function toBasicVideo(input: IBasicVideo): Promise<BasicVideo> {
+  let output = {
+    // TODO: Object spread includes unnecessary keys here, we should strip out properties before returning
+    ...input,
+    channel: await getCachedChannelById(input.channel),
+    // TODO: Get from collections
+    collaborators: [],
+    contributors: [],
+    sponsors: []
+  } as BasicVideo;
+
+  return output;
+}
+
 /**
  * GET /listing/videos/recommended
  */
 router.get("/videos/recommended", async (req, res, next) => {
   try {
-    // TODO: Issue here converting IVideo entity to Browsable
-    // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
-    const content: Browsable[] = [];
+    // TODO: Page content to limit (currently hardcoded to 25)
+    const basicVideos: BasicVideo[] = await Promise.all(
+      (await Video.find().limit(25)).map(
+        async (entity) => await toBasicVideo(entity as IBasicVideo)
+      )
+    );
+    // TODO: Include serial videos and shows
+    const serialVideos: SerialVideo[] = [];
+    const shows: Show[] = [];
+
+    const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
+
     res
       .status(StatusCode.OK)
       .json(content as GetUserListingRecommendedResponse);
