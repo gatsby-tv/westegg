@@ -1,7 +1,8 @@
 import {
   BasicVideo,
   Browsable,
-  Channel as ChannelType,
+  Channel as ClientChannel,
+  EpisodicVideo,
   GetListingFeaturedChannelsResponse,
   GetListingNewVideosResponse,
   GetListingPopularVideosResponse,
@@ -10,7 +11,8 @@ import {
   IBasicVideo,
   SerialVideo,
   Show,
-  StatusCode
+  StatusCode,
+  Video as ClientVideo
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { getCachedChannelById } from "../cache";
@@ -26,7 +28,7 @@ router.get("/featured/channels", async (req, res, next) => {
   try {
     // TODO: Should get actual list of featured channels, for now just get first 10
     const channels = (await Channel.find().limit(10)).map(
-      (entity) => entity as ChannelType
+      (entity) => entity as ClientChannel
     );
     res
       .status(StatusCode.OK)
@@ -37,6 +39,7 @@ router.get("/featured/channels", async (req, res, next) => {
 });
 
 // Convert IBasicVideo to BasicVideo
+// TODO: Move to better file
 async function toBasicVideo(input: IBasicVideo): Promise<BasicVideo> {
   let output = {
     // TODO: Object spread includes unnecessary keys here, we should strip out properties before returning
@@ -54,6 +57,7 @@ async function toBasicVideo(input: IBasicVideo): Promise<BasicVideo> {
 /**
  * GET /listing/videos/recommended
  */
+// TODO: Add to /user/:id route
 router.get("/videos/recommended", async (req, res, next) => {
   try {
     // TODO: Page content to limit (currently hardcoded to 25)
@@ -67,7 +71,6 @@ router.get("/videos/recommended", async (req, res, next) => {
     const shows: Show[] = [];
 
     const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
-
     res
       .status(StatusCode.OK)
       .json(content as GetUserListingRecommendedResponse);
@@ -81,9 +84,17 @@ router.get("/videos/recommended", async (req, res, next) => {
  */
 router.get("/videos/popular", async (req, res, next) => {
   try {
-    // TODO: Issue here converting IVideo entity to Browsable
-    // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
-    const content: Browsable[] = [];
+    // TODO: Page content to limit (currently hardcoded to 25)
+    const basicVideos: BasicVideo[] = await Promise.all(
+      (await Video.find().limit(25)).map(
+        async (entity) => await toBasicVideo(entity as IBasicVideo)
+      )
+    );
+    // TODO: Include serial videos and shows
+    const serialVideos: SerialVideo[] = [];
+    const shows: Show[] = [];
+
+    const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
     res.status(StatusCode.OK).json(content as GetListingPopularVideosResponse);
   } catch (error) {
     next(error);
@@ -95,9 +106,17 @@ router.get("/videos/popular", async (req, res, next) => {
  */
 router.get("/videos/new", async (req, res, next) => {
   try {
-    // TODO: Issue here converting IVideo entity to Browsable
-    // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
-    const content: Browsable[] = [];
+    // TODO: Page content to limit (currently hardcoded to 25)
+    const basicVideos: BasicVideo[] = await Promise.all(
+      (await Video.find().limit(25)).map(
+        async (entity) => await toBasicVideo(entity as IBasicVideo)
+      )
+    );
+    // TODO: Include serial videos and shows
+    const serialVideos: SerialVideo[] = [];
+    const shows: Show[] = [];
+
+    const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
     res.status(StatusCode.OK).json(content as GetListingNewVideosResponse);
   } catch (error) {
     next(error);
@@ -107,11 +126,24 @@ router.get("/videos/new", async (req, res, next) => {
 /**
  * GET /listing/subscriptions
  */
+// TODO: Add to /user/:id route
 router.get("/subscriptions", async (req, res, next) => {
   try {
-    // TODO: Issue here converting IVideo entity to Browsable
-    // const content = (await Video.find().limit(25).map(entity => entity as Browsable));
-    const content: Browsable[] = [];
+    // TODO: Page content to limit (currently hardcoded to 25)
+    const basicVideos: BasicVideo[] = await Promise.all(
+      (await Video.find().limit(25)).map(
+        async (entity) => await toBasicVideo(entity as IBasicVideo)
+      )
+    );
+    // TODO: Include serial and episodic videos
+    const serialVideos: SerialVideo[] = [];
+    const episodicVideos: EpisodicVideo[] = [];
+
+    const content: ClientVideo[] = [
+      ...basicVideos,
+      ...serialVideos,
+      ...episodicVideos
+    ];
     res
       .status(StatusCode.OK)
       .json(content as GetUserListingSubscriptionsResponse);
