@@ -1,7 +1,7 @@
 import { IChannel } from "@gatsby-tv/types";
 import mongoose, { Document, Schema } from "mongoose";
 import { DEFAULT_AVATAR } from "./Base";
-import { ChannelRef, UserRef, VideoRef } from "./refs";
+import { ChannelRef, PlaylistRef, ShowRef, UserRef, VideoRef } from "./refs";
 
 const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   // Required
@@ -31,8 +31,8 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   trusted: { type: Boolean, default: false },
   videos: { type: [Schema.Types.ObjectId], ref: VideoRef, default: [] },
   banned: { type: Boolean, default: false },
-  playlists: {}, // TODO: { type: [Schema.Types.ObjectId], ref: PlaylistRef, default: [] },
-  shows: {}, // TODO: { types: [Schema.Types.ObjectId], ref: ShowRef, default: [] },
+  playlists: { type: [Schema.Types.ObjectId], ref: PlaylistRef, default: [] },
+  shows: { type: [Schema.Types.ObjectId], ref: ShowRef, default: [] },
   // TODO:
   poster: {},
   banner: {},
