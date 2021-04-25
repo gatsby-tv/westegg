@@ -16,18 +16,17 @@ jobs:
     - stage: build
       before_script:
         - docker build -t westegg .
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       script:
-        # Login to docker registry
-        - docker login $DOCKER_USER $DOCKER_PASSWORD
         # Latest tag
         - docker tag westegg gatsbytv/westegg:latest
         - docker push gatsbytv/westegg:latest
 
-    # Deploy docker release tag
-    - stage: deploy
-      script:
-        # Release tag
-        - docker tag westegg gatsbytv/westegg:$TRAVIS_TAG
-        - docker push westegg gatsbytv/westegg:$TRAVIS_TAG
-      on:
-        tags: true
+    # TODO: Deploy docker release tag
+    # - stage: deploy
+    #   script:
+    #     # Release tag
+    #     - docker tag westegg gatsbytv/westegg:$TRAVIS_TAG
+    #     - docker push westegg gatsbytv/westegg:$TRAVIS_TAG
+    #   on:
+    #     tags: true
