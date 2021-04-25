@@ -15,5 +15,7 @@ COPY . .
 # Build app source
 RUN npm run build
 
+EXPOSE 3001
+
 # Run the server
 CMD ["node", "dist"]

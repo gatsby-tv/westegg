@@ -1,4 +1,4 @@
-# WestEgg
+# WestEgg ![TravisCI Build](https://travis-ci.org/gatsby-tv/westegg.svg?branch=master)
 
 WestEgg is the backend for the Gatsby hub site and contains indexing data on users, channels, videos and more.
 
