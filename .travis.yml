@@ -1,11 +1,33 @@
 language: node_js
-node_js:
-  - 14.15.4
-before_script:
-  - npm install
-script:
-  - npm run build
+node_js: 12.18.3
+services: docker
+
+stages:
+  - build
+  - deploy
+
 branches:
   only:
     - master
 
+jobs:
+  include:
+    # Build and deploy latest tag
+    - stage: build
+      before_script:
+        - docker build -t westegg .
+      script:
+        # Login to docker registry
+        - docker login $DOCKER_USER $DOCKER_PASSWORD
+        # Latest tag
+        - docker tag westegg gatsbytv/westegg:latest
+        - docker push gatsbytv/westegg:latest
+
+    # Deploy docker release tag
+    - stage: deploy
+      script:
+        # Release tag
+        - docker tag westegg gatsbytv/westegg:$TRAVIS_TAG
+        - docker push westegg gatsbytv/westegg:$TRAVIS_TAG
+      on:
+        tags: true
