@@ -3,8 +3,7 @@ node_js: 12.18.3
 services: docker
 
 stages:
-  - build
-  - deploy
+  - publish
 
 branches:
   only:
@@ -12,8 +11,8 @@ branches:
 
 jobs:
   include:
-    # Build and deploy latest tag
-    - stage: build
+    # Build and publish latest tag
+    - stage: publish
       before_script:
         - docker build -t westegg .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin

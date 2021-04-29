@@ -1,14 +1,13 @@
 {
   "name": "westegg",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "The place where Gatsby lives.",
   "main": "dist/index.js",
   "scripts": {
     "format:check": "prettier --check \"./src/**/*.ts\"",
     "format:write": "prettier --write \"./src/**/*.ts\"",
     "build": "rm -rf ./dist && npm run format:write && tsc",
-    "start": "npm run build && node .",
-    "typeorm:cli": "ts-node ./node_modules/typeorm/cli -f ./src/ormconfig.ts"
+    "start": "npm run build && node ."
   },
   "repository": {
     "type": "git",
