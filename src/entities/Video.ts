@@ -29,7 +29,9 @@ const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
   sponsors: { type: [String], ref: UserRef, default: [] },
   // TODO:
   promotions: {},
-  contributions: { type: Schema.Types.Mixed, default: {} }
+  contributions: { type: Schema.Types.Mixed, default: {} },
+  next: {},
+  previous: {}
 };
 
 const VideoSchema = new Schema(VideoSchemaFields);

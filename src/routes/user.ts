@@ -1,6 +1,7 @@
 import {
   ErrorMessage,
   GetUserAccountRequest,
+  GetUserAccountResponse,
   NotFound,
   StatusCode
 } from "@gatsby-tv/types";
@@ -29,8 +30,7 @@ router.get(
   "/:unique",
   async (req: Request<GetUserAccountRequestParams, {}, {}, {}>, res, next) => {
     try {
-      // TODO: as GetUserAccountRequest
-      const request = req.params;
+      const request = req.params as GetUserAccountRequest;
 
       let user;
       try {
@@ -45,8 +45,7 @@ router.get(
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
       }
 
-      // TODO: as GetUserAccountResponse
-      res.status(StatusCode.OK).json(user.toJSON());
+      res.status(StatusCode.OK).json(user.toJSON() as GetUserAccountResponse);
     } catch (error) {
       next(error);
     }
