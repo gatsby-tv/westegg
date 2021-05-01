@@ -1,8 +1,17 @@
 version: "3"
 services:
 
-  # NodeJS API server
-  api:
+  # Gatsby frontend
+  gatsby:
+    image: gatsbytv/gatsby:latest
+    ports:
+      - 3000:3000
+    restart: always
+    networks:
+      - gatsby
+
+  # Westegg
+  westegg:
     build: .
     image: westegg
     environment:
@@ -25,7 +34,7 @@ services:
      - 3001:3001
     restart: always
     networks:
-      - westegg
+      - gatsby
 
   # TODO: Redis
 
@@ -46,12 +55,11 @@ services:
     ports:
       - 27017:27017
     networks:
-      - westegg
+      - gatsby
 
   # IPFS
   ipfs:
-    # TODO: Decide on stable ipfs version to use in prod
-    image: ipfs/go-ipfs:bifrost-latest
+    image: gatsbytv/go-ipfs:v0.8.0
     volumes:
       - ./.ipfs:/data/ipfs
     ports:
@@ -64,7 +72,7 @@ services:
       # Daemon API -- DO NOT EXPOSE PUBLICLY
       - 127.0.0.1:5001:5001
     networks:
-      - westegg
+      - gatsby
 
 networks:
-  westegg:
+  gatsby:
