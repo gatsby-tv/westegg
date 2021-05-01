@@ -33,7 +33,7 @@ export function validateEnvironment() {
 
     // TODO: Validate prod JWT secret key is strong
 
-    // TODO: Validate mongo url variables
+    // TODO: Validate mongo url format
 
     // TODO: Validate IPFS url format
   } catch (error) {

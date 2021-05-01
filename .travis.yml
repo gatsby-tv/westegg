@@ -20,12 +20,4 @@ jobs:
         # Latest tag
         - docker tag westegg gatsbytv/westegg:latest
         - docker push gatsbytv/westegg:latest
-
-    # TODO: Deploy docker release tag
-    # - stage: deploy
-    #   script:
-    #     # Release tag
-    #     - docker tag westegg gatsbytv/westegg:$TRAVIS_TAG
-    #     - docker push westegg gatsbytv/westegg:$TRAVIS_TAG
-    #   on:
-    #     tags: true
+    # TODO: Publish versioned tag
