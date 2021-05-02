@@ -28,10 +28,11 @@ services:
       IPFS_URL: ${IPFS_URL}
       # Email config
       SENDGRID_API: ${SENDGRID_API}
-      # Misc config
+      # Westegg config
       JWT_SECRET: ${JWT_SECRET}
       LOGGING_LEVEL: ${LOGGING_LEVEL}
       WESTEGG_ENV: ${WESTEGG_ENV}
+      PUBLIC_URL: ${PUBLIC_URL}
     ports:
      - 3001:3001
     restart: always
