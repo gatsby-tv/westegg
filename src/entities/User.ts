@@ -7,9 +7,8 @@ import { ChannelRef, UserRef, VideoRef } from "./refs";
 // TODO: Include required key
 // TODO: Create unique index for handle in mongo
 
-const UserSchemaFields: Record<keyof IUser, any> = {
+const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
   // Required
-  _id: Schema.Types.ObjectId,
   handle: String,
   name: String,
   creationDate: Date,

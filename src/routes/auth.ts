@@ -1,51 +1,82 @@
 import {
-  BadRequest,
   ErrorMessage,
   NotFound,
-  PostAuthSignupRequest,
+  PostAuthSigninRequest,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
 import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
-import { Environment } from "../environment";
-import { isAuthenticated, validateSignup } from "../middleware/auth";
+import mail from "../mail";
 
 const router = Router();
 
 /**
- * POST /auth/signup
+ * POST /auth/signin
+ * TODO: validate email middleware
  */
-router.post(
-  "/signup",
-  isAuthenticated,
-  validateSignup,
-  async (req, res, next) => {
-    try {
-      const signup: PostAuthSignupRequest = req.body;
+router.post("/signin", async (req, res, next) => {
+  try {
+    const signin = req.body as PostAuthSigninRequest;
 
-      // TODO: Is there a better way to handle this "constructor" with typing?
-      // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
-      let user = new User({
-        _id: signup._id || req.decodedToken!._id,
-        handle: signup.handle,
-        name: signup.name,
-        creationDate: Date.now()
-      });
-      await user.save();
+    // TODO: Check if user already exists with email
+    const exists = false;
 
-      res
-        .status(StatusCode.CREATED)
-        .json(user.toJSON() as PostAuthSignupRequest);
-    } catch (error) {
-      next(error);
-    }
+    // TODO: Is there a better way to handle this "constructor" with typing?
+    // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
+    let user = new User({
+      email: signin.email,
+      creationDate: Date.now()
+    });
+    await user.save();
+
+    // Sign a JWT
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET!, {
+      expiresIn: "4w"
+    });
+
+    // TODO: Store a the JWT in a redis session key that expires in 5 min
+    const key = "werut712vt23";
+
+    // Send an email to the user with the session key and if they need to complete signin
+    const link = new URL(
+      `/magiclink?key=${key}&exists=${exists}`,
+      process.env.PUBLIC_URL!
+    );
+    await mail.send({
+      to: user.email,
+      from: "noreply@gatsby.sh",
+      subject: "New signin request from Gatsby.",
+      text: `Click this link to complete the sign in process: ${link}`
+    });
+
+    // Return 200 OK if no internal errors as to not indicate email is in use
+    res.sendStatus(StatusCode.OK);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
-// TODO: /auth/user/:id/exists
+/**
+ * TODO: GET /auth/session/:key
+ */
+
+/**
+ * TODO: POST /auth/session/:key
+ */
+
+/**
+ * TODO: POST /auth/session/:key
+ */
+
+/**
+ * TODO: POST /auth/signup/:key
+ */
+
+/**
+ * TODO: GET /auth/signin/refresh
+ */
 
 /**
  * GET /auth/user/handle/:handle/exists
@@ -86,30 +117,5 @@ router.get("/channel/handle/:handle/exists", async (req, res, next) => {
     next(error);
   }
 });
-
-/**
- * GET /auth/devtoken
- * ONLY ENABLE ON DEV
- */
-if (Environment.DEV === process.env.WESTEGG_ENV) {
-  router.get("/devtoken", async (req, res, next) => {
-    try {
-      const key = req.query.key as string;
-      if (!key) {
-        throw new BadRequest(ErrorMessage.BAD_REQUEST);
-      }
-      const secret = Buffer.from(key).toString("base64");
-
-      // Get optional id query param from request, if not there generate new
-      let id = req.query.id || new Types.ObjectId();
-      const token = jwt.sign({ _id: id }, secret, {
-        expiresIn: "2w"
-      });
-      res.status(StatusCode.OK).json({ token });
-    } catch (error) {
-      next(error);
-    }
-  });
-}
 
 export default router;
