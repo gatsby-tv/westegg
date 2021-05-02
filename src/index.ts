@@ -30,6 +30,7 @@ process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
 );
 
 // Add json body parser
+// TODO: Deprecated
 app.use(bodyParser.json());
 
 // Allow CORS for all requests

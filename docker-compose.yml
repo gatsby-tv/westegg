@@ -26,6 +26,8 @@ services:
       MONGO_API_DB: gatsby
       # IPFS config
       IPFS_URL: ${IPFS_URL}
+      # Email config
+      SENDGRID_API: ${SENDGRID_API}
       # Misc config
       JWT_SECRET: ${JWT_SECRET}
       LOGGING_LEVEL: ${LOGGING_LEVEL}
