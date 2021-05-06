@@ -3,11 +3,11 @@ import {
   GetAuthSessionRequest,
   GetAuthSessionResponse,
   NotFound,
-  PostAuthCompleteSignupRequest,
-  PostAuthCompleteSignupRequestParams,
-  PostAuthCompleteSignupResponse,
-  PostAuthSigninRequest,
-  PostAuthSigninResponse,
+  PostAuthCompleteSignUpRequest,
+  PostAuthCompleteSignUpRequestParams,
+  PostAuthCompleteSignUpResponse,
+  PostAuthSignInRequest,
+  PostAuthSignInResponse,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
@@ -28,7 +28,7 @@ const router = Router();
  */
 router.post("/signin", async (req, res, next) => {
   try {
-    const signin = req.body as PostAuthSigninRequest;
+    const signin = req.body as PostAuthSignInRequest;
 
     // Check if user already exists with email
     const exists = !!(await User.findOne({ email: signin.email }));
@@ -54,7 +54,7 @@ router.post("/signin", async (req, res, next) => {
         text: `Click this link to complete the sign in process: ${link}`
       });
       // Return 200 OK if no internal errors as to not indicate email is in use
-      res.status(StatusCode.OK).send({} as PostAuthSigninResponse);
+      res.status(StatusCode.OK).send({} as PostAuthSignInResponse);
     } else {
       // Send session key (ONLY IN DEV)
       logger.warn(
@@ -77,8 +77,7 @@ router.get("/session/:key", async (req, res, next) => {
     // Check if session exists
     const session = await Session.findById(request.key);
     if (!session) {
-      // TODO: Change to SESSION_NOT_FOUND
-      throw new NotFound(ErrorMessage.SESSION_DOES_NOT_EXIST);
+      throw new NotFound(ErrorMessage.SESSION_NOT_FOUND);
     }
 
     // Check if the user already exists
@@ -103,14 +102,13 @@ router.get("/session/:key", async (req, res, next) => {
  */
 router.post("/session/:key", validateSignup, async (req, res, next) => {
   try {
-    const params = req.params as PostAuthCompleteSignupRequestParams;
-    const body = req.body as PostAuthCompleteSignupRequest;
+    const params = req.params as PostAuthCompleteSignUpRequestParams;
+    const body = req.body as PostAuthCompleteSignUpRequest;
 
     // Check if session exists
     const session = await Session.findById(params.key);
     if (!session) {
-      // TODO: Change to SESSION_NOT_FOUND
-      throw new NotFound(ErrorMessage.SESSION_DOES_NOT_EXIST);
+      throw new NotFound(ErrorMessage.SESSION_NOT_FOUND);
     }
 
     // TODO: Is there a better way to handle this "constructor" with typing?
@@ -130,7 +128,7 @@ router.post("/session/:key", validateSignup, async (req, res, next) => {
 
     res
       .status(StatusCode.CREATED)
-      .send({ token } as PostAuthCompleteSignupResponse);
+      .send({ token } as PostAuthCompleteSignUpResponse);
   } catch (error) {
     next(error);
   }
