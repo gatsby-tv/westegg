@@ -4,8 +4,8 @@ import {
   GetAuthSessionResponse,
   NotFound,
   PostAuthCompleteSignupRequest,
+  PostAuthCompleteSignupRequestParams,
   PostAuthCompleteSignupResponse,
-  PostAuthPersistSessionKeyRequestParams,
   PostAuthSigninRequest,
   PostAuthSigninResponse,
   StatusCode
@@ -18,6 +18,7 @@ import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { logger } from "../logger";
 import mail from "../mail";
+import { validateSignup } from "../middleware/auth";
 
 const router = Router();
 
@@ -100,9 +101,9 @@ router.get("/session/:key", async (req, res, next) => {
 /**
  * POST /auth/session/:key
  */
-router.post("/session/:key", async (req, res, next) => {
+router.post("/session/:key", validateSignup, async (req, res, next) => {
   try {
-    const params = req.params as PostAuthPersistSessionKeyRequestParams;
+    const params = req.params as PostAuthCompleteSignupRequestParams;
     const body = req.body as PostAuthCompleteSignupRequest;
 
     // Check if session exists

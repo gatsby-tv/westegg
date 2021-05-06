@@ -3,34 +3,37 @@ import {
   IChannel,
   IUser,
   IVideo,
+  PostAuthCompleteSignupRequest,
   Token,
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { compareMongoIDs } from "../utilities";
+import { validateUserHandle } from "./handled";
+import { validateName } from "./named";
 
 const BEARER_PREFIX = "Bearer ";
 
-// export const validateSignup = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const signup: PostAuthSignupRequest = req.body;
+export const validateSignup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const signup: PostAuthCompleteSignupRequest = req.body;
 
-//     // Validate handle
-//     await validateUserHandle(signup.handle);
+    // Validate handle
+    await validateUserHandle(signup.handle);
 
-//     // Validate display name
-//     validateName(signup.name);
-//   } catch (error) {
-//     next(error);
-//   }
+    // Validate display name
+    validateName(signup.name);
+  } catch (error) {
+    next(error);
+  }
 
-//   next();
-// };
+  next();
+};
 
 export const isAuthenticated = async (
   req: Request,
