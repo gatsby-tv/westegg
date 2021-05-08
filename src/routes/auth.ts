@@ -2,6 +2,7 @@ import {
   ErrorMessage,
   GetAuthSessionRequest,
   GetAuthSessionResponse,
+  GetAuthSignInRefreshResponse,
   NotFound,
   PostAuthCompleteSignUpRequest,
   PostAuthCompleteSignUpRequestParams,
@@ -12,13 +13,18 @@ import {
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import { getCachedUserById } from "../cache";
 import { Channel } from "../entities/Channel";
 import { Session } from "../entities/Session";
 import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { logger } from "../logger";
 import mail from "../mail";
-import { validateSignin, validateSignup } from "../middleware/auth";
+import {
+  isAuthenticated,
+  validateSignin,
+  validateSignup
+} from "../middleware/auth";
 
 const router = Router();
 
@@ -53,13 +59,13 @@ router.post("/signin", validateSignin, async (req, res, next) => {
         text: `Click this link to complete the sign in process: ${link}`
       });
       // Return 200 OK if no internal errors as to not indicate email is in use
-      res.status(StatusCode.OK).send({} as PostAuthSignInResponse);
+      res.status(StatusCode.OK).json({} as PostAuthSignInResponse);
     } else {
       // Send session key (ONLY IN DEV)
       logger.warn(
         `--DEV ONLY-- Email not sent to ${session.email}. Session key sent in response!`
       );
-      res.status(StatusCode.OK).send({ key: session._id });
+      res.status(StatusCode.OK).json({ key: session._id });
     }
   } catch (error) {
     next(error);
@@ -90,7 +96,7 @@ router.get("/session/:key", async (req, res, next) => {
       expiresIn: "4w"
     });
 
-    res.status(StatusCode.OK).send({ token } as GetAuthSessionResponse);
+    res.status(StatusCode.OK).json({ token } as GetAuthSessionResponse);
   } catch (error) {
     next(error);
   }
@@ -127,18 +133,30 @@ router.post("/session/:key", validateSignup, async (req, res, next) => {
 
     res
       .status(StatusCode.CREATED)
-      .send({ token } as PostAuthCompleteSignUpResponse);
+      .json({ token } as PostAuthCompleteSignUpResponse);
   } catch (error) {
     next(error);
   }
 });
 
 /**
- * TODO: POST /auth/signup/:key
+ * GET /auth/signin/refresh
  */
+router.get("/signin/refresh", isAuthenticated, async (req, res, next) => {
+  try {
+    // The isAuthenticated middleware confirmed our JWT is valid, send back a new JWT to refresh the login
+    const user = await getCachedUserById(req.decodedToken!._id);
+    const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
+      expiresIn: "4w"
+    });
+    res.json({ token } as GetAuthSignInRefreshResponse);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
- * TODO: GET /auth/signin/refresh
+ * TODO: POST /auth/session/:key/persist
  */
 
 /**
