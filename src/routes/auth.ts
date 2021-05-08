@@ -7,6 +7,7 @@ import {
   PostAuthCompleteSignUpRequest,
   PostAuthCompleteSignUpRequestParams,
   PostAuthCompleteSignUpResponse,
+  PostAuthPersistSessionRequestParams,
   PostAuthSignInRequest,
   PostAuthSignInResponse,
   StatusCode
@@ -15,6 +16,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { getCachedUserById } from "../cache";
 import { Channel } from "../entities/Channel";
+import { PersistSession } from "../entities/PersistSession";
 import { Session } from "../entities/Session";
 import { User } from "../entities/User";
 import { Environment } from "../environment";
@@ -96,6 +98,9 @@ router.get("/session/:key", async (req, res, next) => {
       expiresIn: "4w"
     });
 
+    // Drop the session (if exists)
+    session.delete();
+
     res.status(StatusCode.OK).json({ token } as GetAuthSessionResponse);
   } catch (error) {
     next(error);
@@ -111,7 +116,9 @@ router.post("/session/:key", validateSignup, async (req, res, next) => {
     const body = req.body as PostAuthCompleteSignUpRequest;
 
     // Check if session exists
-    const session = await Session.findById(params.key);
+    const session =
+      (await PersistSession.findById(params.key)) ||
+      (await Session.findById(params.key));
     if (!session) {
       throw new NotFound(ErrorMessage.SESSION_NOT_FOUND);
     }
@@ -130,6 +137,9 @@ router.post("/session/:key", validateSignup, async (req, res, next) => {
     const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
       expiresIn: "4w"
     });
+
+    // Drop the session or persist session (if exists)
+    session.delete();
 
     res
       .status(StatusCode.CREATED)
@@ -156,8 +166,29 @@ router.get("/signin/refresh", isAuthenticated, async (req, res, next) => {
 });
 
 /**
- * TODO: POST /auth/session/:key/persist
+ * POST /auth/session/:key/persist
  */
+router.post("/session/:key/persist", async (req, res, next) => {
+  try {
+    const params = req.params as PostAuthPersistSessionRequestParams;
+
+    const session = await Session.findById(params.key);
+    if (session) {
+      const persistSession = new PersistSession({
+        _id: session._id,
+        email: session.email
+      });
+      await persistSession.save();
+      // Drop the original session
+      await session.delete();
+    }
+
+    // ALWAYS send back OK as to not let the client know if the key exists or not
+    res.sendStatus(StatusCode.OK);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * GET /auth/user/handle/:handle/exists

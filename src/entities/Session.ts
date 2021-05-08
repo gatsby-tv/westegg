@@ -3,7 +3,7 @@ import { SessionRef } from "./refs";
 
 /**
  * Temporary store to denote that a magic link was sent to an email
- * The magic link (key with the _id of this type) can be used to create or sign in to an account
+ * The magic link (key with the _id of this type) can be used to create or sign in to an account with the associated email
  */
 export type ISession = {
   _id: string;
