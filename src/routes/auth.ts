@@ -18,15 +18,14 @@ import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { logger } from "../logger";
 import mail from "../mail";
-import { validateSignup } from "../middleware/auth";
+import { validateSignin, validateSignup } from "../middleware/auth";
 
 const router = Router();
 
 /**
  * POST /auth/signin
- * TODO: validate email middleware
  */
-router.post("/signin", async (req, res, next) => {
+router.post("/signin", validateSignin, async (req, res, next) => {
   try {
     const signin = req.body as PostAuthSignInRequest;
 

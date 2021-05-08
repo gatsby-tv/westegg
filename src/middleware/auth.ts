@@ -1,19 +1,40 @@
 import {
+  BadRequest,
   ErrorMessage,
   IChannel,
   IUser,
   IVideo,
   PostAuthCompleteSignUpRequest,
+  PostAuthSignInRequest,
   Token,
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import validator from "validator";
 import { compareMongoIDs } from "../utilities";
 import { validateUserHandle } from "./handled";
 import { validateName } from "./named";
 
 const BEARER_PREFIX = "Bearer ";
+
+export const validateSignin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const signin = req.body as PostAuthSignInRequest;
+
+    // Validate email is proper format
+    if (!validator.isEmail(signin.email)) {
+      throw new BadRequest(ErrorMessage.INVALID_EMAIL);
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const validateSignup = async (
   req: Request,
@@ -21,7 +42,7 @@ export const validateSignup = async (
   next: NextFunction
 ) => {
   try {
-    const signup: PostAuthCompleteSignUpRequest = req.body;
+    const signup = req.body as PostAuthCompleteSignUpRequest;
 
     // Validate handle
     await validateUserHandle(signup.handle);
