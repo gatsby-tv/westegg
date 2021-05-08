@@ -27,7 +27,7 @@ services:
       # IPFS config
       IPFS_URL: ${IPFS_URL}
       # Email config
-      SENDGRID_API: ${SENDGRID_API}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       # Westegg config
       JWT_SECRET: ${JWT_SECRET}
       LOGGING_LEVEL: ${LOGGING_LEVEL}
