@@ -17,7 +17,6 @@ jobs:
     - stage: publish
       if: branch = master
       before_script:
-        - docker build -t westegg .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       script:
         # Build dockerfile

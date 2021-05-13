@@ -6,6 +6,9 @@ build:
 	docker build -t $(APP_NAME) .
 
 push:
+# Latest tag
 	docker tag $(APP_NAME) gatsbytv/$(APP_NAME):latest
+	docker push gatsbytv/$(APP_NAME):latest
+# Versioned tag
 	docker tag $(APP_NAME) gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
-	docker push --all-tags gatsbytv/$(APP_NAME)
+	docker push gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
