@@ -26,5 +26,10 @@ jobs:
       script:
         # Latest tag
         - docker tag westegg gatsbytv/westegg:latest
-        - docker push gatsbytv/westegg:latest
-    # TODO: Publish versioned tag
+        # Versioned tag
+        - export APP_NAME=`grep '"name":' package.json | cut -d '"' -f4`
+        - export APP_VERSION=`grep '"version":' package.json | cut -d '"' -f4`
+        - export BUILD=`git rev-parse --short HEAD`
+        - docker tag westegg gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
+        # Push tags
+        - docker push gatsbytv/westegg:latest gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
