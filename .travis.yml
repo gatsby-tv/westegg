@@ -6,10 +6,6 @@ stages:
   - build
   - publish
 
-# branches:
-#   only:
-#     - master
-
 jobs:
   include:
     # Check prettier linting and build typescript
@@ -17,7 +13,7 @@ jobs:
       script:
         - npm run format:check
         - npm run build
-    # Build and publish latest tag
+    # Build and publish docker tags
     - stage: publish
       if: branch = master
       before_script:
