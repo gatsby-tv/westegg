@@ -19,14 +19,8 @@ jobs:
       before_script:
         - docker build -t westegg .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-      env:
-        - APP_NAME=`grep '"name":' package.json | cut -d '"' -f4`
-        - APP_VERSION=`grep '"version":' package.json | cut -d '"' -f4`
-        - BUILD=`git rev-parse --short HEAD`
       script:
-        # Latest tag
-        - docker tag westegg gatsbytv/westegg:latest
-        # Versioned tag
-        - docker tag westegg gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
+        # Build dockerfile
+        - make build
         # Push tags
-        - docker push gatsbytv/westegg:latest gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
+        - make push
