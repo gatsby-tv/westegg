@@ -3,16 +3,23 @@ node_js: 12.18.3
 services: docker
 
 stages:
+  - build
   - publish
 
-branches:
-  only:
-    - master
+# branches:
+#   only:
+#     - master
 
 jobs:
   include:
+    # Check prettier linting and build typescript
+    - stage: build
+      script:
+        - npm run format:check
+        - npm run build
     # Build and publish latest tag
     - stage: publish
+      if: branch = master
       before_script:
         - docker build -t westegg .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
