@@ -4,10 +4,12 @@ WestEgg is the backend for the Gatsby hub site and contains indexing data on use
 
 ## Run development build (docker-compose)
 1. Install docker and docker-compose
-2. Run `docker-compose up --build`
+2. Run `docker-compose --env-file default.env up --build`
+
+*Note: If you're testing the frontend with this repo, you might need to comment out the gatsby frontend section of the docker-compose file.*
 
 ## Run development build (just westegg api server)
-1. Install NodeJS 12 and Docker
+1. Install NodeJS 12.8
 2. Install dependencies `npm install`
 3. Copy `default.env` as `.env` and fill out the environment variables, eg.
 ```
