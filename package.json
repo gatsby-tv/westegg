@@ -1,6 +1,6 @@
 {
   "name": "westegg",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The place where Gatsby lives.",
   "main": "dist/index.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@gatsby-tv/types": "^0.4.21",
+    "@gatsby-tv/types": "0.4.24",
     "@sendgrid/mail": "^7.4.2",
     "body-parser": "^1.19.0",
     "busboy": "^0.3.1",

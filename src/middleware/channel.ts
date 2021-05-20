@@ -1,6 +1,7 @@
 import {
   ErrorMessage,
   PostChannelRequest,
+  PutChannelHandleRequest,
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
@@ -67,8 +68,7 @@ export const validatePutChannelHandleRequest = async (
   next: NextFunction
 ) => {
   try {
-    // TODO: as PutChannelHandleRequest
-    const request = req.body;
+    const request = req.body as PutChannelHandleRequest;
 
     // Validate handle
     await validateChannelHandle(request.handle);

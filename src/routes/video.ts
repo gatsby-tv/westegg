@@ -3,10 +3,10 @@ import {
   GetVideoRequest,
   NotFound,
   PostVideoRequest,
+  PostVideoResponse,
   StatusCode
 } from "@gatsby-tv/types";
-import { Request, Router } from "express";
-import * as ExpressCore from "express-serve-static-core";
+import { Router } from "express";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
 import { isAuthenticated } from "../middleware/auth";
@@ -17,36 +17,28 @@ const router = Router();
 /**
  * GET /video/:hash
  */
-interface GetVideoRequestParams
-  extends ExpressCore.ParamsDictionary,
-    GetVideoRequest {}
-router.get(
-  "/:id",
-  async (req: Request<GetVideoRequestParams, {}, {}, {}>, res, next) => {
-    try {
-      // TODO: as GetVideoRequest
-      const request = req.params;
+router.get("/:id", async (req, res, next) => {
+  try {
+    const request = req.params as GetVideoRequest;
 
-      const video = await Video.findById(request.id);
+    const video = await Video.findById(request.id);
 
-      if (!video) {
-        throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
-      }
-
-      // TODO: as GetVideoRequest
-      res.status(StatusCode.OK).json(video.toJSON());
-    } catch (error) {
-      next(error);
+    if (!video) {
+      throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
     }
+
+    res.status(StatusCode.OK).json(video.toJSON() as GetVideoRequest);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 /**
  * POST /video
  */
 router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
   try {
-    const request: PostVideoRequest = req.body;
+    const request = req.body as PostVideoRequest;
 
     // Get the channel we're uploading to
     const channel = await Channel.findById(request.channel);
@@ -71,8 +63,7 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
     channel.videos.push(video._id);
     channel.save();
 
-    // TODO: as PostVideoResponse
-    res.status(StatusCode.CREATED).json(video.toJSON());
+    res.status(StatusCode.CREATED).json(video.toJSON() as PostVideoResponse);
   } catch (error) {
     next(error);
   }

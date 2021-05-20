@@ -2,7 +2,18 @@ import {
   ErrorMessage,
   GetUserAccountRequest,
   GetUserAccountResponse,
+  GetUserFeedsRequest,
+  GetUserPromotionsRequest,
   NotFound,
+  PutUserAvatarRequestParams,
+  PutUserAvatarResponse,
+  PutUserBannerRequestParams,
+  PutUserBannerResponse,
+  PutUserHandleRequest,
+  PutUserHandleResponse,
+  PutUserSubscriptionRequest,
+  PutUserSubscriptionRequestParams,
+  PutUserSubscriptionResponse,
   StatusCode
 } from "@gatsby-tv/types";
 import { Request, Router } from "express";
@@ -57,8 +68,8 @@ router.get(
  */
 router.get("/:id/feeds", async (req, res, next) => {
   try {
-    // TODO: as GetUserFeedsRequestParams
-    const user = await getCachedUserById(req.params.id);
+    const request = req.params as GetUserFeedsRequest;
+    const user = await getCachedUserById(request.id);
     // TODO: Should this be a combination of subscriptions and followed users?
     res.status(StatusCode.OK).json([user.subscriptions, user.following]);
   } catch (error) {
@@ -69,8 +80,8 @@ router.get("/:id/feeds", async (req, res, next) => {
  * GET /user/:id/promotions TODO: Should this be private?
  */
 router.get("/:id/promotions", async (req, res, next) => {
-  // TODO: as GetUserPromotionsParams
-  const user = await getCachedUserById(req.params.id);
+  const request = req.params as GetUserPromotionsRequest;
+  const user = await getCachedUserById(request.id);
   res.status(StatusCode.OK).json(user.promotions);
 });
 
@@ -84,8 +95,7 @@ router.put(
   validatePutUserHandleRequest,
   async (req, res, next) => {
     try {
-      // TODO: as PutUserHandleRequest
-      const request = req.body;
+      const request = req.body as PutUserHandleRequest;
 
       const user = await User.findById(req.params.id);
       if (!user) {
@@ -95,8 +105,9 @@ router.put(
       user.handle = request.handle;
       await user.save();
 
-      // TODO: as PutUserHandleResponse
-      res.status(StatusCode.CREATED).json(user.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(user.toJSON() as PutUserHandleResponse);
     } catch (error) {
       next(error);
     }
@@ -113,8 +124,7 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      // TODO: as PutUserAvatarRequest
-      const request = req.params;
+      const request = req.params as PutUserAvatarRequestParams;
 
       const user = await User.findById(request.id);
       if (!user) {
@@ -127,8 +137,9 @@ router.put(
       user.avatar = req.ipfsContent!;
       user.save();
 
-      // TODO: as PutUserAvatarResponse
-      res.status(StatusCode.CREATED).json(user.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(user.toJSON() as PutUserAvatarResponse);
     } catch (error) {
       next(error);
     }
@@ -145,8 +156,7 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      // TODO: as PutUserBannerRequestParams
-      const request = req.params;
+      const request = req.params as PutUserBannerRequestParams;
 
       const user = await User.findById(request.id);
       if (!user) {
@@ -157,8 +167,9 @@ router.put(
       user.banner = req.ipfsContent!;
       user.save();
 
-      // TODO: as PutUserBannerResponse
-      res.status(StatusCode.CREATED).json(user.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(user.toJSON() as PutUserBannerResponse);
     } catch (error) {
       next(error);
     }
@@ -174,15 +185,17 @@ router.put(
   hasPermissionToPutUserRequest,
   async (req, res, next) => {
     try {
-      // TODO: as PutUserSubscriptionRequestParams
-      const user = await getCachedUserById(req.params.id);
-      // TODO: as PutUserSubscriptionRequest
+      const body = req.body as PutUserSubscriptionRequest;
+      const params = req.params as PutUserSubscriptionRequestParams;
+
+      const user = await getCachedUserById(params.id);
       // TODO: Prevent subscription to the same channel twice (set)
-      user.subscriptions.push(req.body.subscription);
+      user.subscriptions.push(body.subscription);
       user.save();
 
-      // TODO: as PutUserSubscriptionResponse
-      res.status(StatusCode.CREATED).json(user.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(user.toJSON() as PutUserSubscriptionResponse);
     } catch (error) {
       next(error);
     }

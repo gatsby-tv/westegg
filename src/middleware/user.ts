@@ -1,4 +1,9 @@
-import { ErrorMessage, NotFound, Unauthorized } from "@gatsby-tv/types";
+import {
+  ErrorMessage,
+  NotFound,
+  PutUserHandleRequest,
+  Unauthorized
+} from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entities/User";
 import { hasPermission, ResourceAction } from "./auth";
@@ -39,8 +44,7 @@ export const validatePutUserHandleRequest = async (
   next: NextFunction
 ) => {
   try {
-    // TODO: as PutUserHandleRequest
-    const request = req.body;
+    const request = req.body as PutUserHandleRequest;
 
     // Validate handle
     await validateUserHandle(request.handle);

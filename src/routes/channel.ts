@@ -1,14 +1,24 @@
 import {
   ErrorMessage,
   GetChannelAccountRequest,
+  GetChannelAccountResponse,
+  GetChannelContentRequest,
   GetChannelContentResponse,
   IVideo,
   NotFound,
   PostChannelRequest,
+  PostChannelResponse,
+  PutChannelAvatarRequestParams,
+  PutChannelAvatarResponse,
+  PutChannelBannerRequestParams,
+  PutChannelBannerResponse,
+  PutChannelHandleRequest,
+  PutChannelHandleResponse,
+  PutChannelPosterRequestParams,
+  PutChannelPosterResponse,
   StatusCode
 } from "@gatsby-tv/types";
-import { Request, Router } from "express";
-import * as ExpressCore from "express-serve-static-core";
+import { Router } from "express";
 import { Types } from "mongoose";
 import { getCachedChannelById } from "../cache";
 import { Channel } from "../entities/Channel";
@@ -27,20 +37,12 @@ const router = Router();
 /**
  * GET /channel/{:id, :handle}
  */
-interface GetChannelAccountRequestParams
-  extends ExpressCore.ParamsDictionary,
-    GetChannelAccountRequest {}
 router.get(
   // :unique can be either :id or :handle
   "/:unique",
-  async (
-    req: Request<GetChannelAccountRequestParams, {}, {}, {}>,
-    res,
-    next
-  ) => {
+  async (req, res, next) => {
     try {
-      // TODO: as GetChannelAccountRequest
-      const request = req.params;
+      const request = req.params as GetChannelAccountRequest;
 
       let channel;
       try {
@@ -55,8 +57,9 @@ router.get(
         throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
       }
 
-      // TODO: as GetChannelAccountRequest
-      res.status(StatusCode.OK).json(channel.toJSON());
+      res
+        .status(StatusCode.OK)
+        .json(channel.toJSON() as GetChannelAccountResponse);
     } catch (error) {
       next(error);
     }
@@ -94,8 +97,9 @@ router.post(
       user.channels.push(channel._id);
       user.save();
 
-      // TODO: as PostChannelResponse
-      res.status(StatusCode.CREATED).json(channel.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(channel.toJSON() as PostChannelResponse);
     } catch (error) {
       next(error);
     }
@@ -107,8 +111,7 @@ router.post(
  */
 router.get("/:id/content", async (req, res, next) => {
   try {
-    // TODO: as GetChannelContentRequestParams
-    const request = req.params;
+    const request = req.params as GetChannelContentRequest;
     const channel = await getCachedChannelById(request.id);
 
     // Get all channel content from FKs stored on channel (build a mongo query for each content item)
@@ -144,15 +147,15 @@ router.put(
   validatePutChannelHandleRequest,
   async (req, res, next) => {
     try {
-      // TODO: as PutChannelHandleRequest
-      const request = req.body;
+      const request = req.body as PutChannelHandleRequest;
       const channel = await getCachedChannelById(req.params.id);
 
       channel.handle = request.handle;
       await channel.save();
 
-      // TODO: as PutChannelHandleResponse
-      res.status(StatusCode.CREATED).json(channel.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(channel.toJSON() as PutChannelHandleResponse);
     } catch (error) {
       next(error);
     }
@@ -169,16 +172,16 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      // TODO: as PutChannelAvatarRequestParams
-      const request = req.params;
+      const request = req.params as PutChannelAvatarRequestParams;
       const channel = await getCachedChannelById(request.id);
 
       // TODO: Unpin the old avatar unless used by another channel
       channel.avatar = req.ipfsContent!;
       channel.save();
 
-      // TODO: as PutChannelAvatarResponse
-      res.status(StatusCode.CREATED).json(channel.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(channel.toJSON() as PutChannelAvatarResponse);
     } catch (error) {
       next(error);
     }
@@ -195,16 +198,16 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      // TODO: as PutChannelBannerRequestParams
-      const request = req.params;
+      const request = req.params as PutChannelBannerRequestParams;
       const channel = await getCachedChannelById(request.id);
 
       // TODO: Unpin the old banner unless used by another channel
       channel.banner = req.ipfsContent!;
       channel.save();
 
-      // TODO: as PutChannelBannerResponse
-      res.status(StatusCode.CREATED).json(channel.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(channel.toJSON() as PutChannelBannerResponse);
     } catch (error) {
       next(error);
     }
@@ -221,16 +224,16 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      // TODO: as PutChannelPosterRequestParams
-      const request = req.params;
+      const request = req.params as PutChannelPosterRequestParams;
       const channel = await getCachedChannelById(request.id);
 
       // TODO: Unpin the old poster unless used by another channel
       channel.poster = req.ipfsContent!;
       channel.save();
 
-      // TODO: as PutChannelPosterResponse
-      res.status(StatusCode.CREATED).json(channel.toJSON());
+      res
+        .status(StatusCode.CREATED)
+        .json(channel.toJSON() as PutChannelPosterResponse);
     } catch (error) {
       next(error);
     }

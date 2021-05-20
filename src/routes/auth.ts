@@ -1,8 +1,11 @@
 import {
   ErrorMessage,
+  GetAuthChannelHandleExistsRequest,
+  GetAuthChannelHandleExistsResponse,
   GetAuthSessionRequest,
   GetAuthSessionResponse,
   GetAuthSignInRefreshResponse,
+  GetAuthUserHandleExistsRequest,
   NotFound,
   PostAuthCompleteSignUpRequest,
   PostAuthCompleteSignUpRequestParams,
@@ -195,16 +198,16 @@ router.post("/session/:key/persist", async (req, res, next) => {
  */
 router.get("/user/handle/:handle/exists", async (req, res, next) => {
   try {
-    // TODO: as GetAuthUserHandleExistsRequest
-    const request = req.params;
+    const request = req.params as GetAuthUserHandleExistsRequest;
     const user = await User.findOne({ handle: request.handle });
 
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
-    // TODO: as GetAuthUserHandleExistsResponse
-    res.status(StatusCode.OK).json(user.toJSON());
+    res
+      .status(StatusCode.OK)
+      .json(user.toJSON() as GetAuthChannelHandleExistsResponse);
   } catch (error) {
     next(error);
   }
@@ -215,16 +218,16 @@ router.get("/user/handle/:handle/exists", async (req, res, next) => {
  */
 router.get("/channel/handle/:handle/exists", async (req, res, next) => {
   try {
-    // TODO: GetAuthChannelHandleExistsRequest
-    const request = req.params;
+    const request = req.params as GetAuthChannelHandleExistsRequest;
     const channel = await Channel.findOne({ handle: request.handle });
 
     if (!channel) {
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
 
-    // TODO: as GetAuthChannelHandleExistsResponse
-    res.status(StatusCode.OK).json(channel.toJSON());
+    res
+      .status(StatusCode.OK)
+      .json(channel.toJSON() as GetAuthChannelHandleExistsResponse);
   } catch (error) {
     next(error);
   }
