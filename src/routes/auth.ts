@@ -19,6 +19,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { getCachedUserById } from "../cache";
 import { Channel } from "../entities/Channel";
+import { InvalidToken } from "../entities/InvalidToken";
 import { PersistSession } from "../entities/PersistSession";
 import { Session } from "../entities/Session";
 import { User } from "../entities/User";
@@ -188,6 +189,39 @@ router.post("/session/:key/persist", async (req, res, next) => {
 
     // ALWAYS send back OK as to not let the client know if the key exists or not
     res.sendStatus(StatusCode.OK);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /auth/token/valid
+ */
+router.get("/token/valid", isAuthenticated, async (req, res, next) => {
+  try {
+    res.sendStatus(StatusCode.OK);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /auth/token/invalidate
+ */
+router.post("/token/invalidate", isAuthenticated, async (req, res, next) => {
+  // TODO:
+  // Update isAuthenticated route to check for old tokens from collection
+
+  try {
+    const invalid = new InvalidToken({
+      expire: Date.now()
+    });
+    await InvalidToken.findByIdAndUpdate(req.decodedToken!._id, invalid, {
+      upsert: true,
+      setDefaultsOnInsert: true
+    });
+
+    res.sendStatus(StatusCode.CREATED);
   } catch (error) {
     next(error);
   }

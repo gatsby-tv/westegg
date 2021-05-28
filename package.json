@@ -34,7 +34,7 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@gatsby-tv/types": "0.4.24",
+    "@gatsby-tv/types": "0.4.27",
     "@sendgrid/mail": "^7.4.2",
     "body-parser": "^1.19.0",
     "busboy": "^0.3.1",

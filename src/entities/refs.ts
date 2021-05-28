@@ -5,3 +5,4 @@ export const PlaylistRef = "Playlist";
 export const ShowRef = "Show";
 export const SessionRef = "Session";
 export const PersistSessionRef = "PersistSession";
+export const InvalidTokenRef = "InvalidToken";

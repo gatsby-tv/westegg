@@ -12,11 +12,13 @@ import {
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import validator from "validator";
+import { InvalidToken } from "../entities/InvalidToken";
 import { compareMongoIDs } from "../utilities";
 import { validateUserHandle } from "./handled";
 import { validateName } from "./named";
 
 const BEARER_PREFIX = "Bearer ";
+const MILLISECONDS_IN_SECONDS = 1000;
 
 export const validateSignin = async (
   req: Request,
@@ -81,6 +83,17 @@ export const isAuthenticated = async (
       encodedToken,
       process.env.JWT_SECRET!
     ) as Token;
+
+    // Check if the token is expired by the invalid tokens collection
+    const invalid = await InvalidToken.findById(token._id);
+    // Convert JWT NumericDate to Date
+    // See: https://stackoverflow.com/questions/39926104/what-format-is-the-exp-expiration-time-claim-in-a-jwt
+    if (
+      invalid &&
+      invalid.expire > new Date(parseInt(token.iat) * MILLISECONDS_IN_SECONDS)
+    ) {
+      throw new Unauthorized(ErrorMessage.TOKEN_EXPIRED);
+    }
 
     // Add the decoded token to the request
     req.decodedToken = token;
