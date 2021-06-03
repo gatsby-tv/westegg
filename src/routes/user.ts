@@ -16,8 +16,7 @@ import {
   PutUserSubscriptionResponse,
   StatusCode
 } from "@gatsby-tv/types";
-import { Request, Router } from "express";
-import * as ExpressCore from "express-serve-static-core";
+import { Router } from "express";
 import { Types } from "mongoose";
 import { getCachedUserById } from "../cache";
 import { User } from "../entities/User";
@@ -33,13 +32,10 @@ const router = Router();
 /**
  * GET /user/{:id, :handle}
  */
-interface GetUserAccountRequestParams
-  extends ExpressCore.ParamsDictionary,
-    GetUserAccountRequest {}
 router.get(
   // :unique can be either :id or :handle
   "/:unique",
-  async (req: Request<GetUserAccountRequestParams, {}, {}, {}>, res, next) => {
+  async (req, res, next) => {
     try {
       const request = req.params as GetUserAccountRequest;
 
