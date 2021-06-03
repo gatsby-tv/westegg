@@ -4,7 +4,6 @@ import {
   StatusCode,
   WestEggError
 } from "@gatsby-tv/types";
-import bodyParser from "body-parser";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import db from "./db";
@@ -30,8 +29,7 @@ process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
 );
 
 // Add json body parser
-// TODO: Deprecated
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Allow CORS for all requests
 app.use((req, res, next) => {
