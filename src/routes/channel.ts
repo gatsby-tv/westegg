@@ -4,6 +4,8 @@ import {
   GetChannelAccountResponse,
   GetChannelContentRequest,
   GetChannelContentResponse,
+  GetChannelHandleExistsRequest,
+  GetChannelHandleExistsResponse,
   IVideo,
   NotFound,
   PostChannelRequest,
@@ -105,6 +107,26 @@ router.post(
     }
   }
 );
+
+/**
+ * GET /channel/:handle/exists
+ */
+router.get("/:handle/exists", async (req, res, next) => {
+  try {
+    const request = req.params as GetChannelHandleExistsRequest;
+    const channel = await Channel.findOne({ handle: request.handle });
+
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
+
+    res
+      .status(StatusCode.OK)
+      .json(channel.toJSON() as GetChannelHandleExistsResponse);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * GET /channel/:id/content

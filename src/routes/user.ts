@@ -3,8 +3,12 @@ import {
   GetUserAccountRequest,
   GetUserAccountResponse,
   GetUserFeedsRequest,
+  GetUserHandleExistsRequest,
+  GetUserHandleExistsResponse,
   GetUserPromotionsRequest,
   NotFound,
+  PostAuthCompleteSignUpResponse,
+  PostUserCompleteSignupRequest,
   PutUserAvatarRequestParams,
   PutUserAvatarResponse,
   PutUserBannerRequestParams,
@@ -17,10 +21,13 @@ import {
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
+import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { getCachedUserById } from "../cache";
+import { PersistSigninKey } from "../entities/PersistSigninKey";
+import { SigninKey } from "../entities/SigninKey";
 import { User } from "../entities/User";
-import { isAuthenticated } from "../middleware/auth";
+import { isAuthenticated, validateSignup } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
 import {
   hasPermissionToPutUserRequest,
@@ -58,6 +65,67 @@ router.get(
     }
   }
 );
+
+/**
+ * POST /user
+ */
+router.post("/", validateSignup, async (req, res, next) => {
+  try {
+    const body = req.body as PostUserCompleteSignupRequest;
+
+    // Check if signinKey exists
+    const signinKey =
+      (await PersistSigninKey.findById(body.key)) ||
+      (await SigninKey.findById(body.key));
+    if (!signinKey) {
+      throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
+    }
+
+    // TODO: Is there a better way to handle this "constructor" with typing?
+    // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
+    const user = new User({
+      handle: body.handle,
+      name: body.name,
+      email: signinKey.email,
+      creationDate: Date.now()
+    });
+    await user.save();
+
+    // Sign a jwt with the user
+    const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
+      expiresIn: "4w"
+    });
+
+    // Drop the signin key or persist signin key (if exists)
+    signinKey.remove();
+
+    res
+      .status(StatusCode.CREATED)
+      .json({ token } as PostAuthCompleteSignUpResponse);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /user/:handle/exists
+ */
+router.get("/:handle/exists", async (req, res, next) => {
+  try {
+    const request = req.params as GetUserHandleExistsRequest;
+    const user = await User.findOne({ handle: request.handle });
+
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
+    res
+      .status(StatusCode.OK)
+      .json(user.toJSON() as GetUserHandleExistsResponse);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * GET /user/:id/feeds TODO: Should this be private?

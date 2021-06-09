@@ -4,8 +4,8 @@ import {
   IChannel,
   IUser,
   IVideo,
-  PostAuthCompleteSignUpRequest,
   PostAuthSignInRequest,
+  PostUserCompleteSignupRequest,
   Token,
   Unauthorized
 } from "@gatsby-tv/types";
@@ -44,7 +44,7 @@ export const validateSignup = async (
   next: NextFunction
 ) => {
   try {
-    const signup = req.body as PostAuthCompleteSignUpRequest;
+    const signup = req.body as PostUserCompleteSignupRequest;
 
     // Validate handle
     await validateUserHandle(signup.handle);

@@ -1,16 +1,10 @@
 import {
   ErrorMessage,
-  GetAuthChannelHandleExistsRequest,
-  GetAuthChannelHandleExistsResponse,
-  GetAuthSessionRequest,
-  GetAuthSessionResponse,
-  GetAuthSignInRefreshResponse,
-  GetAuthUserHandleExistsRequest,
+  GetAuthSignInKeyRequest,
+  GetAuthSignInKeyResponse,
+  GetAuthTokenRefreshResponse,
   NotFound,
-  PostAuthCompleteSignUpRequest,
-  PostAuthCompleteSignUpRequestParams,
-  PostAuthCompleteSignUpResponse,
-  PostAuthPersistSessionRequestParams,
+  PostAuthPersistSignInKeyRequestParams,
   PostAuthSignInRequest,
   PostAuthSignInResponse,
   StatusCode
@@ -18,19 +12,14 @@ import {
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { getCachedUserById } from "../cache";
-import { Channel } from "../entities/Channel";
 import { InvalidToken } from "../entities/InvalidToken";
-import { PersistSession } from "../entities/PersistSession";
-import { Session } from "../entities/Session";
+import { PersistSigninKey } from "../entities/PersistSigninKey";
+import { SigninKey } from "../entities/SigninKey";
 import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { logger } from "../logger";
 import mail from "../mail";
-import {
-  isAuthenticated,
-  validateSignin,
-  validateSignup
-} from "../middleware/auth";
+import { isAuthenticated, validateSignin } from "../middleware/auth";
 
 const router = Router();
 
@@ -44,15 +33,15 @@ router.post("/signin", validateSignin, async (req, res, next) => {
     // Check if user already exists with email
     const exists = !!(await User.findOne({ email: signin.email }));
 
-    // Create a session that expires after set time (see entities/Session.ts)
-    const session = new Session({
+    // Create a signinKey that expires after set time (see entities/SigninKey.ts)
+    const signinKey = new SigninKey({
       email: signin.email
     });
-    await session.save();
+    await signinKey.save();
 
-    // Send an email to the user with the session key and if they need to complete signin
+    // Send an email to the user with the signin key and if they need to complete signin
     const link = new URL(
-      `/magiclink?key=${session._id}&exists=${exists}`,
+      `/magiclink?key=${signinKey._id}&exists=${exists}`,
       process.env.PUBLIC_URL!
     );
 
@@ -67,11 +56,11 @@ router.post("/signin", validateSignin, async (req, res, next) => {
       // Return 200 OK if no internal errors as to not indicate email is in use
       res.status(StatusCode.OK).json({} as PostAuthSignInResponse);
     } else {
-      // Send session key (ONLY IN DEV)
+      // Send signinKey key (ONLY IN DEV)
       logger.warn(
-        `--DEV ONLY-- Email not sent to ${session.email}. Session key sent in response!`
+        `--DEV ONLY-- Email not sent to ${signinKey.email}. SignIn key sent in response!`
       );
-      res.status(StatusCode.OK).json({ key: session._id });
+      res.status(StatusCode.OK).json({ key: signinKey._id });
     }
   } catch (error) {
     next(error);
@@ -79,20 +68,20 @@ router.post("/signin", validateSignin, async (req, res, next) => {
 });
 
 /**
- * GET /auth/session/:key
+ * GET /auth/signin/:key
  */
-router.get("/session/:key", async (req, res, next) => {
+router.get("/signin/:key", async (req, res, next) => {
   try {
-    const request = req.params as GetAuthSessionRequest;
+    const request = req.params as GetAuthSignInKeyRequest;
 
-    // Check if session exists
-    const session = await Session.findById(request.key);
-    if (!session) {
-      throw new NotFound(ErrorMessage.SESSION_NOT_FOUND);
+    // Check if signin key exists
+    const signinKey = await SigninKey.findById(request.key);
+    if (!signinKey) {
+      throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
     }
 
     // Check if the user already exists
-    const user = await User.findOne({ email: session.email });
+    const user = await User.findOne({ email: signinKey.email });
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
@@ -102,89 +91,29 @@ router.get("/session/:key", async (req, res, next) => {
       expiresIn: "4w"
     });
 
-    // Drop the session (if exists)
-    session.delete();
+    // Drop the signin key (if exists)
+    signinKey.remove();
 
-    res.status(StatusCode.OK).json({ token } as GetAuthSessionResponse);
+    res.status(StatusCode.OK).json({ token } as GetAuthSignInKeyResponse);
   } catch (error) {
     next(error);
   }
 });
 
 /**
- * POST /auth/session/:key
+ * POST /auth/signin/:key/persist
  */
-router.post("/session/:key", validateSignup, async (req, res, next) => {
+router.post("/signin/:key/persist", async (req, res, next) => {
   try {
-    const params = req.params as PostAuthCompleteSignUpRequestParams;
-    const body = req.body as PostAuthCompleteSignUpRequest;
+    const params = req.params as PostAuthPersistSignInKeyRequestParams;
 
-    // Check if session exists
-    const session =
-      (await PersistSession.findById(params.key)) ||
-      (await Session.findById(params.key));
-    if (!session) {
-      throw new NotFound(ErrorMessage.SESSION_NOT_FOUND);
-    }
-
-    // TODO: Is there a better way to handle this "constructor" with typing?
-    // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
-    const user = new User({
-      handle: body.handle,
-      name: body.name,
-      email: session.email,
-      creationDate: Date.now()
-    });
-    await user.save();
-
-    // Sign a jwt with the user
-    const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
-      expiresIn: "4w"
-    });
-
-    // Drop the session or persist session (if exists)
-    session.delete();
-
-    res
-      .status(StatusCode.CREATED)
-      .json({ token } as PostAuthCompleteSignUpResponse);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /auth/signin/refresh
- */
-router.get("/signin/refresh", isAuthenticated, async (req, res, next) => {
-  try {
-    // The isAuthenticated middleware confirmed our JWT is valid, send back a new JWT to refresh the login
-    const user = await getCachedUserById(req.decodedToken!._id);
-    const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
-      expiresIn: "4w"
-    });
-    res.json({ token } as GetAuthSignInRefreshResponse);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * POST /auth/session/:key/persist
- */
-router.post("/session/:key/persist", async (req, res, next) => {
-  try {
-    const params = req.params as PostAuthPersistSessionRequestParams;
-
-    const session = await Session.findById(params.key);
-    if (session) {
-      const persistSession = new PersistSession({
-        _id: session._id,
-        email: session.email
+    const signinKey = await SigninKey.findById(params.key);
+    if (signinKey) {
+      const persistSigninKey = new PersistSigninKey({
+        _id: signinKey._id,
+        email: signinKey.email
       });
-      await persistSession.save();
-      // Drop the original session
-      await session.delete();
+      await persistSigninKey.save();
     }
 
     // ALWAYS send back OK as to not let the client know if the key exists or not
@@ -195,11 +124,16 @@ router.post("/session/:key/persist", async (req, res, next) => {
 });
 
 /**
- * GET /auth/token/valid
+ * GET /auth/token/refresh
  */
-router.get("/token/valid", isAuthenticated, async (req, res, next) => {
+router.get("/token/refresh", isAuthenticated, async (req, res, next) => {
   try {
-    res.sendStatus(StatusCode.OK);
+    // The isAuthenticated middleware confirmed our JWT is valid, send back a new JWT to refresh the login
+    const user = await getCachedUserById(req.decodedToken!._id);
+    const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
+      expiresIn: "4w"
+    });
+    res.json({ token } as GetAuthTokenRefreshResponse);
   } catch (error) {
     next(error);
   }
@@ -209,9 +143,6 @@ router.get("/token/valid", isAuthenticated, async (req, res, next) => {
  * POST /auth/token/invalidate
  */
 router.post("/token/invalidate", isAuthenticated, async (req, res, next) => {
-  // TODO:
-  // Update isAuthenticated route to check for old tokens from collection
-
   try {
     const invalid = new InvalidToken({
       expire: Date.now()
@@ -222,46 +153,6 @@ router.post("/token/invalidate", isAuthenticated, async (req, res, next) => {
     });
 
     res.sendStatus(StatusCode.CREATED);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /auth/user/handle/:handle/exists
- */
-router.get("/user/handle/:handle/exists", async (req, res, next) => {
-  try {
-    const request = req.params as GetAuthUserHandleExistsRequest;
-    const user = await User.findOne({ handle: request.handle });
-
-    if (!user) {
-      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
-    }
-
-    res
-      .status(StatusCode.OK)
-      .json(user.toJSON() as GetAuthChannelHandleExistsResponse);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /auth/channel/handle/:handle/exists
- */
-router.get("/channel/handle/:handle/exists", async (req, res, next) => {
-  try {
-    const request = req.params as GetAuthChannelHandleExistsRequest;
-    const channel = await Channel.findOne({ handle: request.handle });
-
-    if (!channel) {
-      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
-    }
-
-    res
-      .status(StatusCode.OK)
-      .json(channel.toJSON() as GetAuthChannelHandleExistsResponse);
   } catch (error) {
     next(error);
   }
