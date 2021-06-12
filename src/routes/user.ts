@@ -14,6 +14,7 @@ import {
   PutUserBannerRequestParams,
   PutUserBannerResponse,
   PutUserHandleRequest,
+  PutUserHandleRequestParams,
   PutUserHandleResponse,
   PutUserSubscriptionRequest,
   PutUserSubscriptionRequestParams,
@@ -24,7 +25,6 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
-import { getCachedUserById } from "../cache";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
 import { User } from "../entities/User";
@@ -46,11 +46,11 @@ router.get(
   "/:unique",
   async (req, res, next) => {
     try {
-      const request = req.params as GetUserAccountRequest;
+      const params = req.params as GetUserAccountRequest;
 
       let user;
       try {
-        const id = new Types.ObjectId(request.unique);
+        const id = new Types.ObjectId(params.unique);
         user = await User.findById(
           id,
           project(keysOf<GetUserAccountResponse>())
@@ -58,7 +58,7 @@ router.get(
       } catch (error) {
         // Not a mongo object id, try with handle
         user = await User.findOne(
-          { handle: request.unique },
+          { handle: params.unique },
           project(keysOf<GetUserAccountResponse>())
         );
       }
@@ -120,9 +120,9 @@ router.post("/", validateSignup, async (req, res, next) => {
  */
 router.get("/:handle/exists", async (req, res, next) => {
   try {
-    const request = req.params as GetUserHandleExistsRequest;
+    const params = req.params as GetUserHandleExistsRequest;
     const user = await User.findOne(
-      { handle: request.handle },
+      { handle: params.handle },
       project(keysOf<GetUserHandleExistsResponse>())
     );
 
@@ -143,9 +143,12 @@ router.get("/:handle/exists", async (req, res, next) => {
  */
 router.get("/:id/feeds", async (req, res, next) => {
   try {
-    const request = req.params as GetUserFeedsRequest;
-    const user = await getCachedUserById(request.id);
-    // TODO: Should this be a combination of subscriptions and followed users?
+    const params = req.params as GetUserFeedsRequest;
+    const user = await User.findById(params.id);
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+    // TODO: Should this be a combination of subscriptions and followed users? (as GetUserFeedsResponse)
     res.status(StatusCode.OK).json([user.subscriptions, user.following]);
   } catch (error) {
     next(error);
@@ -155,8 +158,12 @@ router.get("/:id/feeds", async (req, res, next) => {
  * GET /user/:id/promotions TODO: Should this be private?
  */
 router.get("/:id/promotions", async (req, res, next) => {
-  const request = req.params as GetUserPromotionsRequest;
-  const user = await getCachedUserById(request.id);
+  const params = req.params as GetUserPromotionsRequest;
+  const user = await User.findById(params.id);
+  if (!user) {
+    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+  }
+  // TODO: as GetUserPromotionsResponse
   res.status(StatusCode.OK).json(user.promotions);
 });
 
@@ -170,17 +177,18 @@ router.put(
   validatePutUserHandleRequest,
   async (req, res, next) => {
     try {
-      const request = req.body as PutUserHandleRequest;
+      const body = req.body as PutUserHandleRequest;
+      const params = req.params as PutUserHandleRequestParams;
 
       const user = await User.findById(
-        req.params.id,
+        params.id,
         project(keysOf<PutUserHandleResponse>())
       );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
       }
 
-      user.handle = request.handle;
+      user.handle = body.handle;
       await user.save();
 
       res
@@ -202,10 +210,10 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      const request = req.params as PutUserAvatarRequestParams;
+      const params = req.params as PutUserAvatarRequestParams;
 
       const user = await User.findById(
-        request.id,
+        params.id,
         project(keysOf<PutUserAvatarResponse>())
       );
       if (!user) {
@@ -237,10 +245,10 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      const request = req.params as PutUserBannerRequestParams;
+      const params = req.params as PutUserBannerRequestParams;
 
       const user = await User.findById(
-        request.id,
+        params.id,
         project(keysOf<PutUserBannerResponse>())
       );
       if (!user) {

@@ -12,7 +12,6 @@ import {
 import { createHmac } from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { getCachedUserById } from "../cache";
 import { InvalidToken } from "../entities/InvalidToken";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
@@ -134,7 +133,10 @@ router.post("/signin/:key/persist", async (req, res, next) => {
 router.get("/token/refresh", isAuthenticated, async (req, res, next) => {
   try {
     // The isAuthenticated middleware confirmed our JWT is valid, send back a new JWT to refresh the login
-    const user = await getCachedUserById(req.decodedToken!._id);
+    const user = await User.findById(req.decodedToken!._id);
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
     const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
       expiresIn: "4w"
     });

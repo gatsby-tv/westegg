@@ -3,19 +3,20 @@ import {
   Browsable,
   Channel as ClientChannel,
   EpisodicVideo,
+  ErrorMessage,
   GetListingFeaturedChannelsResponse,
   GetListingNewVideosResponse,
   GetListingPopularVideosResponse,
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsResponse,
   IBasicVideo,
+  NotFound,
   SerialVideo,
   Show,
   StatusCode,
   Video as ClientVideo
 } from "@gatsby-tv/types";
 import { Router } from "express";
-import { getCachedChannelById } from "../cache";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
 
@@ -41,10 +42,14 @@ router.get("/featured/channels", async (req, res, next) => {
 // Convert IBasicVideo to BasicVideo
 // TODO: Move to better file
 async function toBasicVideo(input: IBasicVideo): Promise<BasicVideo> {
+  let channel = await Channel.findById(input.channel);
+  if (!channel) {
+    throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+  }
   let output = {
     // TODO: Object spread includes unnecessary keys here, we should strip out properties before returning
     ...input,
-    channel: await getCachedChannelById(input.channel),
+    channel: channel,
     // TODO: Get from collections
     collaborators: [],
     contributors: [],

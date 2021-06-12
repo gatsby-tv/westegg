@@ -15,6 +15,7 @@ import {
   PutChannelBannerRequestParams,
   PutChannelBannerResponse,
   PutChannelHandleRequest,
+  PutChannelHandleRequestParams,
   PutChannelHandleResponse,
   PutChannelPosterRequestParams,
   PutChannelPosterResponse,
@@ -22,7 +23,6 @@ import {
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { Types } from "mongoose";
-import { getCachedChannelById } from "../cache";
 import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 import { Video } from "../entities/Video";
@@ -44,15 +44,15 @@ router.get(
   "/:unique",
   async (req, res, next) => {
     try {
-      const request = req.params as GetChannelAccountRequest;
+      const params = req.params as GetChannelAccountRequest;
 
       let channel;
       try {
-        const id = new Types.ObjectId(request.unique);
+        const id = new Types.ObjectId(params.unique);
         channel = await Channel.findById(id);
       } catch (error) {
         // Not a mongo object id, try with handle
-        channel = await Channel.findOne({ handle: request.unique });
+        channel = await Channel.findOne({ handle: params.unique });
       }
 
       if (!channel) {
@@ -77,10 +77,10 @@ router.post(
   validatePostChannel,
   async (req, res, next) => {
     try {
-      const request: PostChannelRequest = req.body;
+      const body: PostChannelRequest = req.body;
 
       // Get the user making the request
-      const user = await User.findById(request.owner);
+      const user = await User.findById(body.owner);
 
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
@@ -88,8 +88,8 @@ router.post(
 
       // Create the new channel
       const channel = new Channel({
-        handle: request.handle,
-        name: request.name,
+        handle: body.handle,
+        name: body.name,
         creationDate: Date.now(),
         owners: [user._id]
       });
@@ -113,8 +113,8 @@ router.post(
  */
 router.get("/:handle/exists", async (req, res, next) => {
   try {
-    const request = req.params as GetChannelHandleExistsRequest;
-    const channel = await Channel.findOne({ handle: request.handle });
+    const params = req.params as GetChannelHandleExistsRequest;
+    const channel = await Channel.findOne({ handle: params.handle });
 
     if (!channel) {
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
@@ -133,8 +133,11 @@ router.get("/:handle/exists", async (req, res, next) => {
  */
 router.get("/:id/content", async (req, res, next) => {
   try {
-    const request = req.params as GetChannelContentRequest;
-    const channel = await getCachedChannelById(request.id);
+    const params = req.params as GetChannelContentRequest;
+    const channel = await Channel.findById(params.id);
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
 
     // Get all channel content from FKs stored on channel (build a mongo query for each content item)
     // TODO: Videos
@@ -169,10 +172,14 @@ router.put(
   validatePutChannelHandleRequest,
   async (req, res, next) => {
     try {
-      const request = req.body as PutChannelHandleRequest;
-      const channel = await getCachedChannelById(req.params.id);
+      const body = req.body as PutChannelHandleRequest;
+      const params = req.params as PutChannelHandleRequestParams;
+      const channel = await Channel.findById(params.id);
+      if (!channel) {
+        throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+      }
 
-      channel.handle = request.handle;
+      channel.handle = body.handle;
       await channel.save();
 
       res
@@ -194,8 +201,11 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      const request = req.params as PutChannelAvatarRequestParams;
-      const channel = await getCachedChannelById(request.id);
+      const params = req.params as PutChannelAvatarRequestParams;
+      const channel = await Channel.findById(params.id);
+      if (!channel) {
+        throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+      }
 
       // TODO: Unpin the old avatar unless used by another channel
       channel.avatar = req.ipfsContent!;
@@ -220,8 +230,11 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      const request = req.params as PutChannelBannerRequestParams;
-      const channel = await getCachedChannelById(request.id);
+      const params = req.params as PutChannelBannerRequestParams;
+      const channel = await Channel.findById(params.id);
+      if (!channel) {
+        throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+      }
 
       // TODO: Unpin the old banner unless used by another channel
       channel.banner = req.ipfsContent!;
@@ -246,8 +259,11 @@ router.put(
   upload,
   async (req, res, next) => {
     try {
-      const request = req.params as PutChannelPosterRequestParams;
-      const channel = await getCachedChannelById(request.id);
+      const params = req.params as PutChannelPosterRequestParams;
+      const channel = await Channel.findById(params.id);
+      if (!channel) {
+        throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+      }
 
       // TODO: Unpin the old poster unless used by another channel
       channel.poster = req.ipfsContent!;
