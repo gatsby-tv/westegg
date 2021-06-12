@@ -23,6 +23,7 @@ import {
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import { keys as keysOf } from "ts-transformer-keys";
 import { getCachedUserById } from "../cache";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
@@ -33,6 +34,7 @@ import {
   hasPermissionToPutUserRequest,
   validatePutUserHandleRequest
 } from "../middleware/user";
+import { project } from "../utilities";
 
 const router = Router();
 
@@ -49,10 +51,16 @@ router.get(
       let user;
       try {
         const id = new Types.ObjectId(request.unique);
-        user = await User.findById(id);
+        user = await User.findById(
+          id,
+          project(keysOf<GetUserAccountResponse>())
+        );
       } catch (error) {
         // Not a mongo object id, try with handle
-        user = await User.findOne({ handle: request.unique });
+        user = await User.findOne(
+          { handle: request.unique },
+          project(keysOf<GetUserAccountResponse>())
+        );
       }
 
       if (!user) {
@@ -113,7 +121,10 @@ router.post("/", validateSignup, async (req, res, next) => {
 router.get("/:handle/exists", async (req, res, next) => {
   try {
     const request = req.params as GetUserHandleExistsRequest;
-    const user = await User.findOne({ handle: request.handle });
+    const user = await User.findOne(
+      { handle: request.handle },
+      project(keysOf<GetUserHandleExistsResponse>())
+    );
 
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
@@ -161,7 +172,10 @@ router.put(
     try {
       const request = req.body as PutUserHandleRequest;
 
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(
+        req.params.id,
+        project(keysOf<PutUserHandleResponse>())
+      );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
       }
@@ -190,7 +204,10 @@ router.put(
     try {
       const request = req.params as PutUserAvatarRequestParams;
 
-      const user = await User.findById(request.id);
+      const user = await User.findById(
+        request.id,
+        project(keysOf<PutUserAvatarResponse>())
+      );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
       }
@@ -222,7 +239,10 @@ router.put(
     try {
       const request = req.params as PutUserBannerRequestParams;
 
-      const user = await User.findById(request.id);
+      const user = await User.findById(
+        request.id,
+        project(keysOf<PutUserBannerResponse>())
+      );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
       }
@@ -252,7 +272,14 @@ router.put(
       const body = req.body as PutUserSubscriptionRequest;
       const params = req.params as PutUserSubscriptionRequestParams;
 
-      const user = await getCachedUserById(params.id);
+      const user = await User.findById(
+        params.id,
+        project(keysOf<PutUserSubscriptionResponse>())
+      );
+      if (!user) {
+        throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+      }
+
       // TODO: Prevent subscription to the same channel twice (set)
       user.subscriptions.push(body.subscription);
       user.save();

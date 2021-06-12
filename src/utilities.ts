@@ -8,6 +8,14 @@ export function compareMongoIDs(
   return left.toString() === right.toString();
 }
 
+// Map an array of keys (usually a response type) into a mongo projection
+export function project(keys: string[]): any {
+  return keys.reduce(
+    (result: any, key: any) => ((result[key] = 1), result),
+    {}
+  );
+}
+
 // Generate a random string
 export function randomString(length: number = 8) {
   return Math.random()

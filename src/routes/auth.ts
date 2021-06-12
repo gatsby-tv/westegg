@@ -45,7 +45,7 @@ router.post("/signin", validateSignin, async (req, res, next) => {
 
     // Send an email to the user with the signin key and if they need to complete signin
     const link = new URL(
-      `/magiclink?key=${signinKey.key}&exists=${exists}`,
+      `/$magiclink?key=${signinKey.key}&exists=${exists}`,
       process.env.PUBLIC_URL!
     );
 

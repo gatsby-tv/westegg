@@ -4,7 +4,7 @@ import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 
 const HANDLE_MIN_LENGTH = 4;
-const HANDLE_MAX_LENGTH = 16;
+const HANDLE_MAX_LENGTH = 21;
 
 const validateHandle = async (handle: string) => {
   if (handle.length < HANDLE_MIN_LENGTH || handle.length > HANDLE_MAX_LENGTH) {
