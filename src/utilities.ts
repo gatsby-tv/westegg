@@ -7,3 +7,11 @@ export function compareMongoIDs(
 ): boolean {
   return left.toString() === right.toString();
 }
+
+// Generate a random string
+export function randomString(length: number = 8) {
+  return Math.random()
+    .toString(36)
+    .replace(/[^a-z]+/g, "")
+    .substr(0, length);
+}

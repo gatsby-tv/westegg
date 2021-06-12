@@ -24,8 +24,8 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { getCachedUserById } from "../cache";
-import { PersistSigninKey } from "../entities/PersistSigninKey";
-import { SigninKey } from "../entities/SigninKey";
+import { PersistSignInKey } from "../entities/PersistSignInKey";
+import { SignInKey } from "../entities/SignInKey";
 import { User } from "../entities/User";
 import { isAuthenticated, validateSignup } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
@@ -75,8 +75,8 @@ router.post("/", validateSignup, async (req, res, next) => {
 
     // Check if signinKey exists
     const signinKey =
-      (await PersistSigninKey.findById(body.key)) ||
-      (await SigninKey.findById(body.key));
+      (await PersistSignInKey.findOne({ key: body.key })) ||
+      (await SignInKey.findOne({ key: body.key }));
     if (!signinKey) {
       throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
     }

@@ -9,17 +9,19 @@ import {
   PostAuthSignInResponse,
   StatusCode
 } from "@gatsby-tv/types";
+import { createHmac } from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { getCachedUserById } from "../cache";
 import { InvalidToken } from "../entities/InvalidToken";
-import { PersistSigninKey } from "../entities/PersistSigninKey";
-import { SigninKey } from "../entities/SigninKey";
+import { PersistSignInKey } from "../entities/PersistSignInKey";
+import { SignInKey } from "../entities/SignInKey";
 import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { logger } from "../logger";
 import mail from "../mail";
 import { isAuthenticated, validateSignin } from "../middleware/auth";
+import { randomString } from "../utilities";
 
 const router = Router();
 
@@ -33,15 +35,17 @@ router.post("/signin", validateSignin, async (req, res, next) => {
     // Check if user already exists with email
     const exists = !!(await User.findOne({ email: signin.email }));
 
-    // Create a signinKey that expires after set time (see entities/SigninKey.ts)
-    const signinKey = new SigninKey({
+    // Create a signinKey that expires after set time (see entities/SignInKey.ts)
+    const key = createHmac("sha256", randomString()).digest("hex");
+    const signinKey = new SignInKey({
+      key: key,
       email: signin.email
     });
     await signinKey.save();
 
     // Send an email to the user with the signin key and if they need to complete signin
     const link = new URL(
-      `/magiclink?key=${signinKey._id}&exists=${exists}`,
+      `/magiclink?key=${signinKey.key}&exists=${exists}`,
       process.env.PUBLIC_URL!
     );
 
@@ -60,7 +64,7 @@ router.post("/signin", validateSignin, async (req, res, next) => {
       logger.warn(
         `--DEV ONLY-- Email not sent to ${signinKey.email}. SignIn key sent in response!`
       );
-      res.status(StatusCode.OK).json({ key: signinKey._id });
+      res.status(StatusCode.OK).json({ key: signinKey.key });
     }
   } catch (error) {
     next(error);
@@ -72,10 +76,10 @@ router.post("/signin", validateSignin, async (req, res, next) => {
  */
 router.get("/signin/:key", async (req, res, next) => {
   try {
-    const request = req.params as GetAuthSignInKeyRequest;
+    const params = req.params as GetAuthSignInKeyRequest;
 
     // Check if signin key exists
-    const signinKey = await SigninKey.findById(request.key);
+    const signinKey = await SignInKey.findOne({ key: params.key });
     if (!signinKey) {
       throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
     }
@@ -107,13 +111,14 @@ router.post("/signin/:key/persist", async (req, res, next) => {
   try {
     const params = req.params as PostAuthPersistSignInKeyRequestParams;
 
-    const signinKey = await SigninKey.findById(params.key);
+    const signinKey = await SignInKey.findOne({ key: params.key });
     if (signinKey) {
-      const persistSigninKey = new PersistSigninKey({
+      const persistSignInKey = new PersistSignInKey({
         _id: signinKey._id,
+        key: signinKey.key,
         email: signinKey.email
       });
-      await persistSigninKey.save();
+      await persistSignInKey.save();
     }
 
     // ALWAYS send back OK as to not let the client know if the key exists or not
