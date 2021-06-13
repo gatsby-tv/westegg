@@ -7,6 +7,8 @@ export enum Environment {
 }
 
 const secretRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\!\@\#\$\%\^\&\*\(\)\_\+])[0-9a-zA-Z\!\@\#\$\%\^\&\*\(\)\_\+\/\,\.\<\\\>\{\}\[\]\;\:\`\-\+\=]{64,}$/;
+const ipfsHostRegex = /^http(s)?:\/\/[a-zA-Z0-9\%\.\_\+\~\#\=]{1,256}\:[0-9]{1,5}([a-zA-Z0-9\(\)\@\:\%\_\+\.\~\#\?\&\/\=]*)$/;
+const mongoHostRegex = /^[a-zA-Z0-9\%\.\_\+\~\#\=]{1,256}$/;
 
 // Check all environment variables are properly set and valid, exit if not
 export function validateEnvironment() {
@@ -33,17 +35,40 @@ export function validateEnvironment() {
       throw new Error("No JWT secret key set!");
     }
 
-    if (Environment.DEV === process.env.WESTEGG_ENV) {
-      let regexMatch = process.env.JWT_SECRET.match(secretRegex) as string[];
-      let matchString = regexMatch?.join();
-      if (matchString !== process.env.JWT_SECRET) {
+    // Verify environment variables
+    if (Environment.PRODUCTION === process.env.WESTEGG_ENV) {
+      let regexMatch = process.env.JWT_SECRET?.match(secretRegex) as string[];
+      let matchString = regexMatch?.join("");
+      if (matchString !== process.env.JWT_SECRET || !process.env.JWT_SECRET) {
         throw new Error("JWT secret key not complex enough!");
       }
     }
 
-    // TODO: Validate mongo url format
+    if (
+      !process.env.MONGO_PROTOCOL ||
+      (process.env.MONGO_PROTOCOL !== "mongodb" &&
+        process.env.MONGO_PROTOCOL !== "mongodb+srv")
+    ) {
+      throw new Error("MongoDB protocol missing or malformed!");
+    }
 
-    // TODO: Validate IPFS url format
+    let regexMatch = process.env.MONGO_HOST?.match(mongoHostRegex) as string[];
+    let matchString = regexMatch?.join("");
+    if (!process.env.MONGO_HOST || matchString !== process.env.MONGO_HOST) {
+      throw new Error("MongoDB host missing or malformed!");
+    }
+
+    if (!process.env.MONGO_API_PASS) {
+      throw new Error("MongoDB api password missing!");
+    }
+
+    if (Environment.DEV === process.env.WESTEGG_ENV) {
+      let regexMatch = process.env.IPFS_URL?.match(ipfsHostRegex) as string[];
+      let matchString = regexMatch?.join("");
+      if (matchString !== process.env.IPFS_URL || !process.env.IPFS_URL) {
+        throw new Error("IPFS host missing or malformed!");
+      }
+    }
   } catch (error) {
     logger.error(`FATAL: ${error}`);
     process.exit(1);
