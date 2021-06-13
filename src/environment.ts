@@ -6,6 +6,8 @@ export enum Environment {
   PRODUCTION = "production"
 }
 
+const secretRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\!\@\#\$\%\^\&\*\(\)\_\+])[0-9a-zA-Z\!\@\#\$\%\^\&\*\(\)\_\+\/\,\.\<\\\>\{\}\[\]\;\:\`\-\+\=]{64,}$/;
+
 // Check all environment variables are properly set and valid, exit if not
 export function validateEnvironment() {
   try {
@@ -31,7 +33,13 @@ export function validateEnvironment() {
       throw new Error("No JWT secret key set!");
     }
 
-    // TODO: Validate prod JWT secret key is strong
+    if (Environment.DEV === process.env.WESTEGG_ENV) {
+      let regexMatch = process.env.JWT_SECRET.match(secretRegex) as string[];
+      let matchString = regexMatch?.join();
+      if (matchString !== process.env.JWT_SECRET) {
+        throw new Error("JWT secret key not complex enough!");
+      }
+    }
 
     // TODO: Validate mongo url format
 
