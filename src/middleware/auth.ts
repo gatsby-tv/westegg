@@ -14,7 +14,7 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 import { InvalidToken } from "../entities/InvalidToken";
 import { compareMongoIDs } from "../utilities";
-import { validateUserHandle } from "./handled";
+import { validateHandle } from "./handled";
 import { validateName } from "./named";
 
 const BEARER_PREFIX = "Bearer ";
@@ -47,7 +47,7 @@ export const validateSignup = async (
     const signup = req.body as PostUserCompleteSignupRequest;
 
     // Validate handle
-    await validateUserHandle(signup.handle);
+    validateHandle(signup.handle);
 
     // Validate display name
     validateName(signup.name);

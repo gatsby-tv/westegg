@@ -9,7 +9,7 @@ import { ChannelRef, UserRef, VideoRef } from "./refs";
 
 const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
   // Required
-  handle: String,
+  handle: { type: String, unique: true },
   name: String,
   creationDate: Date,
   // Optional

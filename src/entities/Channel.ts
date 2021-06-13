@@ -5,7 +5,7 @@ import { ChannelRef, PlaylistRef, ShowRef, UserRef, VideoRef } from "./refs";
 
 const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   // Required
-  handle: String,
+  handle: { type: String, unique: true },
   name: String,
   owners: { type: [Schema.Types.ObjectId], ref: UserRef },
   creationDate: Date,

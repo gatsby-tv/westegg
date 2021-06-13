@@ -1,4 +1,5 @@
 import {
+  BadRequest,
   ErrorMessage,
   GetUserAccountRequest,
   GetUserAccountResponse,
@@ -34,7 +35,7 @@ import {
   hasPermissionToPutUserRequest,
   validatePutUserHandleRequest
 } from "../middleware/user";
-import { project } from "../utilities";
+import { isMongoDuplicateKeyError, project } from "../utilities";
 
 const router = Router();
 
@@ -97,7 +98,14 @@ router.post("/", validateSignup, async (req, res, next) => {
       email: signinKey.email,
       creationDate: Date.now()
     });
-    await user.save();
+    try {
+      await user.save();
+    } catch (error) {
+      if (isMongoDuplicateKeyError(error)) {
+        throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+      }
+      next(error);
+    }
 
     // Sign a jwt with the user
     const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
@@ -189,7 +197,14 @@ router.put(
       }
 
       user.handle = body.handle;
-      await user.save();
+      try {
+        await user.save();
+      } catch (error) {
+        if (isMongoDuplicateKeyError(error)) {
+          throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+        }
+        next(error);
+      }
 
       res
         .status(StatusCode.CREATED)

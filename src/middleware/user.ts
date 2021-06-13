@@ -7,7 +7,7 @@ import {
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entities/User";
 import { hasPermission, ResourceAction } from "./auth";
-import { validateUserHandle } from "./handled";
+import { validateHandle } from "./handled";
 
 /**
  * PUT /user/:id/*
@@ -47,7 +47,7 @@ export const validatePutUserHandleRequest = async (
     const request = req.body as PutUserHandleRequest;
 
     // Validate handle
-    await validateUserHandle(request.handle);
+    validateHandle(request.handle);
     next();
   } catch (error) {
     next(error);

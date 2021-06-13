@@ -1,3 +1,4 @@
+import { MongoError } from "mongodb";
 import { Schema } from "mongoose";
 
 // Compare two mongo ids (can be strings or ObjectIDs)
@@ -14,6 +15,10 @@ export function project(keys: string[]): any {
     (result: any, key: any) => ((result[key] = 1), result),
     {}
   );
+}
+
+export function isMongoDuplicateKeyError(error: MongoError): boolean {
+  return error && error.name === "MongoError" && error.code === 11000;
 }
 
 // Generate a random string

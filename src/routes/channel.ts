@@ -1,4 +1,5 @@
 import {
+  BadRequest,
   ErrorMessage,
   GetChannelAccountRequest,
   GetChannelAccountResponse,
@@ -33,6 +34,7 @@ import {
   validatePutChannelHandleRequest
 } from "../middleware/channel";
 import { upload } from "../middleware/multipart";
+import { isMongoDuplicateKeyError } from "../utilities";
 
 const router = Router();
 
@@ -81,7 +83,6 @@ router.post(
 
       // Get the user making the request
       const user = await User.findById(body.owner);
-
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
       }
@@ -93,7 +94,14 @@ router.post(
         creationDate: Date.now(),
         owners: [user._id]
       });
-      await channel.save();
+      try {
+        await channel.save();
+      } catch (error) {
+        if (isMongoDuplicateKeyError(error)) {
+          throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+        }
+        next(error);
+      }
 
       // Update the user with the channel FK
       user.channels.push(channel._id);
@@ -144,7 +152,6 @@ router.get("/:id/content", async (req, res, next) => {
     const videos = (
       await Video.find().where("_id").in(channel.videos).exec()
     ).map((entity) => entity as IVideo);
-    console.log(videos);
     // TODO: Shows
     // TODO: Playlists
 
@@ -180,7 +187,14 @@ router.put(
       }
 
       channel.handle = body.handle;
-      await channel.save();
+      try {
+        await channel.save();
+      } catch (error) {
+        if (isMongoDuplicateKeyError(error)) {
+          throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+        }
+        next(error);
+      }
 
       res
         .status(StatusCode.CREATED)

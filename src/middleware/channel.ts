@@ -9,7 +9,7 @@ import { NextFunction, Request, Response } from "express";
 import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 import { hasPermission, ResourceAction } from "./auth";
-import { validateChannelHandle } from "./handled";
+import { validateHandle } from "./handled";
 import { validateName } from "./named";
 
 /**
@@ -24,7 +24,7 @@ export const validatePostChannel = async (
     const request: PostChannelRequest = req.body;
 
     // Validate handle
-    await validateChannelHandle(request.handle);
+    validateHandle(request.handle);
 
     // Validate display name
     validateName(request.name);
@@ -43,11 +43,12 @@ export const hasPermissionToPutChannelRequest = async (
   next: NextFunction
 ) => {
   try {
+    // TODO: params as generic put request for channel
     // Get the user performing the action
     const actor = await User.findById(req.decodedToken!._id);
 
     // Get the channel to update
-    const channel = await Channel.findById(req.decodedToken!._id);
+    const channel = await Channel.findById(req.params.id);
     if (!channel) {
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
@@ -75,7 +76,7 @@ export const validatePutChannelHandleRequest = async (
     const request = req.body as PutChannelHandleRequest;
 
     // Validate handle
-    await validateChannelHandle(request.handle);
+    validateHandle(request.handle);
     next();
   } catch (error) {
     next(error);
