@@ -212,7 +212,9 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  upload,
+  (res, req, next) => {
+    upload(res, req, next, 2);
+  },
   async (req, res, next) => {
     try {
       const params = req.params as PutChannelAvatarRequestParams;
@@ -241,7 +243,9 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  upload,
+  (res, req, next) => {
+    upload(res, req, next, 2);
+  },
   async (req, res, next) => {
     try {
       const params = req.params as PutChannelBannerRequestParams;
@@ -270,7 +274,9 @@ router.put(
   "/:id/poster",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  upload,
+  (res, req, next) => {
+    upload(res, req, next, 2);
+  },
   async (req, res, next) => {
     try {
       const params = req.params as PutChannelPosterRequestParams;

@@ -1,4 +1,4 @@
-import { IPFSContent } from "@gatsby-tv/types";
+import { BadRequest, ErrorMessage, IPFSContent } from "@gatsby-tv/types";
 import Busboy from "busboy";
 import { NextFunction, Request, Response } from "express";
 import fs from "fs";
@@ -17,11 +17,13 @@ enum SupportedMimeType {
 }
 
 const TMP_DIR = "/tmp";
+const MiB_SIZE = 1048576;
 
 export const upload = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
+  contentLength: number
 ) => {
   try {
     const busboy = new Busboy({ headers: req.headers });
@@ -38,9 +40,17 @@ export const upload = async (
         mimeType
       ) => {
         try {
-          // TODO: Validate mime type is allowed
-          // TODO: Validate file contents
-          // TODO: Validate file size
+          let mimeTypes = Object.values(SupportedMimeType) as string[];
+          if (mimeTypes.includes(mimeType)) {
+            throw new BadRequest(ErrorMessage.INVALID_FILE_TYPE);
+          }
+
+          if (
+            parseInt(req.headers["content-length"]!) >
+            contentLength * MiB_SIZE
+          ) {
+            throw new BadRequest(ErrorMessage.INVALID_FILE_SIZE);
+          }
 
           // Save file to tmp dir
           tmpFileMimeType = <SupportedMimeType>mimeType;
