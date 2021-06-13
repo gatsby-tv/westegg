@@ -1,7 +1,6 @@
 import {
   BasicVideo,
   Browsable,
-  Channel as ClientChannel,
   EpisodicVideo,
   ErrorMessage,
   GetListingFeaturedChannelsResponse,
@@ -10,6 +9,7 @@ import {
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsResponse,
   IBasicVideo,
+  IChannelAccount,
   NotFound,
   SerialVideo,
   Show,
@@ -17,8 +17,10 @@ import {
   Video as ClientVideo
 } from "@gatsby-tv/types";
 import { Router } from "express";
+import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
+import { projection } from "../utilities";
 
 const router = Router();
 
@@ -28,9 +30,11 @@ const router = Router();
 router.get("/featured/channels", async (req, res, next) => {
   try {
     // TODO: Should get actual list of featured channels, for now just get first 10
-    const channels = (await Channel.find().limit(10)).map(
-      (entity) => entity as ClientChannel
-    );
+    const channels = await Channel.find(
+      {},
+      projection(keysOf<Omit<IChannelAccount, "_id">>())
+    ).limit(10);
+
     res
       .status(StatusCode.OK)
       .json(channels as GetListingFeaturedChannelsResponse);

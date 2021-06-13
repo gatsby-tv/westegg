@@ -2,15 +2,18 @@ import {
   ErrorMessage,
   GetVideoRequest,
   NotFound,
+  pick,
   PostVideoRequest,
   PostVideoResponse,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
+import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
 import { isAuthenticated } from "../middleware/auth";
 import { validatePostVideo } from "../middleware/video";
+import { projection } from "../utilities";
 
 const router = Router();
 
@@ -21,7 +24,10 @@ router.get("/:id", async (req, res, next) => {
   try {
     const request = req.params as GetVideoRequest;
 
-    const video = await Video.findById(request.id);
+    const video = await Video.findById(
+      request.id,
+      projection(keysOf<GetVideoRequest>())
+    );
 
     if (!video) {
       throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
@@ -63,7 +69,11 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
     channel.videos.push(video._id);
     channel.save();
 
-    res.status(StatusCode.CREATED).json(video.toJSON() as PostVideoResponse);
+    res
+      .status(StatusCode.CREATED)
+      .json(
+        pick(video.toJSON(), keysOf<PostVideoRequest>()) as PostVideoResponse
+      );
   } catch (error) {
     next(error);
   }

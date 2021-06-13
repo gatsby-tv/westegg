@@ -10,7 +10,7 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   owners: { type: [Schema.Types.ObjectId], ref: UserRef },
   creationDate: Date,
   // Optional
-  subscribers: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
+  subscribers: Number,
   avatar: {
     type: {
       hash: String,
