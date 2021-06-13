@@ -6,6 +6,10 @@ stages:
   - build
   - publish
 
+branches:
+  only:
+  - master
+
 jobs:
   include:
     # Check prettier linting and build typescript
@@ -15,7 +19,6 @@ jobs:
         - npm run build
     # Build and publish docker tags
     - stage: publish
-      if: branch = master
       before_script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       script:
