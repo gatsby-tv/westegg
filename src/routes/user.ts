@@ -35,7 +35,7 @@ import {
   hasPermissionToPutUserRequest,
   validatePutUserHandleRequest
 } from "../middleware/user";
-import { isMongoDuplicateKeyError, project } from "../utilities";
+import { isMongoDuplicateKeyError, projection } from "../utilities";
 
 const router = Router();
 
@@ -54,13 +54,13 @@ router.get(
         const id = new Types.ObjectId(params.unique);
         user = await User.findById(
           id,
-          project(keysOf<GetUserAccountResponse>())
+          projection(keysOf<GetUserAccountResponse>())
         );
       } catch (error) {
         // Not a mongo object id, try with handle
         user = await User.findOne(
           { handle: params.unique },
-          project(keysOf<GetUserAccountResponse>())
+          projection(keysOf<GetUserAccountResponse>())
         );
       }
 
@@ -131,7 +131,7 @@ router.get("/:handle/exists", async (req, res, next) => {
     const params = req.params as GetUserHandleExistsRequest;
     const user = await User.findOne(
       { handle: params.handle },
-      project(keysOf<GetUserHandleExistsResponse>())
+      projection(keysOf<GetUserHandleExistsResponse>())
     );
 
     if (!user) {
@@ -190,7 +190,7 @@ router.put(
 
       const user = await User.findById(
         params.id,
-        project(keysOf<PutUserHandleResponse>())
+        projection(keysOf<PutUserHandleResponse>())
       );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
@@ -229,7 +229,7 @@ router.put(
 
       const user = await User.findById(
         params.id,
-        project(keysOf<PutUserAvatarResponse>())
+        projection(keysOf<PutUserAvatarResponse>())
       );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
@@ -264,7 +264,7 @@ router.put(
 
       const user = await User.findById(
         params.id,
-        project(keysOf<PutUserBannerResponse>())
+        projection(keysOf<PutUserBannerResponse>())
       );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);
@@ -297,7 +297,7 @@ router.put(
 
       const user = await User.findById(
         params.id,
-        project(keysOf<PutUserSubscriptionResponse>())
+        projection(keysOf<PutUserSubscriptionResponse>())
       );
       if (!user) {
         throw new NotFound(ErrorMessage.USER_NOT_FOUND);

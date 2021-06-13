@@ -9,6 +9,7 @@ import {
   GetChannelHandleExistsResponse,
   IVideo,
   NotFound,
+  pick,
   PostChannelRequest,
   PostChannelResponse,
   PutChannelAvatarRequestParams,
@@ -24,6 +25,7 @@ import {
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { Types } from "mongoose";
+import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 import { Video } from "../entities/Video";
@@ -34,7 +36,7 @@ import {
   validatePutChannelHandleRequest
 } from "../middleware/channel";
 import { upload } from "../middleware/multipart";
-import { isMongoDuplicateKeyError } from "../utilities";
+import { isMongoDuplicateKeyError, projection } from "../utilities";
 
 const router = Router();
 
@@ -51,10 +53,16 @@ router.get(
       let channel;
       try {
         const id = new Types.ObjectId(params.unique);
-        channel = await Channel.findById(id);
+        channel = await Channel.findById(
+          id,
+          projection(keysOf<GetChannelAccountResponse>())
+        );
       } catch (error) {
         // Not a mongo object id, try with handle
-        channel = await Channel.findOne({ handle: params.unique });
+        channel = await Channel.findOne(
+          { handle: params.unique },
+          projection(keysOf<GetChannelAccountResponse>())
+        );
       }
 
       if (!channel) {
@@ -109,7 +117,12 @@ router.post(
 
       res
         .status(StatusCode.CREATED)
-        .json(channel.toJSON() as PostChannelResponse);
+        .json(
+          pick(
+            channel.toJSON(),
+            keysOf<PostChannelResponse>()
+          ) as PostChannelResponse
+        );
     } catch (error) {
       next(error);
     }
@@ -122,7 +135,10 @@ router.post(
 router.get("/:handle/exists", async (req, res, next) => {
   try {
     const params = req.params as GetChannelHandleExistsRequest;
-    const channel = await Channel.findOne({ handle: params.handle });
+    const channel = await Channel.findOne(
+      { handle: params.handle },
+      projection(keysOf<GetChannelHandleExistsResponse>())
+    );
 
     if (!channel) {
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
@@ -181,7 +197,10 @@ router.put(
     try {
       const body = req.body as PutChannelHandleRequest;
       const params = req.params as PutChannelHandleRequestParams;
-      const channel = await Channel.findById(params.id);
+      const channel = await Channel.findById(
+        params.id,
+        projection(keysOf<PutChannelHandleResponse>())
+      );
       if (!channel) {
         throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
       }
@@ -216,7 +235,10 @@ router.put(
   async (req, res, next) => {
     try {
       const params = req.params as PutChannelAvatarRequestParams;
-      const channel = await Channel.findById(params.id);
+      const channel = await Channel.findById(
+        params.id,
+        projection(keysOf<PutChannelAvatarResponse>())
+      );
       if (!channel) {
         throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
       }
@@ -245,7 +267,10 @@ router.put(
   async (req, res, next) => {
     try {
       const params = req.params as PutChannelBannerRequestParams;
-      const channel = await Channel.findById(params.id);
+      const channel = await Channel.findById(
+        params.id,
+        projection(keysOf<PutChannelBannerResponse>())
+      );
       if (!channel) {
         throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
       }
@@ -274,7 +299,10 @@ router.put(
   async (req, res, next) => {
     try {
       const params = req.params as PutChannelPosterRequestParams;
-      const channel = await Channel.findById(params.id);
+      const channel = await Channel.findById(
+        params.id,
+        projection(keysOf<PutChannelPosterResponse>())
+      );
       if (!channel) {
         throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
       }

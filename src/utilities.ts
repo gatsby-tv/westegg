@@ -10,7 +10,7 @@ export function compareMongoIDs(
 }
 
 // Map an array of keys (usually a response type) into a mongo projection
-export function project(keys: string[]): any {
+export function projection(keys: string[]): any {
   return keys.reduce(
     (result: any, key: any) => ((result[key] = 1), result),
     {}
