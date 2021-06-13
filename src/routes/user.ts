@@ -90,8 +90,6 @@ router.post("/", validateSignup, async (req, res, next) => {
       throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
     }
 
-    // TODO: Is there a better way to handle this "constructor" with typing?
-    // TODO: https://mongoosejs.com/docs/middleware.html mongoose validation hooks
     const user = new User({
       handle: body.handle,
       name: body.name,
