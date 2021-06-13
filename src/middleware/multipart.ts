@@ -72,7 +72,8 @@ export const upload = async (
           mimeType: tmpFileMimeType
         };
         req.ipfsContent = ipfsContent;
-        // TODO: Clean up tmp file
+        
+        await fs.promises.rm(tmpFilePath);
 
         // Pass ipfs content to endpoint
         next();
