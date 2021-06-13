@@ -222,7 +222,9 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutUserRequest,
-  upload,
+  (res, req, next) => {
+    upload(res, req, next, 2);
+  },
   async (req, res, next) => {
     try {
       const params = req.params as PutUserAvatarRequestParams;
@@ -257,7 +259,9 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutUserRequest,
-  upload,
+  (res, req, next) => {
+    upload(res, req, next, 2);
+  },
   async (req, res, next) => {
     try {
       const params = req.params as PutUserBannerRequestParams;
