@@ -8,7 +8,7 @@ export enum Environment {
 
 const SECRET_REGEX = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\!\@\#\$\%\^\&\*\(\)\_\+])[0-9a-zA-Z\!\@\#\$\%\^\&\*\(\)\_\+\/\,\.\<\\\>\{\}\[\]\;\:\`\-\+\=]{64,}$/;
 const IPFS_HOST_REGEX = /^http(s)?:\/\/[a-zA-Z0-9\%\.\_\+\~\#\=]{1,256}\:[0-9]{1,5}([a-zA-Z0-9\(\)\@\:\%\_\+\.\~\#\?\&\/\=]*)$/;
-const MONGO_HOST_REGEX = /^[a-zA-Z0-9\%\.\_\+\~\#\=]{1,256}$/;
+const MONGO_HOST_REGEX = /^[a-zA-Z0-9\%\.\_\+\~\#\=\-]{1,256}$/;
 
 // Check all environment variables are properly set and valid, exit if not
 export function validateEnvironment() {
