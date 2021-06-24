@@ -1,10 +1,14 @@
 import {
+  DeleteVideoRequest,
   ErrorMessage,
   GetVideoRequest,
   NotFound,
   pick,
   PostVideoRequest,
   PostVideoResponse,
+  PutVideoRequest,
+  PutVideoRequestParams,
+  PutVideoViewRequestParams,
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
@@ -12,7 +16,11 @@ import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
 import { isAuthenticated } from "../middleware/auth";
-import { validatePostVideo } from "../middleware/video";
+import {
+  validatePostVideo,
+  validatePutVideo,
+  validateVideoExists
+} from "../middleware/video";
 import { projection } from "../utilities";
 
 const router = Router();
@@ -82,34 +90,69 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
 /*
  * PUT /video/:id
  */
-router.put("/:id", isAuthenticated, validatePostVideo, async (req, res, next) => {
-  try {
-    
-  } catch (error) {
-    next(error);
+router.put(
+  "/:id",
+  isAuthenticated,
+  validatePutVideo,
+  async (req, res, next) => {
+    try {
+      const body = req.body as PutVideoRequest;
+      const params = req.params as PutVideoRequestParams;
+
+      const video = await Video.findByIdAndUpdate(params.id, body);
+
+      res.sendStatus(StatusCode.CREATED);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /*
  * PUT /video/:id/view
  */
-router.put("/:id", isAuthenticated, validatePostVideo, async (req, res, next) => {
-  try {
-    
-  } catch (error) {
-    next(error);
+router.put(
+  "/:id/view",
+  isAuthenticated,
+  validateVideoExists,
+  async (req, res, next) => {
+    try {
+      const params = req.params as PutVideoViewRequestParams;
+
+      const video = await Video.findById(params.id);
+
+      if (!video) {
+        throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
+      }
+
+      video.views += 1;
+      video.save();
+
+      res.sendStatus(StatusCode.CREATED);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /*
  * DELETE /video/:id
  */
-router.delete("/:id", isAuthenticated, validatePostVideo, async (req, res, next) => {
-  try {
-    
-  } catch (error) {
-    next(error);
+router.delete(
+  "/:id",
+  isAuthenticated,
+  validateVideoExists,
+  async (req, res, next) => {
+    try {
+      const request = req.params as DeleteVideoRequest;
+
+      await Video.findByIdAndRemove(request.id);
+
+      res.sendStatus(StatusCode.NO_CONTENT);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;
