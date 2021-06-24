@@ -99,7 +99,7 @@ router.put(
       const body = req.body as PutVideoRequest;
       const params = req.params as PutVideoRequestParams;
 
-      const video = await Video.findByIdAndUpdate(params.id, body);
+      await Video.findByIdAndUpdate(params.id, body);
 
       res.sendStatus(StatusCode.CREATED);
     } catch (error) {
