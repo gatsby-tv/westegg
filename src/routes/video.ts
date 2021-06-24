@@ -79,4 +79,37 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
   }
 });
 
+/*
+ * PUT /video/:id
+ */
+router.put("/:id", isAuthenticated, validatePostVideo, async (req, res, next) => {
+  try {
+    
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*
+ * PUT /video/:id/view
+ */
+router.put("/:id", isAuthenticated, validatePostVideo, async (req, res, next) => {
+  try {
+    
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*
+ * DELETE /video/:id
+ */
+router.delete("/:id", isAuthenticated, validatePostVideo, async (req, res, next) => {
+  try {
+    
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
