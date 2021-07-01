@@ -14,9 +14,8 @@ import {
   PutUserAvatarResponse,
   PutUserBannerRequestParams,
   PutUserBannerResponse,
-  PutUserHandleRequest,
-  PutUserHandleRequestParams,
-  PutUserHandleResponse,
+  PutUserRequest,
+  PutUserRequestParams,
   PutUserSubscriptionRequest,
   PutUserSubscriptionRequestParams,
   PutUserSubscriptionResponse,
@@ -33,7 +32,7 @@ import { isAuthenticated, validateSignup } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
 import {
   hasPermissionToPutUserRequest,
-  validatePutUserHandleRequest
+  validatePutUserRequest
 } from "../middleware/user";
 import { isMongoDuplicateKeyError, projection } from "../utilities";
 
@@ -173,30 +172,20 @@ router.get("/:id/promotions", async (req, res, next) => {
   res.status(StatusCode.OK).json(user.promotions);
 });
 
-/**
- * PUT /user/:id/handle
+/*
+ * PUT /user/:id
  */
 router.put(
-  "/:id/handle",
+  "/:id",
   isAuthenticated,
   hasPermissionToPutUserRequest,
-  validatePutUserHandleRequest,
   async (req, res, next) => {
     try {
-      const body = req.body as PutUserHandleRequest;
-      const params = req.params as PutUserHandleRequestParams;
+      const body = req.body as PutUserRequest;
+      const params = req.params as PutUserRequestParams;
 
-      const user = await User.findById(
-        params.id,
-        projection(keysOf<PutUserHandleResponse>())
-      );
-      if (!user) {
-        throw new NotFound(ErrorMessage.USER_NOT_FOUND);
-      }
-
-      user.handle = body.handle;
       try {
-        await user.save();
+        await User.findByIdAndUpdate(params.id, body);
       } catch (error) {
         if (isMongoDuplicateKeyError(error)) {
           throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
@@ -204,9 +193,7 @@ router.put(
         next(error);
       }
 
-      res
-        .status(StatusCode.CREATED)
-        .json(user.toJSON() as PutUserHandleResponse);
+      res.sendStatus(StatusCode.CREATED);
     } catch (error) {
       next(error);
     }
@@ -220,6 +207,7 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutUserRequest,
+  validatePutUserRequest,
   (res, req, next) => {
     upload(res, req, next, 2);
   },

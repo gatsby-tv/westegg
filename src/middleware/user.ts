@@ -1,7 +1,7 @@
 import {
   ErrorMessage,
   NotFound,
-  PutUserHandleRequest,
+  PutUserRequest,
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
@@ -38,16 +38,18 @@ export const hasPermissionToPutUserRequest = async (
   }
 };
 
-export const validatePutUserHandleRequest = async (
+export const validatePutUserRequest = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const request = req.body as PutUserHandleRequest;
+    const request = req.body as PutUserRequest;
 
-    // Validate handle
-    validateHandle(request.handle);
+    if (request.handle) {
+      // Validate handle
+      validateHandle(request.handle);
+    }
     next();
   } catch (error) {
     next(error);
