@@ -32,7 +32,7 @@ import { isAuthenticated, validateSignup } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
 import {
   hasPermissionToPutUserRequest,
-  validatePutUserHandleRequest
+  validatePutUserRequest
 } from "../middleware/user";
 import { isMongoDuplicateKeyError, projection } from "../utilities";
 
@@ -207,6 +207,7 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutUserRequest,
+  validatePutUserRequest,
   (res, req, next) => {
     upload(res, req, next, 2);
   },
