@@ -99,7 +99,12 @@ router.post("/", validateSignup, async (req, res, next) => {
       await user.save();
     } catch (error) {
       if (isMongoDuplicateKeyError(error)) {
-        throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+        if (error.message.includes("index: handle")) {
+          throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+        }
+        if (error.message.includes("index: email")) {
+          throw new BadRequest(ErrorMessage.EMAIL_IN_USE);
+        }
       }
       next(error);
     }
@@ -188,7 +193,12 @@ router.put(
         await User.findByIdAndUpdate(params.id, body);
       } catch (error) {
         if (isMongoDuplicateKeyError(error)) {
-          throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+          if (error.message.includes("index: handle")) {
+            throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+          }
+          if (error.message.includes("index: email")) {
+            throw new BadRequest(ErrorMessage.EMAIL_IN_USE);
+          }
         }
         next(error);
       }
