@@ -25,7 +25,7 @@ const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
     ref: ChannelRef,
     default: []
   },
-  email: String,
+  email: { type: String, unique: true },
   administering: {
     type: [Schema.Types.ObjectId],
     ref: ChannelRef,
