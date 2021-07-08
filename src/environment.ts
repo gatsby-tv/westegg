@@ -37,8 +37,10 @@ export function validateEnvironment() {
     }
 
     // Verify environment variables
-    if (Environment.PRODUCTION === process.env.WESTEGG_ENV ||
-      Environment.STAGING === process.env.WESTEGG_ENV) {
+    if (
+      Environment.PRODUCTION === process.env.WESTEGG_ENV ||
+      Environment.STAGING === process.env.WESTEGG_ENV
+    ) {
       let regexMatch = process.env.JWT_SECRET?.match(SECRET_REGEX) as string[];
       let matchString = regexMatch?.join("");
       if (matchString !== process.env.JWT_SECRET) {
@@ -57,8 +59,7 @@ export function validateEnvironment() {
 
     if (!process.env.MONGO_HOST) {
       throw new Error("MongoDB host missing!");
-    }
-    else {
+    } else {
       let regexMatch = process.env.MONGO_HOST?.match(
         MONGO_HOST_REGEX
       ) as string[];
@@ -72,8 +73,10 @@ export function validateEnvironment() {
       throw new Error("MongoDB api password missing!");
     }
 
-    if (Environment.PRODUCTION === process.env.WESTEGG_ENV ||
-      Environment.STAGING === process.env.WESTEGG_ENV) {
+    if (
+      Environment.PRODUCTION === process.env.WESTEGG_ENV ||
+      Environment.STAGING === process.env.WESTEGG_ENV
+    ) {
       let regexMatch = process.env.IPFS_URL?.match(IPFS_HOST_REGEX) as string[];
       let matchString = regexMatch?.join("");
       if (matchString !== process.env.IPFS_URL || !process.env.IPFS_URL) {
@@ -86,8 +89,10 @@ export function validateEnvironment() {
       throw new Error("SendGrid API key missing!");
     }
 
-    if (Environment.PRODUCTION === process.env.WESTEGG_ENV ||
-      Environment.STAGING === process.env.WESTEGG_ENV) {
+    if (
+      Environment.PRODUCTION === process.env.WESTEGG_ENV ||
+      Environment.STAGING === process.env.WESTEGG_ENV
+    ) {
       let regexMatch = process.env.SENDGRID_API_KEY?.match(
         SENDGRID_API_KEY_REGEX
       ) as string[];
@@ -96,7 +101,6 @@ export function validateEnvironment() {
         throw new Error("SendGrid API key malformed!");
       }
     }
-
   } catch (error) {
     logger.error(`FATAL: ${error}`);
     process.exit(1);
