@@ -5,7 +5,7 @@ mongo <<EOF
 use admin
 db.createUser(
   {
-    user: "gatsby",
+    user: "$MONGO_API_USER",
     pwd: "$MONGO_API_PASS",
     roles: [
       {

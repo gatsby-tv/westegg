@@ -21,7 +21,7 @@ services:
       MONGO_PROTOCOL: mongodb
       MONGO_HOST: mongo
       MONGO_PORT: 27017
-      MONGO_API_USER: gatsby
+      MONGO_API_USER: ${MONGO_API_USER}
       MONGO_API_PASS: ${MONGO_API_PASS}
       MONGO_API_DB: gatsby
       # IPFS config
