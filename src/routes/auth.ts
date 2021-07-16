@@ -12,6 +12,7 @@ import {
 import { createHmac } from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import { keys as keysOf } from "ts-transformer-keys";
 import { InvalidToken } from "../entities/InvalidToken";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
@@ -22,7 +23,6 @@ import mail from "../mail";
 import { isValidBody } from "../middleware";
 import { isAuthenticated, validateSignin } from "../middleware/auth";
 import { randomString } from "../utilities";
-import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
 
