@@ -12,6 +12,7 @@ import {
 import { createHmac } from "crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import { keys as keysOf } from "ts-transformer-keys";
 import { InvalidToken } from "../entities/InvalidToken";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
@@ -19,6 +20,7 @@ import { User } from "../entities/User";
 import { Environment } from "../environment";
 import { logger } from "../logger";
 import mail from "../mail";
+import { isValidBody } from "../middleware";
 import { isAuthenticated, validateSignin } from "../middleware/auth";
 import { randomString } from "../utilities";
 
@@ -27,48 +29,55 @@ const router = Router();
 /**
  * POST /auth/signin
  */
-router.post("/signin", validateSignin, async (req, res, next) => {
-  try {
-    const signin = req.body as PostAuthSignInRequest;
+router.post(
+  "/signin",
+  validateSignin,
+  (req, res, next) => {
+    isValidBody(keysOf<PostAuthSignInRequest>(), req, res, next);
+  },
+  async (req, res, next) => {
+    try {
+      const signin = req.body as PostAuthSignInRequest;
 
-    // Check if user already exists with email
-    const exists = !!(await User.findOne({ email: signin.email }));
+      // Check if user already exists with email
+      const exists = !!(await User.findOne({ email: signin.email }));
 
-    // Create a signinKey that expires after set time (see entities/SignInKey.ts)
-    const key = createHmac("sha256", randomString()).digest("hex");
-    const signinKey = new SignInKey({
-      key: key,
-      email: signin.email
-    });
-    await signinKey.save();
-
-    // Send an email to the user with the signin key and if they need to complete signin
-    const link = new URL(
-      `/$magiclink?key=${signinKey.key}&exists=${exists}`,
-      process.env.PUBLIC_URL!
-    );
-
-    // Don't send mail in dev
-    if (process.env.WESTEGG_ENV! !== Environment.DEV) {
-      await mail.send({
-        to: signin.email,
-        from: "noreply@gatsby.sh",
-        subject: "New signin request from Gatsby.",
-        text: `Click this link to complete the sign in process: ${link}`
+      // Create a signinKey that expires after set time (see entities/SignInKey.ts)
+      const key = createHmac("sha256", randomString()).digest("hex");
+      const signinKey = new SignInKey({
+        key: key,
+        email: signin.email
       });
-      // Return 200 OK if no internal errors as to not indicate email is in use
-      res.status(StatusCode.OK).json({} as PostAuthSignInResponse);
-    } else {
-      // Send signinKey key (ONLY IN DEV)
-      logger.warn(
-        `--DEV ONLY-- Email not sent to ${signinKey.email}. SignIn key sent in response!`
+      await signinKey.save();
+
+      // Send an email to the user with the signin key and if they need to complete signin
+      const link = new URL(
+        `/$magiclink?key=${signinKey.key}&exists=${exists}`,
+        process.env.PUBLIC_URL!
       );
-      res.status(StatusCode.OK).json({ key: signinKey.key });
+
+      // Don't send mail in dev
+      if (process.env.WESTEGG_ENV! !== Environment.DEV) {
+        await mail.send({
+          to: signin.email,
+          from: "noreply@gatsby.sh",
+          subject: "New signin request from Gatsby.",
+          text: `Click this link to complete the sign in process: ${link}`
+        });
+        // Return 200 OK if no internal errors as to not indicate email is in use
+        res.status(StatusCode.OK).json({} as PostAuthSignInResponse);
+      } else {
+        // Send signinKey key (ONLY IN DEV)
+        logger.warn(
+          `--DEV ONLY-- Email not sent to ${signinKey.email}. SignIn key sent in response!`
+        );
+        res.status(StatusCode.OK).json({ key: signinKey.key });
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * GET /auth/signin/:key
