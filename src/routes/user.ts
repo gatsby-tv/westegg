@@ -28,6 +28,7 @@ import { keys as keysOf } from "ts-transformer-keys";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
 import { User } from "../entities/User";
+import { isValidPutBody } from "../middleware";
 import { isAuthenticated, validateSignup } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
 import {
@@ -183,6 +184,9 @@ router.get("/:id/promotions", async (req, res, next) => {
 router.put(
   "/:id",
   isAuthenticated,
+  (req, res, next) => {
+    isValidPutBody(keysOf<PutUserRequest>(), req, res, next);
+  },
   hasPermissionToPutUserRequest,
   async (req, res, next) => {
     try {
@@ -218,8 +222,8 @@ router.put(
   isAuthenticated,
   hasPermissionToPutUserRequest,
   validatePutUserRequest,
-  (res, req, next) => {
-    upload(res, req, next, 2);
+  (req, res, next) => {
+    upload(req, res, next, 2);
   },
   async (req, res, next) => {
     try {
@@ -255,8 +259,8 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutUserRequest,
-  (res, req, next) => {
-    upload(res, req, next, 2);
+  (req, res, next) => {
+    upload(req, res, next, 2);
   },
   async (req, res, next) => {
     try {
@@ -289,6 +293,9 @@ router.put(
 router.put(
   "/:id/subscription",
   isAuthenticated,
+  (req, res, next) => {
+    isValidPutBody(keysOf<PutUserSubscriptionRequest>(), req, res, next);
+  },
   hasPermissionToPutUserRequest,
   async (req, res, next) => {
     try {

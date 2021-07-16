@@ -29,6 +29,7 @@ import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 import { Video } from "../entities/Video";
+import { isValidPutBody } from "../middleware";
 import { isAuthenticated } from "../middleware/auth";
 import {
   hasPermissionToPutChannelRequest,
@@ -193,6 +194,9 @@ router.put(
   isAuthenticated,
   hasPermissionToPutChannelRequest,
   validatePutChannelHandleRequest,
+  (req, res, next) => {
+    isValidPutBody(keysOf<PutChannelHandleRequest>(), req, res, next);
+  },
   async (req, res, next) => {
     try {
       const body = req.body as PutChannelHandleRequest;
@@ -231,8 +235,8 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  (res, req, next) => {
-    upload(res, req, next, 2);
+  (req, res, next) => {
+    upload(req, res, next, 2);
   },
   async (req, res, next) => {
     try {
@@ -265,8 +269,8 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  (res, req, next) => {
-    upload(res, req, next, 2);
+  (req, res, next) => {
+    upload(req, res, next, 2);
   },
   async (req, res, next) => {
     try {
@@ -299,8 +303,8 @@ router.put(
   "/:id/poster",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  (res, req, next) => {
-    upload(res, req, next, 2);
+  (req, res, next) => {
+    upload(req, res, next, 2);
   },
   async (req, res, next) => {
     try {

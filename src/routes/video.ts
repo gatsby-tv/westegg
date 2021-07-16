@@ -15,6 +15,7 @@ import { Router } from "express";
 import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { Video } from "../entities/Video";
+import { isValidPutBody } from "../middleware";
 import { isAuthenticated } from "../middleware/auth";
 import {
   validatePostVideo,
@@ -93,6 +94,9 @@ router.post("/", isAuthenticated, validatePostVideo, async (req, res, next) => {
 router.put(
   "/:id",
   isAuthenticated,
+  (req, res, next) => {
+    isValidPutBody(keysOf<PutVideoRequest>(), req, res, next);
+  },
   validatePutVideo,
   async (req, res, next) => {
     try {
