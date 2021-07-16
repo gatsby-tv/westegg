@@ -29,7 +29,7 @@ import { keys as keysOf } from "ts-transformer-keys";
 import { Channel } from "../entities/Channel";
 import { User } from "../entities/User";
 import { Video } from "../entities/Video";
-import { isValidPutBody } from "../middleware";
+import { isValidBody } from "../middleware";
 import { isAuthenticated } from "../middleware/auth";
 import {
   hasPermissionToPutChannelRequest,
@@ -85,6 +85,9 @@ router.get(
 router.post(
   "/",
   isAuthenticated,
+  (req, res, next) => {
+    isValidBody(keysOf<PostChannelRequest>(), req, res, next);
+  },
   validatePostChannel,
   async (req, res, next) => {
     try {
@@ -195,7 +198,7 @@ router.put(
   hasPermissionToPutChannelRequest,
   validatePutChannelHandleRequest,
   (req, res, next) => {
-    isValidPutBody(keysOf<PutChannelHandleRequest>(), req, res, next);
+    isValidBody(keysOf<PutChannelHandleRequest>(), req, res, next);
   },
   async (req, res, next) => {
     try {

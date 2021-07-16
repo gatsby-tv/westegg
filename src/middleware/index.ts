@@ -1,7 +1,7 @@
 import { BadRequest, ErrorMessage } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
 
-export const isValidPutBody = async (
+export const isValidBody = async (
   keys: string[],
   req: Request,
   res: Response,

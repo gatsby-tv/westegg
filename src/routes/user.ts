@@ -28,7 +28,7 @@ import { keys as keysOf } from "ts-transformer-keys";
 import { PersistSignInKey } from "../entities/PersistSignInKey";
 import { SignInKey } from "../entities/SignInKey";
 import { User } from "../entities/User";
-import { isValidPutBody } from "../middleware";
+import { isValidBody } from "../middleware";
 import { isAuthenticated, validateSignup } from "../middleware/auth";
 import { upload } from "../middleware/multipart";
 import {
@@ -78,53 +78,60 @@ router.get(
 /**
  * POST /user
  */
-router.post("/", validateSignup, async (req, res, next) => {
-  try {
-    const body = req.body as PostUserCompleteSignupRequest;
-
-    // Check if signinKey exists
-    const signinKey =
-      (await PersistSignInKey.findOne({ key: body.key })) ||
-      (await SignInKey.findOne({ key: body.key }));
-    if (!signinKey) {
-      throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
-    }
-
-    const user = new User({
-      handle: body.handle,
-      name: body.name,
-      email: signinKey.email,
-      creationDate: Date.now()
-    });
+router.post(
+  "/",
+  validateSignup,
+  (req, res, next) => {
+    isValidBody(keysOf<PostUserCompleteSignupRequest>(), req, res, next);
+  },
+  async (req, res, next) => {
     try {
-      await user.save();
-    } catch (error) {
-      if (isMongoDuplicateKeyError(error)) {
-        if (error.message.includes("index: handle")) {
-          throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
-        }
-        if (error.message.includes("index: email")) {
-          throw new BadRequest(ErrorMessage.EMAIL_IN_USE);
-        }
+      const body = req.body as PostUserCompleteSignupRequest;
+
+      // Check if signinKey exists
+      const signinKey =
+        (await PersistSignInKey.findOne({ key: body.key })) ||
+        (await SignInKey.findOne({ key: body.key }));
+      if (!signinKey) {
+        throw new NotFound(ErrorMessage.SIGNIN_KEY_NOT_FOUND);
       }
+
+      const user = new User({
+        handle: body.handle,
+        name: body.name,
+        email: signinKey.email,
+        creationDate: Date.now()
+      });
+      try {
+        await user.save();
+      } catch (error) {
+        if (isMongoDuplicateKeyError(error)) {
+          if (error.message.includes("index: handle")) {
+            throw new BadRequest(ErrorMessage.HANDLE_IN_USE);
+          }
+          if (error.message.includes("index: email")) {
+            throw new BadRequest(ErrorMessage.EMAIL_IN_USE);
+          }
+        }
+        next(error);
+      }
+
+      // Sign a jwt with the user
+      const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
+        expiresIn: "4w"
+      });
+
+      // Drop the signin key or persist signin key (if exists)
+      signinKey.remove();
+
+      res
+        .status(StatusCode.CREATED)
+        .json({ token } as PostAuthCompleteSignUpResponse);
+    } catch (error) {
       next(error);
     }
-
-    // Sign a jwt with the user
-    const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET!, {
-      expiresIn: "4w"
-    });
-
-    // Drop the signin key or persist signin key (if exists)
-    signinKey.remove();
-
-    res
-      .status(StatusCode.CREATED)
-      .json({ token } as PostAuthCompleteSignUpResponse);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * GET /user/:handle/exists
@@ -185,7 +192,7 @@ router.put(
   "/:id",
   isAuthenticated,
   (req, res, next) => {
-    isValidPutBody(keysOf<PutUserRequest>(), req, res, next);
+    isValidBody(keysOf<PutUserRequest>(), req, res, next);
   },
   hasPermissionToPutUserRequest,
   async (req, res, next) => {
@@ -294,7 +301,7 @@ router.put(
   "/:id/subscription",
   isAuthenticated,
   (req, res, next) => {
-    isValidPutBody(keysOf<PutUserSubscriptionRequest>(), req, res, next);
+    isValidBody(keysOf<PutUserSubscriptionRequest>(), req, res, next);
   },
   hasPermissionToPutUserRequest,
   async (req, res, next) => {
