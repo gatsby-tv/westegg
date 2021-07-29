@@ -15,8 +15,8 @@ jobs:
     # Check prettier linting and build typescript
     - stage: build
       script:
-        - npm run format:check
-        - npm run build
+        - yarn run format:check
+        - yarn run build
     # Build and publish docker tags
     - stage: publish
       if: branch == master AND (NOT (type IN (pull_request)))

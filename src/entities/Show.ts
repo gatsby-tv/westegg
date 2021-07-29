@@ -21,9 +21,6 @@ const ShowSchemaFields: Record<keyof Omit<IShow, "_id">, any> = {
   explicit: { type: Boolean, default: false },
   unlisted: { type: Boolean, default: false },
   promotions: { type: Number, default: 0 },
-  // TODO: Should topic/genre be required?
-  topic: { type: String, default: "" },
-  genre: { type: String, default: "" }
 };
 
 const ShowSchema = new Schema(ShowSchemaFields);

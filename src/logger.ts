@@ -1,19 +1,28 @@
 import * as winston from "winston";
 
-const colorizer = winston.format.colorize();
+function capitalize(message: string): string {
+  return message
+    .split(" ")
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
+}
 
-export const logger = winston.createLogger({
+const { colorize } = winston.format.colorize();
+
+const logger = winston.createLogger({
   level: process.env.LOGGING_LEVEL || "info",
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf((info) =>
-      colorizer.colorize(
+      colorize(
         info.level,
-        `${info.timestamp} ${info.level.toUpperCase()}: ${info.message}${
-          info.stack ? info.stack : ""
-        }`
+        `${info.timestamp} [${capitalize(process.env.NODE_ENV)}] ${capitalize(
+          info.level
+        )}: ${info.message}${info.stack ?? ""}`
       )
     )
   ),
   transports: [new winston.transports.Console()]
 });
+
+export default logger;

@@ -3,12 +3,18 @@ APP_VERSION ?= `grep '"version":' package.json | cut -d '"' -f4`
 BUILD ?= `git rev-parse --short HEAD`
 
 build:
-	docker build -t $(APP_NAME) .
+	docker build \
+		--build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VERSION=$(APP_VERSION) \
+		-t gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD) \
+		-t gatsbytv/$(APP_NAME):latest .
 
 push:
-# Latest tag
-	docker tag $(APP_NAME) gatsbytv/$(APP_NAME):latest
-	docker push gatsbytv/$(APP_NAME):latest
-# Versioned tag
-	docker tag $(APP_NAME) gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
-	docker push gatsbytv/$(APP_NAME):$(APP_VERSION)-$(BUILD)
+	docker push --all-tags gatsbytv/$(APP_NAME)
+
+run:
+	docker run \
+		-p 3001:3001 \
+		--env-file .env \
+		--env-file .env.local \
+		--rm -it gatsbytv/$(APP_NAME):latest

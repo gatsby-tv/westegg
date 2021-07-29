@@ -1,3 +1,7 @@
+import { Router } from "express";
+import { createHmac } from "crypto";
+import jwt from "jsonwebtoken";
+import { keys as keysOf } from "ts-transformer-keys";
 import {
   ErrorMessage,
   GetAuthSignInKeyRequest,
@@ -9,20 +13,16 @@ import {
   PostAuthSignInResponse,
   StatusCode
 } from "@gatsby-tv/types";
-import { createHmac } from "crypto";
-import { Router } from "express";
-import jwt from "jsonwebtoken";
-import { keys as keysOf } from "ts-transformer-keys";
-import { InvalidToken } from "../entities/InvalidToken";
-import { PersistSignInKey } from "../entities/PersistSignInKey";
-import { SignInKey } from "../entities/SignInKey";
-import { User } from "../entities/User";
-import { Environment } from "../environment";
-import { logger } from "../logger";
-import mail from "../mail";
-import { isValidBody } from "../middleware";
-import { isAuthenticated, validateSignin } from "../middleware/auth";
-import { randomString } from "../utilities";
+
+import { InvalidToken } from "@src/entities/InvalidToken";
+import { PersistSignInKey } from "@src/entities/PersistSignInKey";
+import { SignInKey } from "@src/entities/SignInKey";
+import { User } from "@src/entities/User";
+import logger from "@src/logger";
+import mail from "@src/mail";
+import { isValidBody } from "@src/middleware";
+import { isAuthenticated, validateSignin } from "@src/middleware/auth";
+import { randomString } from "@src/utilities";
 
 const router = Router();
 
@@ -57,7 +57,7 @@ router.post(
       );
 
       // Don't send mail in dev
-      if (process.env.WESTEGG_ENV! !== Environment.DEV) {
+      if (process.env.NODE_ENV !== "development") {
         await mail.send({
           to: signin.email,
           from: "noreply@gatsby.sh",
@@ -69,7 +69,7 @@ router.post(
       } else {
         // Send signinKey key (ONLY IN DEV)
         logger.warn(
-          `--DEV ONLY-- Email not sent to ${signinKey.email}. SignIn key sent in response!`
+          `Email not sent to ${signinKey.email}. SignIn key sent in response.`
         );
         res.status(StatusCode.OK).json({ key: signinKey.key });
       }

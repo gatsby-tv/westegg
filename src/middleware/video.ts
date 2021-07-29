@@ -8,8 +8,9 @@ import {
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
-import { Channel } from "../entities/Channel";
-import { Video } from "../entities/Video";
+
+import { Channel } from "@src/entities/Channel";
+import { Video } from "@src/entities/Video";
 
 const TITLE_MIN_LENGTH = 1;
 const TITLE_MAX_LENGTH = 256;

@@ -18,9 +18,10 @@ import {
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { keys as keysOf } from "ts-transformer-keys";
-import { Channel } from "../entities/Channel";
-import { Video } from "../entities/Video";
-import { projection } from "../utilities";
+
+import { Channel } from "@src/entities/Channel";
+import { Video } from "@src/entities/Video";
+import { projection } from "@src/utilities";
 
 const router = Router();
 
@@ -71,9 +72,9 @@ router.get("/videos/recommended", async (req, res, next) => {
   try {
     // TODO: Page content to limit (currently hardcoded to 25)
     const basicVideos: BasicVideo[] = await Promise.all(
-      (await Video.find().limit(25)).map(
-        async (entity) => await toBasicVideo(entity as IBasicVideo)
-      )
+      (
+        await Video.find().limit(25)
+      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
     );
     // TODO: Include serial videos and shows
     const serialVideos: SerialVideo[] = [];
@@ -95,9 +96,9 @@ router.get("/videos/popular", async (req, res, next) => {
   try {
     // TODO: Page content to limit (currently hardcoded to 25)
     const basicVideos: BasicVideo[] = await Promise.all(
-      (await Video.find().limit(25)).map(
-        async (entity) => await toBasicVideo(entity as IBasicVideo)
-      )
+      (
+        await Video.find().limit(25)
+      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
     );
     // TODO: Include serial videos and shows
     const serialVideos: SerialVideo[] = [];
@@ -117,9 +118,9 @@ router.get("/videos/new", async (req, res, next) => {
   try {
     // TODO: Page content to limit (currently hardcoded to 25)
     const basicVideos: BasicVideo[] = await Promise.all(
-      (await Video.find().limit(25)).map(
-        async (entity) => await toBasicVideo(entity as IBasicVideo)
-      )
+      (
+        await Video.find().limit(25)
+      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
     );
     // TODO: Include serial videos and shows
     const serialVideos: SerialVideo[] = [];
@@ -140,9 +141,9 @@ router.get("/subscriptions", async (req, res, next) => {
   try {
     // TODO: Page content to limit (currently hardcoded to 25)
     const basicVideos: BasicVideo[] = await Promise.all(
-      (await Video.find().limit(25)).map(
-        async (entity) => await toBasicVideo(entity as IBasicVideo)
-      )
+      (
+        await Video.find().limit(25)
+      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
     );
     // TODO: Include serial and episodic videos
     const serialVideos: SerialVideo[] = [];
