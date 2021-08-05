@@ -41,9 +41,13 @@ services:
     volumes:
       - ./.ipfs:/data/ipfs
     ports:
+      # Swarm TCP
       - 4001:4001
+      # Swarm Websockets
       - 8081:8081
+      # HTTP Gateway
       - 8080:8080
+      # Private Daemon API
       - 127.0.0.1:5001:5001
     networks:
       - gatsby
