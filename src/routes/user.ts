@@ -35,6 +35,7 @@ import {
   hasPermissionToPutUserRequest,
   validatePutUserRequest
 } from "../middleware/user";
+import { useTransaction } from "../middleware/useTransaction";
 import { isMongoDuplicateKeyError, projection } from "../utilities";
 
 const router = Router();
@@ -84,8 +85,10 @@ router.post(
   (req, res, next) => {
     isValidBody(keysOf<PostUserCompleteSignupRequest>(), req, res, next);
   },
+  useTransaction,
   async (req, res, next) => {
     try {
+      req.session!.startTransaction();
       const body = req.body as PostUserCompleteSignupRequest;
 
       // Check if signinKey exists
@@ -127,6 +130,8 @@ router.post(
       res
         .status(StatusCode.CREATED)
         .json({ token } as PostAuthCompleteSignUpResponse);
+
+      await req.session!.commitTransaction();
     } catch (error) {
       next(error);
     }
