@@ -24,6 +24,7 @@ import {
   StatusCode
 } from "@gatsby-tv/types";
 import { Router } from "express";
+import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
 
 import { Channel } from "@src/entities/Channel";
@@ -53,8 +54,9 @@ router.get(
 
       let channel;
       try {
+        const id = new Types.ObjectId(params.unique);
         channel = await Channel.findById(
-          params.unique,
+          id,
           projection(keysOf<GetChannelAccountResponse>())
         );
       } catch (error) {

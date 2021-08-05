@@ -23,6 +23,7 @@ import {
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
 
 import { PersistSignInKey } from "@src/entities/PersistSignInKey";
@@ -51,8 +52,9 @@ router.get(
 
       let user;
       try {
+        const id = new Types.ObjectId(params.unique);
         user = await User.findById(
-          params.unique,
+          id,
           projection(keysOf<GetUserAccountResponse>())
         );
       } catch (error) {
