@@ -16,9 +16,9 @@ const logger = winston.createLogger({
     winston.format.printf((info) =>
       colorize(
         info.level,
-        `${info.timestamp} [${capitalize(process.env.NODE_ENV)}] ${capitalize(
-          info.level
-        )}: ${info.message}${info.stack ?? ""}`
+        `${info.timestamp} [${capitalize(
+          process.env.NODE_ENV ?? "development"
+        )}] ${capitalize(info.level)}: ${info.message}${info.stack ?? ""}`
       )
     )
   ),
