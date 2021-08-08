@@ -1,12 +1,5 @@
 import * as winston from "winston";
 
-function capitalize(message: string): string {
-  return message
-    .split(" ")
-    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-    .join(" ");
-}
-
 const { colorize } = winston.format.colorize();
 
 const logger = winston.createLogger({
@@ -16,9 +9,9 @@ const logger = winston.createLogger({
     winston.format.printf((info) =>
       colorize(
         info.level,
-        `${info.timestamp} [${capitalize(
+        `${info.timestamp} [${
           process.env.NODE_ENV ?? "development"
-        )}] ${capitalize(info.level)}: ${info.message}${info.stack ?? ""}`
+        }] ${info.level.toUpperCase()}: ${info.message}${info.stack ?? ""}`
       )
     )
   ),
