@@ -39,7 +39,7 @@ if (!isDevelopment) {
   try {
     validate();
   } catch (error) {
-    logger.error(error);
+    logger.error(`Fatal: ${error}`);
     process.exit(1);
   }
 } else {
