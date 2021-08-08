@@ -25,17 +25,18 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
-import { PersistSignInKey } from "../entities/PersistSignInKey";
-import { SignInKey } from "../entities/SignInKey";
-import { User } from "../entities/User";
-import { isValidBody } from "../middleware";
-import { isAuthenticated, validateSignup } from "../middleware/auth";
-import { upload } from "../middleware/multipart";
+
+import { PersistSignInKey } from "@src/entities/PersistSignInKey";
+import { SignInKey } from "@src/entities/SignInKey";
+import { User } from "@src/entities/User";
+import { isValidBody } from "@src/middleware";
+import { isAuthenticated, validateSignup } from "@src/middleware/auth";
+import { upload } from "@src/middleware/multipart";
 import {
   hasPermissionToPutUserRequest,
   validatePutUserRequest
-} from "../middleware/user";
-import { isMongoDuplicateKeyError, projection } from "../utilities";
+} from "@src/middleware/user";
+import { isMongoDuplicateKeyError, projection } from "@src/utilities";
 
 const router = Router();
 

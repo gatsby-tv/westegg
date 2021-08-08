@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
-// Create connection string to mongodb
-const connectionString = `${process.env.MONGO_PROTOCOL}://${process.env.MONGO_API_USER}:${process.env.MONGO_API_PASS}@${process.env.MONGO_HOST}/gatsby?retryWrites=true&w=majority&authSource=admin`;
+const params = new URLSearchParams();
+params.set("retryWrite", "true");
+params.set("w", "majority");
+params.set("authSource", "admin");
 
 const db = {
   connect: async () => {
-    await mongoose.connect(connectionString, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    await mongoose.connect(`${process.env.MONGO_URL}?${params}`, {
       useFindAndModify: false,
       useCreateIndex: true
     });

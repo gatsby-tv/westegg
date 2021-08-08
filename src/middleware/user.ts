@@ -5,9 +5,10 @@ import {
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
-import { User } from "../entities/User";
 import { hasPermission, ResourceAction } from "./auth";
 import { validateHandle } from "./handled";
+
+import { User } from "@src/entities/User";
 
 /**
  * PUT /user/:id/*
