@@ -39,7 +39,7 @@ export const upload = async (
       ) => {
         try {
           let mimeTypes = Object.values(SupportedMimeType) as string[];
-          if (mimeTypes.includes(mimeType)) {
+          if (!mimeTypes.includes(mimeType)) {
             throw new BadRequest(ErrorMessage.INVALID_FILE_TYPE);
           }
 
