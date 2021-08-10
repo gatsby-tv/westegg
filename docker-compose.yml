@@ -7,8 +7,8 @@ services:
     restart: always
     networks:
       - gatsby
-    environment: 
-      WESTEGG_URL: ${WESTEGG_URL}
+    env_file: 
+      - .env
 
   westegg:
     build: .
