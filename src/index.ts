@@ -1,32 +1,25 @@
+import "dotenv/config";
+import "@src/environment";
+
+import express, { NextFunction, Request, Response } from "express";
 import {
   ErrorResponse,
   InternalError,
   StatusCode,
   WestEggError
 } from "@gatsby-tv/types";
-import "dotenv/config";
-import express, { NextFunction, Request, Response } from "express";
-import db from "./db";
-import { validateEnvironment } from "./environment";
-import { logger } from "./logger";
-// Import routes
-import auth from "./routes/auth";
-import channel from "./routes/channel";
-import listing from "./routes/listing";
-import user from "./routes/user";
-import video from "./routes/video";
+
+import db from "@src/db";
+import logger from "@src/logger";
+import auth from "@src/routes/auth";
+import channel from "@src/routes/channel";
+import listing from "@src/routes/listing";
+import user from "@src/routes/user";
+import video from "@src/routes/video";
 
 const router = express.Router();
 const app = express();
 const port = process.env.PORT || 3001;
-
-// Validate environment variables are set and proper format
-validateEnvironment();
-
-// Set Base64 JWT secret
-process.env.JWT_SECRET = Buffer.from(process.env.JWT_SECRET!).toString(
-  "base64"
-);
 
 // Add json body parser
 app.use(express.json());

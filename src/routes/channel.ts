@@ -26,18 +26,19 @@ import {
 import { Router } from "express";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
-import { Channel } from "../entities/Channel";
-import { User } from "../entities/User";
-import { Video } from "../entities/Video";
-import { isValidBody } from "../middleware";
-import { isAuthenticated } from "../middleware/auth";
+
+import { Channel } from "@src/entities/Channel";
+import { User } from "@src/entities/User";
+import { Video } from "@src/entities/Video";
+import { isValidBody } from "@src/middleware";
+import { isAuthenticated } from "@src/middleware/auth";
 import {
   hasPermissionToPutChannelRequest,
   validatePostChannel,
   validatePutChannelHandleRequest
-} from "../middleware/channel";
-import { upload } from "../middleware/multipart";
-import { isMongoDuplicateKeyError, projection } from "../utilities";
+} from "@src/middleware/channel";
+import { upload } from "@src/middleware/multipart";
+import { isMongoDuplicateKeyError, projection } from "@src/utilities";
 
 const router = Router();
 

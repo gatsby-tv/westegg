@@ -2,12 +2,10 @@ import { BadRequest, ErrorMessage, IPFSContent } from "@gatsby-tv/types";
 import Busboy from "busboy";
 import { NextFunction, Request, Response } from "express";
 import fs from "fs";
-// Quick hack to import other ipfs http client types while typescript support is still wip
-// @ts-ignore
-import IPFSClient, { globSource, UnixFSEntry } from "ipfs-http-client";
+import { create, globSource } from "ipfs-http-client";
 import path from "path";
 
-const ipfs = IPFSClient({
+const ipfs = create({
   url: process.env.IPFS_URL || "http://localhost:5001"
 });
 
@@ -65,7 +63,7 @@ export const upload = async (
     busboy.on("finish", async () => {
       try {
         // Pin tmp file to ipfs node/cluster
-        const file: UnixFSEntry = await ipfs.add(globSource(tmpFilePath));
+        const file = await ipfs.add(globSource(tmpFilePath.toString()) as any);
         await ipfs.pin.add(file.cid);
         const ipfsContent: IPFSContent = {
           hash: file.cid.toString(),
