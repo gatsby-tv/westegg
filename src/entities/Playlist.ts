@@ -21,9 +21,6 @@ const PlaylistSchemaFields: Record<keyof Omit<IPlaylist, "_id">, any> = {
   tags: { type: [String], default: [] },
   explicit: { type: Boolean, default: false },
   unlisted: { type: Boolean, default: false },
-  // TODO: Should topic/genre be required?
-  topic: { type: String, default: "" },
-  genre: { type: String, default: "" }
 };
 
 const PlaylistSchema = new Schema(PlaylistSchemaFields);

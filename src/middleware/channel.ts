@@ -6,8 +6,10 @@ import {
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
-import { Channel } from "../entities/Channel";
-import { User } from "../entities/User";
+
+import { Channel } from "@src/entities/Channel";
+import { User } from "@src/entities/User";
+
 import { hasPermission, ResourceAction } from "./auth";
 import { validateHandle } from "./handled";
 import { validateName } from "./named";

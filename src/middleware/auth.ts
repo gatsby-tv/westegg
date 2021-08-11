@@ -12,8 +12,10 @@ import {
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import validator from "validator";
-import { InvalidToken } from "../entities/InvalidToken";
-import { compareMongoIDs } from "../utilities";
+
+import { InvalidToken } from "@src/entities/InvalidToken";
+import { compareMongoIDs } from "@src/utilities";
+
 import { validateHandle } from "./handled";
 import { validateName } from "./named";
 
@@ -79,10 +81,10 @@ export const isAuthenticated = async (
     // TODO: Promisify this and use the async overload
     // TODO: Add try/catch to for token validation
     // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
-    const token: Token = jwt.verify(
+    const token = jwt.verify(
       encodedToken,
       process.env.JWT_SECRET!
-    ) as Token;
+    ) as unknown as Token;
 
     // Check if the token is expired by the invalid tokens collection
     const invalid = await InvalidToken.findById(token._id);

@@ -1,19 +1,38 @@
-FROM node:12.18.3
+FROM node:alpine AS packages
+WORKDIR /app
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn/releases .yarn/releases
+COPY .yarn/plugins .yarn/plugins
+COPY packages packages
+RUN find packages \! -name package.json -mindepth 2 -maxdepth 2 -exec rm -rf {} +
 
-# Create app directory
-WORKDIR /usr/src/app
+FROM node:alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache alpine-sdk libc6-compat python3
+COPY --from=packages /app .
+RUN yarn install --immutable
 
-# Copy over package files
-COPY package*.json ./
-
-# Install app dependencies
-RUN npm install
-
-# Bundle app source
+FROM node:alpine AS builder
+WORKDIR /app
 COPY . .
+COPY --from=deps /app .
+RUN yarn build
 
-# Build app source
-RUN npm run build
+FROM node:alpine
+WORKDIR /app
+ENV NODE_ENV production
 
-# Run the server
-CMD ["node", "dist"]
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S westegg -u 1001
+
+COPY --from=packages /app .
+COPY --from=builder /app/.yarn .yarn
+COPY --from=builder /app/packages packages
+COPY --from=builder /app/.pnp.cjs .
+COPY --from=builder --chown=westegg:nodejs /app/dist dist
+RUN find packages \! \( -name package.json -o -name dist \) -mindepth 2 -maxdepth 2 -exec rm -rf {} +
+
+USER westegg
+EXPOSE 3001
+
+CMD ["yarn", "start"]

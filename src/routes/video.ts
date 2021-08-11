@@ -13,16 +13,17 @@ import {
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { keys as keysOf } from "ts-transformer-keys";
-import { Channel } from "../entities/Channel";
-import { Video } from "../entities/Video";
-import { isValidBody } from "../middleware";
-import { isAuthenticated } from "../middleware/auth";
+
+import { Channel } from "@src/entities/Channel";
+import { Video } from "@src/entities/Video";
+import { isValidBody } from "@src/middleware";
+import { isAuthenticated } from "@src/middleware/auth";
 import {
   validatePostVideo,
   validatePutVideo,
   validateVideoExists
-} from "../middleware/video";
-import { projection } from "../utilities";
+} from "@src/middleware/video";
+import { projection } from "@src/utilities";
 
 const router = Router();
 

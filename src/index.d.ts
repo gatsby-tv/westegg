@@ -2,6 +2,13 @@ import { IPFSContent, Token } from "@gatsby-tv/types";
 import { ClientSession } from "mongoose";
 
 declare global {
+  declare namespace NodeJS {
+    interface ProcessEnv {
+      NODE_ENV: "development" | "staging" | "production";
+      [key: string]: string | undefined;
+    }
+  }
+
   declare namespace Express {
     interface Request {
       decodedToken?: Token;
