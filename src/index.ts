@@ -62,6 +62,7 @@ app.use(
     }
 
     if (req.session) {
+      // TODO: Abort transaction is async
       req.session.abortTransaction();
       req.session.endSession();
     }
