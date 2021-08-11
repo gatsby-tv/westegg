@@ -39,7 +39,7 @@ import {
 } from "@src/middleware/channel";
 import { upload } from "@src/middleware/multipart";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { useTransaction } from "@src/middleware/useTransaction";
+import { useTransaction } from "@src/middleware/transaction";
 
 const router = Router();
 

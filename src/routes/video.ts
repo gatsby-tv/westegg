@@ -24,7 +24,7 @@ import {
   validateVideoExists
 } from "@src/middleware/video";
 import { projection } from "@src/utilities";
-import { useTransaction } from "@src/middleware/useTransaction";
+import { useTransaction } from "@src/middleware/transaction";
 
 const router = Router();
 

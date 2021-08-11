@@ -17,7 +17,7 @@ import logger from "@src/logger";
 import mail from "@src/mail";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated, validateSignin } from "@src/middleware/auth";
-import { useTransaction } from "@src/middleware/useTransaction";
+import { useTransaction } from "@src/middleware/transaction";
 import { randomString } from "@src/utilities";
 import { createHmac } from "crypto";
 import { Router } from "express";

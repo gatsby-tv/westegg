@@ -37,7 +37,7 @@ import {
   validatePutUserRequest
 } from "@src/middleware/user";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { useTransaction } from "@src/middleware/useTransaction";
+import { useTransaction } from "@src/middleware/transaction";
 
 const router = Router();
 
