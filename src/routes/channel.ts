@@ -39,6 +39,7 @@ import {
 } from "@src/middleware/channel";
 import { upload } from "@src/middleware/multipart";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
+import { useTransaction } from "@src/middleware/useTransaction";
 
 const router = Router();
 
@@ -86,6 +87,7 @@ router.get(
 router.post(
   "/",
   isAuthenticated,
+  useTransaction,
   (req, res, next) => {
     isValidBody(keysOf<PostChannelRequest>(), req, res, next);
   },
@@ -198,6 +200,7 @@ router.put(
   isAuthenticated,
   hasPermissionToPutChannelRequest,
   validatePutChannelHandleRequest,
+  useTransaction,
   (req, res, next) => {
     isValidBody(keysOf<PutChannelHandleRequest>(), req, res, next);
   },
@@ -239,6 +242,7 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
+  useTransaction,
   (req, res, next) => {
     upload(req, res, next, 2);
   },
@@ -273,6 +277,7 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
+  useTransaction,
   (req, res, next) => {
     upload(req, res, next, 2);
   },
@@ -307,6 +312,7 @@ router.put(
   "/:id/poster",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
+  useTransaction,
   (req, res, next) => {
     upload(req, res, next, 2);
   },

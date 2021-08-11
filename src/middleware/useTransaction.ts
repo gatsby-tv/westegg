@@ -9,14 +9,8 @@ export const useTransaction = async (
   const session = await mongoose.startSession();
 
   req.session = session;
-
-  try {
-    next();
-  } catch (error) {
-    console.log(error);
-    await session.abortTransaction();
-    next(error);
-  } finally {
-    session.endSession();
-  }
+  session.startTransaction();
+  next();
+  await session.commitTransaction();
+  session.endSession();
 };

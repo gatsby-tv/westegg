@@ -1,7 +1,3 @@
-import { Router } from "express";
-import { createHmac } from "crypto";
-import jwt from "jsonwebtoken";
-import { keys as keysOf } from "ts-transformer-keys";
 import {
   ErrorMessage,
   GetAuthSignInKeyRequest,
@@ -13,7 +9,6 @@ import {
   PostAuthSignInResponse,
   StatusCode
 } from "@gatsby-tv/types";
-
 import { InvalidToken } from "@src/entities/InvalidToken";
 import { PersistSignInKey } from "@src/entities/PersistSignInKey";
 import { SignInKey } from "@src/entities/SignInKey";
@@ -22,7 +17,12 @@ import logger from "@src/logger";
 import mail from "@src/mail";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated, validateSignin } from "@src/middleware/auth";
+import { useTransaction } from "@src/middleware/useTransaction";
 import { randomString } from "@src/utilities";
+import { createHmac } from "crypto";
+import { Router } from "express";
+import jwt from "jsonwebtoken";
+import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
 
@@ -32,6 +32,7 @@ const router = Router();
 router.post(
   "/signin",
   validateSignin,
+  useTransaction,
   (req, res, next) => {
     isValidBody(keysOf<PostAuthSignInRequest>(), req, res, next);
   },
@@ -115,7 +116,7 @@ router.get("/signin/:key", async (req, res, next) => {
 /**
  * POST /auth/signin/:key/persist
  */
-router.post("/signin/:key/persist", async (req, res, next) => {
+router.post("/signin/:key/persist", useTransaction, async (req, res, next) => {
   try {
     const params = req.params as PostAuthPersistSignInKeyRequestParams;
 
@@ -158,20 +159,25 @@ router.get("/token/refresh", isAuthenticated, async (req, res, next) => {
 /**
  * POST /auth/token/invalidate
  */
-router.post("/token/invalidate", isAuthenticated, async (req, res, next) => {
-  try {
-    const invalid = new InvalidToken({
-      expire: Date.now()
-    });
-    await InvalidToken.findByIdAndUpdate(req.decodedToken!._id, invalid, {
-      upsert: true,
-      setDefaultsOnInsert: true
-    });
+router.post(
+  "/token/invalidate",
+  isAuthenticated,
+  useTransaction,
+  async (req, res, next) => {
+    try {
+      const invalid = new InvalidToken({
+        expire: Date.now()
+      });
+      await InvalidToken.findByIdAndUpdate(req.decodedToken!._id, invalid, {
+        upsert: true,
+        setDefaultsOnInsert: true
+      });
 
-    res.sendStatus(StatusCode.CREATED);
-  } catch (error) {
-    next(error);
+      res.sendStatus(StatusCode.CREATED);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 export default router;

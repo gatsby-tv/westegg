@@ -37,6 +37,7 @@ import {
   validatePutUserRequest
 } from "@src/middleware/user";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
+import { useTransaction } from "@src/middleware/useTransaction";
 
 const router = Router();
 
@@ -88,7 +89,6 @@ router.post(
   useTransaction,
   async (req, res, next) => {
     try {
-      req.session!.startTransaction();
       const body = req.body as PostUserCompleteSignupRequest;
 
       // Check if signinKey exists
@@ -130,8 +130,6 @@ router.post(
       res
         .status(StatusCode.CREATED)
         .json({ token } as PostAuthCompleteSignUpResponse);
-
-      await req.session!.commitTransaction();
     } catch (error) {
       next(error);
     }
@@ -200,6 +198,7 @@ router.put(
     isValidBody(keysOf<PutUserRequest>(), req, res, next);
   },
   hasPermissionToPutUserRequest,
+  useTransaction,
   async (req, res, next) => {
     try {
       const body = req.body as PutUserRequest;
@@ -234,6 +233,7 @@ router.put(
   isAuthenticated,
   hasPermissionToPutUserRequest,
   validatePutUserRequest,
+  useTransaction,
   (req, res, next) => {
     upload(req, res, next, 2);
   },
@@ -271,6 +271,7 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutUserRequest,
+  useTransaction,
   (req, res, next) => {
     upload(req, res, next, 2);
   },
@@ -309,6 +310,7 @@ router.put(
     isValidBody(keysOf<PutUserSubscriptionRequest>(), req, res, next);
   },
   hasPermissionToPutUserRequest,
+  useTransaction,
   async (req, res, next) => {
     try {
       const body = req.body as PutUserSubscriptionRequest;

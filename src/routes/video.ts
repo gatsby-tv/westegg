@@ -24,6 +24,7 @@ import {
   validateVideoExists
 } from "@src/middleware/video";
 import { projection } from "@src/utilities";
+import { useTransaction } from "@src/middleware/useTransaction";
 
 const router = Router();
 
@@ -56,6 +57,7 @@ router.post(
   "/",
   isAuthenticated,
   validatePostVideo,
+  useTransaction,
   (req, res, next) => {
     isValidBody(keysOf<PostVideoRequest>(), req, res, next);
   },
@@ -103,6 +105,7 @@ router.post(
 router.put(
   "/:id",
   isAuthenticated,
+  useTransaction,
   (req, res, next) => {
     isValidBody(keysOf<PutVideoRequest>(), req, res, next);
   },
@@ -128,6 +131,7 @@ router.put(
   "/:id/view",
   isAuthenticated,
   validateVideoExists,
+  useTransaction,
   async (req, res, next) => {
     try {
       const params = req.params as PutVideoViewRequestParams;
@@ -155,6 +159,7 @@ router.delete(
   "/:id",
   isAuthenticated,
   validateVideoExists,
+  useTransaction,
   async (req, res, next) => {
     try {
       const request = req.params as DeleteVideoRequest;

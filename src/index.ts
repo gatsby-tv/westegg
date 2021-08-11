@@ -61,6 +61,11 @@ app.use(
       return;
     }
 
+    if (req.session) {
+      req.session.abortTransaction();
+      req.session.endSession();
+    }
+
     // Check if error is specific with response code
     if (error instanceof WestEggError) {
       return res.status(error.statusCode).json({ error } as ErrorResponse);
