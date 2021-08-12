@@ -9,7 +9,8 @@ const SENDGRID_API_KEY_REGEX = /^SG\..{1,256}$/;
 const isDevelopment = !["staging", "production"].includes(process.env.NODE_ENV);
 
 const required = {
-  PUBLIC_URL: process.env.PUBLIC_URL,
+  NODE_ENV: process.env.NODE_ENV,
+  GATSBY_URL: process.env.GATSBY_URL,
   IPFS_URL: process.env.IPFS_URL,
   MONGO_URL: process.env.MONGO_URL,
   JWT_SECRET: process.env.JWT_SECRET,

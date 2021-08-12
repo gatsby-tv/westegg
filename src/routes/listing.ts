@@ -1,27 +1,18 @@
 import {
-  BasicVideo,
   Browsable,
-  EpisodicVideo,
-  ErrorMessage,
   GetListingFeaturedChannelsResponse,
   GetListingNewVideosResponse,
   GetListingPopularVideosResponse,
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsResponse,
-  IBasicVideo,
   IChannelAccount,
-  NotFound,
-  SerialVideo,
-  Show,
-  StatusCode,
-  Video as ClientVideo
+  StatusCode
 } from "@gatsby-tv/types";
-import { Router } from "express";
-import { keys as keysOf } from "ts-transformer-keys";
-
 import { Channel } from "@src/entities/Channel";
 import { Video } from "@src/entities/Video";
 import { projection } from "@src/utilities";
+import { Router } from "express";
+import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
 
@@ -44,46 +35,25 @@ router.get("/featured/channels", async (req, res, next) => {
   }
 });
 
-// Convert IBasicVideo to BasicVideo
-// TODO: Move to better file
-async function toBasicVideo(input: IBasicVideo): Promise<BasicVideo> {
-  let channel = await Channel.findById(input.channel);
-  if (!channel) {
-    throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
-  }
-  let output = {
-    // TODO: Object spread includes unnecessary keys here, we should strip out properties before returning
-    ...input,
-    channel: channel,
-    // TODO: Get from collections
-    collaborators: [],
-    contributors: [],
-    sponsors: []
-  } as BasicVideo;
-
-  return output;
-}
-
 /**
  * GET /listing/videos/recommended
  */
-// TODO: Add to /user/:id route
 router.get("/videos/recommended", async (req, res, next) => {
   try {
-    // TODO: Page content to limit (currently hardcoded to 25)
-    const basicVideos: BasicVideo[] = await Promise.all(
-      (
-        await Video.find().limit(25)
-      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
-    );
-    // TODO: Include serial videos and shows
-    const serialVideos: SerialVideo[] = [];
-    const shows: Show[] = [];
+    let videos = await Video.aggregate()
+      .lookup({
+        let: { channel_id: { $toObjectId: "$channel" } },
+        from: Channel.collection.name,
+        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Browsable>()));
 
-    const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
-    res
-      .status(StatusCode.OK)
-      .json(content as GetUserListingRecommendedResponse);
+    res.status(StatusCode.OK).json(videos as GetUserListingRecommendedResponse);
   } catch (error) {
     next(error);
   }
@@ -94,18 +64,20 @@ router.get("/videos/recommended", async (req, res, next) => {
  */
 router.get("/videos/popular", async (req, res, next) => {
   try {
-    // TODO: Page content to limit (currently hardcoded to 25)
-    const basicVideos: BasicVideo[] = await Promise.all(
-      (
-        await Video.find().limit(25)
-      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
-    );
-    // TODO: Include serial videos and shows
-    const serialVideos: SerialVideo[] = [];
-    const shows: Show[] = [];
+    let videos = await Video.aggregate()
+      .lookup({
+        let: { channel_id: { $toObjectId: "$channel" } },
+        from: Channel.collection.name,
+        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Browsable>()));
 
-    const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
-    res.status(StatusCode.OK).json(content as GetListingPopularVideosResponse);
+    res.status(StatusCode.OK).json(videos as GetListingPopularVideosResponse);
   } catch (error) {
     next(error);
   }
@@ -116,18 +88,20 @@ router.get("/videos/popular", async (req, res, next) => {
  */
 router.get("/videos/new", async (req, res, next) => {
   try {
-    // TODO: Page content to limit (currently hardcoded to 25)
-    const basicVideos: BasicVideo[] = await Promise.all(
-      (
-        await Video.find().limit(25)
-      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
-    );
-    // TODO: Include serial videos and shows
-    const serialVideos: SerialVideo[] = [];
-    const shows: Show[] = [];
+    let videos = await Video.aggregate()
+      .lookup({
+        let: { channel_id: { $toObjectId: "$channel" } },
+        from: Channel.collection.name,
+        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Browsable>()));
 
-    const content: Browsable[] = [...basicVideos, ...serialVideos, ...shows];
-    res.status(StatusCode.OK).json(content as GetListingNewVideosResponse);
+    res.status(StatusCode.OK).json(videos as GetListingNewVideosResponse);
   } catch (error) {
     next(error);
   }
@@ -136,27 +110,24 @@ router.get("/videos/new", async (req, res, next) => {
 /**
  * GET /listing/subscriptions
  */
-// TODO: Add to /user/:id route
 router.get("/subscriptions", async (req, res, next) => {
   try {
-    // TODO: Page content to limit (currently hardcoded to 25)
-    const basicVideos: BasicVideo[] = await Promise.all(
-      (
-        await Video.find().limit(25)
-      ).map(async (entity) => await toBasicVideo(entity as IBasicVideo))
-    );
-    // TODO: Include serial and episodic videos
-    const serialVideos: SerialVideo[] = [];
-    const episodicVideos: EpisodicVideo[] = [];
+    let videos = await Video.aggregate()
+      .lookup({
+        let: { channel_id: { $toObjectId: "$channel" } },
+        from: Channel.collection.name,
+        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Browsable>()));
 
-    const content: ClientVideo[] = [
-      ...basicVideos,
-      ...serialVideos,
-      ...episodicVideos
-    ];
     res
       .status(StatusCode.OK)
-      .json(content as GetUserListingSubscriptionsResponse);
+      .json(videos as GetUserListingSubscriptionsResponse);
   } catch (error) {
     next(error);
   }

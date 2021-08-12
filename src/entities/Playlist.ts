@@ -20,7 +20,7 @@ const PlaylistSchemaFields: Record<keyof Omit<IPlaylist, "_id">, any> = {
   collaborators: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
   tags: { type: [String], default: [] },
   explicit: { type: Boolean, default: false },
-  unlisted: { type: Boolean, default: false },
+  unlisted: { type: Boolean, default: false }
 };
 
 const PlaylistSchema = new Schema(PlaylistSchemaFields);
