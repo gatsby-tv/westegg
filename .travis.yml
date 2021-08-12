@@ -1,6 +1,10 @@
 language: node_js
 node_js: 12.18.3
 services: docker
+addons:
+  apt:
+    packages:
+      - docker-ce
 
 stages:
   - build
