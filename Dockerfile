@@ -35,4 +35,4 @@ RUN find packages \! \( -name package.json -o -name dist \) -mindepth 2 -maxdept
 USER westegg
 EXPOSE 3001
 
-CMD ["yarn", "start"]
+CMD ["yarn", "node", "."]
