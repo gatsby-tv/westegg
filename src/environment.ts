@@ -10,7 +10,7 @@ const isDevelopment = !["staging", "production"].includes(process.env.NODE_ENV);
 
 const required = {
   NODE_ENV: process.env.NODE_ENV,
-  PUBLIC_URL: process.env.PUBLIC_URL,
+  GATSBY_URL: process.env.GATSBY_URL,
   IPFS_URL: process.env.IPFS_URL,
   MONGO_URL: process.env.MONGO_URL,
   JWT_SECRET: process.env.JWT_SECRET,
