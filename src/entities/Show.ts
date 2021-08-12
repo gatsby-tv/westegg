@@ -20,7 +20,7 @@ const ShowSchemaFields: Record<keyof Omit<IShow, "_id">, any> = {
   tags: { type: [String], default: [] },
   explicit: { type: Boolean, default: false },
   unlisted: { type: Boolean, default: false },
-  promotions: { type: Number, default: 0 },
+  promotions: { type: Number, default: 0 }
 };
 
 const ShowSchema = new Schema(ShowSchemaFields);
