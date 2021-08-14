@@ -11,7 +11,7 @@ import {
   PutVideoViewRequestParams,
   StatusCode
 } from "@gatsby-tv/types";
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { keys as keysOf } from "ts-transformer-keys";
 
 import { Channel } from "@src/entities/Channel";
@@ -24,7 +24,10 @@ import {
   validateVideoExists
 } from "@src/middleware/video";
 import { projection } from "@src/utilities";
-import { useTransaction } from "@src/middleware/transaction";
+import {
+  commitTransaction,
+  startTransaction
+} from "@src/middleware/transaction";
 
 const router = Router();
 
@@ -57,11 +60,11 @@ router.post(
   "/",
   isAuthenticated,
   validatePostVideo,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PostVideoRequest>(), req, res, next);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const request = req.body as PostVideoRequest;
 
@@ -93,10 +96,12 @@ router.post(
         .json(
           pick(video.toJSON(), keysOf<PostVideoRequest>()) as PostVideoResponse
         );
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /*
@@ -105,12 +110,12 @@ router.post(
 router.put(
   "/:id",
   isAuthenticated,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PutVideoRequest>(), req, res, next);
   },
   validatePutVideo,
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = req.body as PutVideoRequest;
       const params = req.params as PutVideoRequestParams;
@@ -118,10 +123,12 @@ router.put(
       await Video.findByIdAndUpdate(params.id, body);
 
       res.sendStatus(StatusCode.CREATED);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /*
@@ -131,8 +138,8 @@ router.put(
   "/:id/view",
   isAuthenticated,
   validateVideoExists,
-  useTransaction,
-  async (req, res, next) => {
+  //startTransaction,
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const params = req.params as PutVideoViewRequestParams;
 
@@ -146,10 +153,12 @@ router.put(
       video.save();
 
       res.sendStatus(StatusCode.CREATED);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /*
@@ -159,18 +168,20 @@ router.delete(
   "/:id",
   isAuthenticated,
   validateVideoExists,
-  useTransaction,
-  async (req, res, next) => {
+  //startTransaction,
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const request = req.params as DeleteVideoRequest;
 
       await Video.findByIdAndRemove(request.id);
 
       res.sendStatus(StatusCode.NO_CONTENT);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 export default router;

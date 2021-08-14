@@ -21,11 +21,6 @@ import {
   PutUserSubscriptionResponse,
   StatusCode
 } from "@gatsby-tv/types";
-import { Router } from "express";
-import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
-import { keys as keysOf } from "ts-transformer-keys";
-
 import { PersistSignInKey } from "@src/entities/PersistSignInKey";
 import { SignInKey } from "@src/entities/SignInKey";
 import { User } from "@src/entities/User";
@@ -33,11 +28,18 @@ import { isValidBody } from "@src/middleware";
 import { isAuthenticated, validateSignup } from "@src/middleware/auth";
 import { upload } from "@src/middleware/multipart";
 import {
+  //commitTransaction,
+  startTransaction
+} from "@src/middleware/transaction";
+import {
   hasPermissionToPutUserRequest,
   validatePutUserRequest
 } from "@src/middleware/user";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { useTransaction } from "@src/middleware/transaction";
+import { NextFunction, Request, Response, Router } from "express";
+import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
+import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
 
@@ -83,11 +85,11 @@ router.get(
 router.post(
   "/",
   validateSignup,
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PostUserCompleteSignupRequest>(), req, res, next);
   },
-  useTransaction,
-  async (req, res, next) => {
+  //startTransaction,
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = req.body as PostUserCompleteSignupRequest;
 
@@ -130,10 +132,12 @@ router.post(
       res
         .status(StatusCode.CREATED)
         .json({ token } as PostAuthCompleteSignUpResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -194,12 +198,12 @@ router.get("/:id/promotions", async (req, res, next) => {
 router.put(
   "/:id",
   isAuthenticated,
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PutUserRequest>(), req, res, next);
   },
   hasPermissionToPutUserRequest,
-  useTransaction,
-  async (req, res, next) => {
+  //startTransaction,
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = req.body as PutUserRequest;
       const params = req.params as PutUserRequestParams;
@@ -219,10 +223,12 @@ router.put(
       }
 
       res.sendStatus(StatusCode.CREATED);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -233,11 +239,11 @@ router.put(
   isAuthenticated,
   hasPermissionToPutUserRequest,
   validatePutUserRequest,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     upload(req, res, next, 2);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const params = req.params as PutUserAvatarRequestParams;
 
@@ -258,10 +264,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(user.toJSON() as PutUserAvatarResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -271,11 +279,11 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutUserRequest,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     upload(req, res, next, 2);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const params = req.params as PutUserBannerRequestParams;
 
@@ -294,10 +302,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(user.toJSON() as PutUserBannerResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -306,12 +316,12 @@ router.put(
 router.put(
   "/:id/subscription",
   isAuthenticated,
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PutUserSubscriptionRequest>(), req, res, next);
   },
   hasPermissionToPutUserRequest,
-  useTransaction,
-  async (req, res, next) => {
+  //startTransaction,
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = req.body as PutUserSubscriptionRequest;
       const params = req.params as PutUserSubscriptionRequestParams;
@@ -331,10 +341,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(user.toJSON() as PutUserSubscriptionResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 export default router;

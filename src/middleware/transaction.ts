@@ -1,16 +1,32 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
-export const useTransaction = async (
+export const startTransaction = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const session = await mongoose.startSession();
+  try {
+    const session = await mongoose.startSession();
 
-  req.session = session;
-  session.startTransaction();
-  next();
-  await session.commitTransaction();
-  session.endSession();
+    req.session = session;
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const commitTransaction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log("Committing transaction");
+    if (!req.session) {
+      throw new Error("No session found");
+    }
+    req.session.endSession();
+  } catch (err) {
+    next(err);
+  }
 };

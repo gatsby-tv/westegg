@@ -23,7 +23,7 @@ import {
   PutChannelPosterResponse,
   StatusCode
 } from "@gatsby-tv/types";
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
 
@@ -39,7 +39,10 @@ import {
 } from "@src/middleware/channel";
 import { upload } from "@src/middleware/multipart";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { useTransaction } from "@src/middleware/transaction";
+import {
+  commitTransaction,
+  startTransaction
+} from "@src/middleware/transaction";
 
 const router = Router();
 
@@ -87,12 +90,12 @@ router.get(
 router.post(
   "/",
   isAuthenticated,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PostChannelRequest>(), req, res, next);
   },
   validatePostChannel,
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body: PostChannelRequest = req.body;
 
@@ -130,10 +133,12 @@ router.post(
             keysOf<PostChannelResponse>()
           ) as PostChannelResponse
         );
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -200,11 +205,11 @@ router.put(
   isAuthenticated,
   hasPermissionToPutChannelRequest,
   validatePutChannelHandleRequest,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     isValidBody(keysOf<PutChannelHandleRequest>(), req, res, next);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = req.body as PutChannelHandleRequest;
       const params = req.params as PutChannelHandleRequestParams;
@@ -229,10 +234,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(channel.toJSON() as PutChannelHandleResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -242,11 +249,11 @@ router.put(
   "/:id/avatar",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     upload(req, res, next, 2);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const params = req.params as PutChannelAvatarRequestParams;
       const channel = await Channel.findById(
@@ -264,10 +271,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(channel.toJSON() as PutChannelAvatarResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -277,11 +286,11 @@ router.put(
   "/:id/banner",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     upload(req, res, next, 2);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const params = req.params as PutChannelBannerRequestParams;
       const channel = await Channel.findById(
@@ -299,10 +308,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(channel.toJSON() as PutChannelBannerResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 /**
@@ -312,11 +323,11 @@ router.put(
   "/:id/poster",
   isAuthenticated,
   hasPermissionToPutChannelRequest,
-  useTransaction,
-  (req, res, next) => {
+  //startTransaction,
+  (req: Request, res: Response, next: NextFunction) => {
     upload(req, res, next, 2);
   },
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const params = req.params as PutChannelPosterRequestParams;
       const channel = await Channel.findById(
@@ -334,10 +345,12 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(channel.toJSON() as PutChannelPosterResponse);
+      next();
     } catch (error) {
       next(error);
     }
   }
+  //commitTransaction
 );
 
 export default router;

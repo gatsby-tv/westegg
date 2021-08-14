@@ -50,7 +50,7 @@ app.use("/v1", router);
 
 // Handle all errors
 app.use(
-  (
+  async (
     error: WestEggError | Error,
     req: Request,
     res: Response,
@@ -61,10 +61,13 @@ app.use(
       return;
     }
 
+    console.log(req.session);
     if (req.session) {
+      console.log("Canceling transaction");
       // TODO: Abort transaction is async
-      req.session.abortTransaction();
-      req.session.endSession();
+      console.log("Aborting transaction in index.ts");
+      // await req.session.abortTransaction();
+      // req.session.endSession();
     }
 
     // Check if error is specific with response code
