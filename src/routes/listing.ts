@@ -42,9 +42,9 @@ router.get("/videos/recommended", async (req, res, next) => {
   try {
     let videos = await Video.aggregate()
       .lookup({
-        let: { channel_id: { $toObjectId: "$channel" } },
         from: Channel.collection.name,
-        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        localField: "channel",
+        foreignField: "_id",
         as: "channel"
       })
       .unwind({
@@ -66,9 +66,9 @@ router.get("/videos/popular", async (req, res, next) => {
   try {
     let videos = await Video.aggregate()
       .lookup({
-        let: { channel_id: { $toObjectId: "$channel" } },
         from: Channel.collection.name,
-        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        localField: "channel",
+        foreignField: "_id",
         as: "channel"
       })
       .unwind({
@@ -90,9 +90,9 @@ router.get("/videos/new", async (req, res, next) => {
   try {
     let videos = await Video.aggregate()
       .lookup({
-        let: { channel_id: { $toObjectId: "$channel" } },
         from: Channel.collection.name,
-        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        localField: "channel",
+        foreignField: "_id",
         as: "channel"
       })
       .unwind({
@@ -114,9 +114,9 @@ router.get("/subscriptions", async (req, res, next) => {
   try {
     let videos = await Video.aggregate()
       .lookup({
-        let: { channel_id: { $toObjectId: "$channel" } },
         from: Channel.collection.name,
-        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$channel_id"] } } }],
+        localField: "channel",
+        foreignField: "_id",
         as: "channel"
       })
       .unwind({
