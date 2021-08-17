@@ -22,6 +22,7 @@ import {
   startTransaction
 } from "@src/middleware/transaction";
 import { randomString } from "@src/utilities";
+import assert from "assert";
 import { createHmac } from "crypto";
 import { NextFunction, Request, Response, Router } from "express";
 import jwt from "jsonwebtoken";
@@ -42,18 +43,7 @@ router.post(
     isValidBody(keysOf<PostAuthSignInRequest>(), req, res, next);
   },
   async (req: Request, res: Response, next: NextFunction) => {
-    const params = new URLSearchParams();
-    params.set("retryWrite", "true");
-    params.set("w", "majority");
-    params.set("authSource", "admin");
-    const connection = await mongoose.createConnection(
-      `${process.env.MONGO_URL}?${params}`,
-      {
-        useFindAndModify: false,
-        useCreateIndex: true
-      }
-    );
-    const session = await connection.startSession();
+    const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
         const signin = req.body as PostAuthSignInRequest;
@@ -67,6 +57,7 @@ router.post(
           key: key,
           email: signin.email
         });
+        assert.ok(signinKey.$session(session));
         await signinKey.save();
 
         // Send an email to the user with the signin key and if they need to complete signin

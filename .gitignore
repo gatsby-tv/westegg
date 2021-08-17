@@ -53,6 +53,7 @@ typings/
 
 # VSCode
 .vscode
+!.vscode/settings.json
 
 # Environment files
 .env*
