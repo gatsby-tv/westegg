@@ -1,4 +1,3 @@
-import "dotenv/config";
 import "@src/environment";
 
 import express, { NextFunction, Request, Response } from "express";
