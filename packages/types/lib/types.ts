@@ -16,11 +16,6 @@ import {
   IVideoReport
 } from "@lib/entities";
 
-export type PagedRequest = {
-  page?: number;
-  perPage?: number;
-};
-
 /*
  * Format of JWT used for authentication requests.
  *
