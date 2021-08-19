@@ -22,16 +22,15 @@ import {
 //
 // Generic Responses
 // --------------------------------------------------
-export type CursorResponse = {
-  cursor?: ObjectID;
-  limit?: number;
-};
-
 export type ErrorResponse = {
   error: WestEggError;
 };
 
 export type Response<T = {}> = T | ErrorResponse;
+
+export type CursorResponse<T = {}> =
+  | { content: T; cursor: ObjectID; limit: number }
+  | ErrorResponse;
 
 //
 // Authentication Responses
@@ -113,12 +112,14 @@ export type GetUserPromotionsResponse = Response<UserPromotions>;
 /*
  * GET /user/:id/listing/recommended
  */
-export type GetUserListingRecommendedResponse = Response<Array<Browsable>>;
+export type GetUserListingRecommendedResponse = CursorResponse<
+  Array<Browsable>
+>;
 
 /*
  * GET /user/:id/listing/subscriptions
  */
-export type GetUserListingSubscriptionsResponse = Response<
+export type GetUserListingSubscriptionsResponse = CursorResponse<
   Array<BrowsableVideo>
 >;
 
@@ -525,9 +526,11 @@ export type GetListingFeaturedChannelsResponse = Response<Array<Channel>>;
 /*
  * GET /listing/videos/popular
  */
-export type GetListingPopularVideosResponse = Response<Array<Browsable>>;
+export type GetListingPopularVideosResponse = CursorResponse<Array<Browsable>> &
+  CursorResponse;
 
 /*
  * GET /listing/videos/new
  */
-export type GetListingNewVideosResponse = Response<Array<Browsable>>;
+export type GetListingNewVideosResponse = CursorResponse<Array<Browsable>> &
+  CursorResponse;
