@@ -20,7 +20,7 @@
     "build": "node ./scripts/build.js",
     "start:dev": "node ./scripts/start.dev.js",
     "start:staging": "node ./scripts/start.staging.js",
-    "start:prod": "node ./scripts/start.production.js"
+    "start:prod": "node ./scripts/start.prod.js"
   },
   "workspaces": {
     "packages": [
