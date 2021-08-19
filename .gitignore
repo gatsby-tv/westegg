@@ -53,7 +53,6 @@ typings/
 
 # VSCode
 .vscode
-!.vscode/settings.json
 
 # Environment files
 .env*
@@ -61,6 +60,7 @@ typings/
 !.env.development
 !.env.staging
 !.env.production
+!.env.docker
 
 # Mac files
 .DS_Store
