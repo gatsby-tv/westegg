@@ -70,7 +70,7 @@ router.get("/videos/recommended", async (req, res, next) => {
 
     const response = {
       content: videos,
-      cursor: videos[videos.length - 1]._id || CURSOR_START,
+      cursor: videos[videos.length - 1]?._id,
       limit: limit
     };
 
@@ -107,7 +107,7 @@ router.get("/videos/popular", async (req, res, next) => {
 
     const response = {
       content: videos,
-      cursor: videos[videos.length - 1]._id || CURSOR_START,
+      cursor: videos[videos.length - 1]?._id,
       limit: limit
     };
 
@@ -142,7 +142,7 @@ router.get("/videos/new", async (req, res, next) => {
 
     const response = {
       content: videos,
-      cursor: videos[videos.length - 1]._id || CURSOR_START,
+      cursor: videos[videos.length - 1]?._id,
       limit: limit
     };
 
@@ -177,7 +177,7 @@ router.get("/subscriptions", async (req, res, next) => {
 
     const response = {
       content: videos,
-      cursor: videos[videos.length - 1]._id || CURSOR_START,
+      cursor: videos[videos.length - 1]?._id,
       limit: limit
     };
 
