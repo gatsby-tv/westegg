@@ -526,11 +526,9 @@ export type GetListingFeaturedChannelsResponse = Response<Array<Channel>>;
 /*
  * GET /listing/videos/popular
  */
-export type GetListingPopularVideosResponse = CursorResponse<Array<Browsable>> &
-  CursorResponse;
+export type GetListingPopularVideosResponse = CursorResponse<Array<Browsable>>;
 
 /*
  * GET /listing/videos/new
  */
-export type GetListingNewVideosResponse = CursorResponse<Array<Browsable>> &
-  CursorResponse;
+export type GetListingNewVideosResponse = CursorResponse<Array<Browsable>>;
