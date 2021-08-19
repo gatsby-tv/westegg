@@ -17,8 +17,22 @@ import {
   ModerationSettings,
   UserSettings
 } from "@lib/settings";
-import { ChannelID, CID, SignInKeyID, UserID, VideoID } from "@lib/shared";
-import { PagedRequest } from "@lib/types";
+import {
+  ChannelID,
+  CID,
+  ObjectID,
+  SignInKeyID,
+  UserID,
+  VideoID
+} from "@lib/shared";
+
+//
+// Generic Requests
+// --------------------------------------------------
+export type CursorRequest = {
+  cursor?: ObjectID;
+  limit?: number;
+};
 
 //
 // Authentication Requests
@@ -131,12 +145,12 @@ export type GetUserPromotionsRequest = {
 /*
  * GET /user/:id/listing/recommended
  */
-export type GetUserListingRecommendedRequest = { id: UserID } & PagedRequest;
+export type GetUserListingRecommendedRequest = { id: UserID } & CursorRequest;
 
 /*
  * GET /user/:id/listing/subscriptions
  */
-export type GetUserListingSubscriptionsRequest = { id: UserID } & PagedRequest;
+export type GetUserListingSubscriptionsRequest = { id: UserID } & CursorRequest;
 
 /*
  * PUT /user/:id
@@ -487,7 +501,7 @@ export type GetVideoRequest = { id: string };
 /*
  * GET /video/:id/listing/related
  */
-export type GetVideoListingRelatedRequest = PagedRequest;
+export type GetVideoListingRelatedRequest = CursorRequest;
 
 /*
  * PUT /video/:id
@@ -623,9 +637,9 @@ export type GetListingFeaturedChannelsRequest = {};
 /*
  * GET /listing/videos/popular
  */
-export type GetListingPopularVideosRequest = PagedRequest;
+export type GetListingPopularVideosRequest = CursorRequest;
 
 /*
  * GET /listing/videos/new
  */
-export type GetListingNewVideosRequest = PagedRequest;
+export type GetListingNewVideosRequest = CursorRequest;

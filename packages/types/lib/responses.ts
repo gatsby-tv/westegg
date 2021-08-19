@@ -1,4 +1,5 @@
 import { WestEggError } from "@lib/errors";
+import { ObjectID } from "@lib/shared";
 import {
   Browsable,
   BrowsableVideo,
@@ -18,7 +19,14 @@ import {
   Video
 } from "@lib/types";
 
-// Response that should always return an error, used by westegg
+//
+// Generic Responses
+// --------------------------------------------------
+export type CursorResponse = {
+  cursor?: ObjectID;
+  limit?: number;
+};
+
 export type ErrorResponse = {
   error: WestEggError;
 };
