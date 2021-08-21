@@ -1,5 +1,4 @@
 import {
-  Browsable,
   GetListingFeaturedChannelsResponse,
   GetListingNewVideosRequest,
   GetListingNewVideosResponse,
@@ -10,10 +9,11 @@ import {
   GetUserListingSubscriptionsRequest,
   GetUserListingSubscriptionsResponse,
   IChannelAccount,
-  StatusCode
+  StatusCode,
+  Video
 } from "@gatsby-tv/types";
 import { Channel } from "@src/entities/Channel";
-import { Video } from "@src/entities/Video";
+import { Video as VideoCollection } from "@src/entities/Video";
 import { projection } from "@src/utilities";
 import { Router } from "express";
 import { Types } from "mongoose";
@@ -51,7 +51,7 @@ router.get("/videos/recommended", async (req, res, next) => {
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
 
-    const videos = await Video.aggregate()
+    const videos = await VideoCollection.aggregate()
       .match({
         _id: { $gt: cursor }
       })
@@ -65,7 +65,7 @@ router.get("/videos/recommended", async (req, res, next) => {
         path: "$channel",
         preserveNullAndEmptyArrays: true
       })
-      .project(projection(keysOf<Browsable>()))
+      .project(projection(keysOf<Video>()))
       .limit(limit);
 
     const response = {
@@ -90,7 +90,7 @@ router.get("/videos/popular", async (req, res, next) => {
     const body = req.body as GetListingPopularVideosRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    const videos = await Video.aggregate()
+    const videos = await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor } })
       .lookup({
         from: Channel.collection.name,
@@ -102,7 +102,7 @@ router.get("/videos/popular", async (req, res, next) => {
         path: "$channel",
         preserveNullAndEmptyArrays: true
       })
-      .project(projection(keysOf<Browsable>()))
+      .project(projection(keysOf<Video>()))
       .limit(limit);
 
     const response = {
@@ -125,7 +125,7 @@ router.get("/videos/new", async (req, res, next) => {
     const body = req.body as GetListingNewVideosRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    const videos = await Video.aggregate()
+    const videos = await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor || CURSOR_START } })
       .lookup({
         from: Channel.collection.name,
@@ -137,7 +137,7 @@ router.get("/videos/new", async (req, res, next) => {
         path: "$channel",
         preserveNullAndEmptyArrays: true
       })
-      .project(projection(keysOf<Browsable>()))
+      .project(projection(keysOf<Video>()))
       .limit(limit);
 
     const response = {
@@ -160,7 +160,7 @@ router.get("/subscriptions", async (req, res, next) => {
     const body = req.body as GetUserListingSubscriptionsRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    const videos = await Video.aggregate()
+    const videos = await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor || CURSOR_START } })
       .lookup({
         from: Channel.collection.name,
@@ -172,7 +172,7 @@ router.get("/subscriptions", async (req, res, next) => {
         path: "$channel",
         preserveNullAndEmptyArrays: true
       })
-      .project(projection(keysOf<Browsable>()))
+      .project(projection(keysOf<Video>()))
       .limit(limit);
 
     const response = {
