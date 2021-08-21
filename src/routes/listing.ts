@@ -20,7 +20,7 @@ import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
-const DEFAULT_CURSOR_LIMIT = 12;
+const DEFAULT_CURSOR_LIMIT = 24;
 const CURSOR_START = new Types.ObjectId("0".repeat(24));
 
 /**

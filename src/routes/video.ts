@@ -2,6 +2,7 @@ import {
   DeleteVideoRequest,
   ErrorMessage,
   GetVideoRequest,
+  GetVideoResponse,
   NotFound,
   pick,
   PostVideoRequest,
@@ -9,13 +10,14 @@ import {
   PutVideoRequest,
   PutVideoRequestParams,
   PutVideoViewRequestParams,
-  StatusCode
+  StatusCode,
+  Video
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { keys as keysOf } from "ts-transformer-keys";
 
 import { Channel } from "@src/entities/Channel";
-import { Video } from "@src/entities/Video";
+import { Video as VideoCollection } from "@src/entities/Video";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated } from "@src/middleware/auth";
 import {
@@ -24,6 +26,7 @@ import {
   validateVideoExists
 } from "@src/middleware/video";
 import { projection } from "@src/utilities";
+import { Types } from "mongoose";
 
 const router = Router();
 
@@ -34,16 +37,29 @@ router.get("/:id", async (req, res, next) => {
   try {
     const request = req.params as GetVideoRequest;
 
-    const video = await Video.findById(
-      request.id,
-      projection(keysOf<GetVideoRequest>())
-    );
+    const video = (
+      await VideoCollection.aggregate()
+        .match({
+          _id: { $eq: new Types.ObjectId(request.id) }
+        })
+        .lookup({
+          from: Channel.collection.name,
+          localField: "channel",
+          foreignField: "_id",
+          as: "channel"
+        })
+        .unwind({
+          path: "$channel",
+          preserveNullAndEmptyArrays: true
+        })
+        .project(projection(keysOf<Video>()))
+    )[0] as Video;
 
     if (!video) {
       throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
     }
 
-    res.status(StatusCode.OK).json(video.toJSON() as GetVideoRequest);
+    res.status(StatusCode.OK).json(video as GetVideoResponse);
   } catch (error) {
     next(error);
   }
@@ -72,7 +88,7 @@ router.post(
 
       // Create and save the video
       // TODO: Include optional fields
-      const video = new Video({
+      const video = new VideoCollection({
         content: request.content,
         title: request.title,
         releaseDate: Date.now(),
@@ -112,7 +128,7 @@ router.put(
       const body = req.body as PutVideoRequest;
       const params = req.params as PutVideoRequestParams;
 
-      await Video.findByIdAndUpdate(params.id, body);
+      await VideoCollection.findByIdAndUpdate(params.id, body);
 
       res.sendStatus(StatusCode.CREATED);
     } catch (error) {
@@ -132,7 +148,7 @@ router.put(
     try {
       const params = req.params as PutVideoViewRequestParams;
 
-      const video = await Video.findById(params.id);
+      const video = await VideoCollection.findById(params.id);
 
       if (!video) {
         throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
@@ -159,7 +175,7 @@ router.delete(
     try {
       const request = req.params as DeleteVideoRequest;
 
-      await Video.findByIdAndRemove(request.id);
+      await VideoCollection.findByIdAndRemove(request.id);
 
       res.sendStatus(StatusCode.NO_CONTENT);
     } catch (error) {
