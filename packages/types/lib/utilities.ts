@@ -20,6 +20,12 @@ import {
   Show,
   Video
 } from "@lib/types";
+import {
+  Response,
+  CursorResponse,
+  Cursor,
+  ErrorResponse
+} from "@lib/responses";
 
 /*
  * General Utilities
@@ -41,6 +47,25 @@ export function pick(
   return Object.fromEntries(
     Object.entries(data).filter((entry) => [keys].flat().includes(entry[0]))
   );
+}
+
+/*
+ * Response Utilities
+ */
+export function isErrorResponse(
+  response: Response | CursorResponse
+): response is ErrorResponse {
+  return (response as ErrorResponse).error !== undefined;
+}
+
+export function isResponse<T>(response: Response<T>): response is T {
+  return !isErrorResponse(response);
+}
+
+export function isCursor<T>(
+  response: CursorResponse<T>
+): response is Cursor<T> {
+  return !isErrorResponse(response);
 }
 
 /*

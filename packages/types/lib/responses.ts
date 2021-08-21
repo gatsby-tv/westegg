@@ -28,9 +28,13 @@ export type ErrorResponse = {
 
 export type Response<T = {}> = T | ErrorResponse;
 
-export type CursorResponse<T = {}> =
-  | { content: T; cursor: ObjectID | undefined; limit: number }
-  | ErrorResponse;
+export type Cursor<T = {}> = {
+  content: T;
+  cursor: ObjectID | undefined;
+  limit: number;
+};
+
+export type CursorResponse<T = {}> = Cursor<T> | ErrorResponse;
 
 //
 // Authentication Responses
