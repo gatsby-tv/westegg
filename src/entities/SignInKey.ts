@@ -1,6 +1,6 @@
 import { SignInKeyID } from "@gatsby-tv/types";
 import mongoose, { Document, Schema } from "mongoose";
-import { SignInKeyRef } from "./refs";
+import { SignInKeyRef } from "@src/entities/refs";
 
 /**
  * Temporary store to denote that a magic link was sent to an email

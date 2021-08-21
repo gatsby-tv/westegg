@@ -1,6 +1,6 @@
 import { IShow } from "@gatsby-tv/types";
+import { ChannelRef, ShowRef, UserRef } from "@src/entities/refs";
 import mongoose, { Document, Schema } from "mongoose";
-import { ChannelRef, ShowRef, UserRef } from "./refs";
 
 const ShowSchemaFields: Record<keyof Omit<IShow, "_id">, any> = {
   // Required

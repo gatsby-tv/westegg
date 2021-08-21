@@ -1,7 +1,13 @@
 import { IChannel } from "@gatsby-tv/types";
+import { DEFAULT_AVATAR } from "@src/entities/Base";
+import {
+  ChannelRef,
+  PlaylistRef,
+  ShowRef,
+  UserRef,
+  VideoRef
+} from "@src/entities/refs";
 import mongoose, { Document, Schema } from "mongoose";
-import { DEFAULT_AVATAR } from "./Base";
-import { ChannelRef, PlaylistRef, ShowRef, UserRef, VideoRef } from "./refs";
 
 const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   // Required

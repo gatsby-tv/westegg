@@ -1,6 +1,6 @@
 import { UserID } from "@gatsby-tv/types";
+import { InvalidTokenRef } from "@src/entities/refs";
 import mongoose, { Document, Schema } from "mongoose";
-import { InvalidTokenRef } from "./refs";
 
 /**
  * Invalid tokens are simple documents that contain the expiration date for any tokens created per user.

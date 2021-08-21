@@ -1,6 +1,6 @@
 import { IPlaylist } from "@gatsby-tv/types";
 import mongoose, { Document, Schema } from "mongoose";
-import { ChannelRef, PlaylistRef, UserRef, VideoRef } from "./refs";
+import { ChannelRef, PlaylistRef, UserRef, VideoRef } from "@src/entities/refs";
 
 const PlaylistSchemaFields: Record<keyof Omit<IPlaylist, "_id">, any> = {
   // Required

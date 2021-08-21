@@ -39,7 +39,7 @@
     "dotenv-flow": "^3.2.0",
     "ipfs-core-types": "^0.6.0",
     "prettier": "^2.1.2",
-    "prettier-plugin-organize-imports": "^1.1.1",
+    "prettier-plugin-organize-imports": "^2.3.3",
     "ts-node": "^9.0.0",
     "tscpaths": "^0.0.9",
     "ttypescript": "^1.5.12",

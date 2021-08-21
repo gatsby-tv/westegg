@@ -1,6 +1,6 @@
 import { IBasicVideo } from "@gatsby-tv/types";
 import mongoose, { Document, Schema } from "mongoose";
-import { ChannelRef, UserRef, VideoRef } from "./refs";
+import { ChannelRef, UserRef, VideoRef } from "@src/entities/refs";
 
 const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
   // Required
