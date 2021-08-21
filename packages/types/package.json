@@ -1,7 +1,7 @@
 {
   "name": "@gatsby-tv/types",
   "description": "Gatsby shared Typescript types library.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "files": [
     "dist"
   ],
