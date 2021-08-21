@@ -13,13 +13,17 @@ stages:
 
 branches:
   only:
-  - master
+    - master
 
 jobs:
   include:
     # Check prettier linting and build typescript
     - stage: build
       script:
+        - yarn run format:check
+        - yarn run build
+        # Build types
+        - cd packages/types
         - yarn run format:check
         - yarn run build
     # Build and publish docker tags
@@ -31,4 +35,8 @@ jobs:
         # Build dockerfile
         - make build
         # Push tags
+        - make push
+        # Publish types (if version bumped)
+        - cd package/types
+        - make build
         - make push
