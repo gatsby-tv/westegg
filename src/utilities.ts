@@ -1,13 +1,4 @@
 import { MongoError } from "mongodb";
-import { Schema } from "mongoose";
-
-// Compare two mongo ids (can be strings or ObjectIDs)
-export function compareMongoIDs(
-  left: string | Schema.Types.ObjectId,
-  right: string | Schema.Types.ObjectId
-): boolean {
-  return left.toString() === right.toString();
-}
 
 // Map an array of keys (usually a response type) into a mongo projection
 export function projection(keys: string[]): any {

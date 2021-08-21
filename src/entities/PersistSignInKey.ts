@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { PersistSignInKeyRef } from "./refs";
-import { ISignInKey } from "./SignInKey";
+import { PersistSignInKeyRef } from "@src/entities/refs";
+import { ISignInKey } from "@src/entities/SignInKey";
 
 /**
  * Temporary store to denote that a magic link was sent to an email

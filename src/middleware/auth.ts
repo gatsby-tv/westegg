@@ -9,15 +9,13 @@ import {
   Token,
   Unauthorized
 } from "@gatsby-tv/types";
+import { InvalidToken } from "@src/entities/InvalidToken";
+import { validateHandle } from "@src/middleware/handled";
+import { validateName } from "@src/middleware/named";
 import { NextFunction, Request, Response } from "express";
+import { Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import validator from "validator";
-
-import { InvalidToken } from "@src/entities/InvalidToken";
-import { compareMongoIDs } from "@src/utilities";
-
-import { validateHandle } from "./handled";
-import { validateName } from "./named";
 
 const BEARER_PREFIX = "Bearer ";
 const MILLISECONDS_IN_SECONDS = 1000;
@@ -144,14 +142,15 @@ export function hasPermission(
     let user: IUser = resource as IUser;
     // Check if the actor is the same user
     // No need to check for method here, owner can perform all actions
-    if (compareMongoIDs(actor._id, user._id)) {
+    if (new Types.ObjectId(actor._id).equals(new Types.ObjectId(user._id))) {
       return true;
     }
   } else if (isChannel(resource)) {
     let channel: IChannel = resource as IChannel;
     for (let owner of channel.owners) {
-      // Check if the actor is one of the channel owners, no need to check method, owners can perform all actions
-      if (compareMongoIDs(actor._id, owner)) {
+      // Check if the actor is one of the channel owners
+      // No need to check method, owners can perform all actions
+      if (new Types.ObjectId(actor._id).equals(new Types.ObjectId(owner))) {
         return true;
       }
     }

@@ -1,7 +1,7 @@
 import { IUser } from "@gatsby-tv/types";
 import mongoose, { Document, Schema } from "mongoose";
-import { DEFAULT_AVATAR } from "./Base";
-import { ChannelRef, UserRef, VideoRef } from "./refs";
+import { DEFAULT_AVATAR } from "@src/entities/Base";
+import { ChannelRef, UserRef, VideoRef } from "@src/entities/refs";
 
 const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
   // Required

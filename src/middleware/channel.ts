@@ -10,9 +10,9 @@ import { NextFunction, Request, Response } from "express";
 import { Channel } from "@src/entities/Channel";
 import { User } from "@src/entities/User";
 
-import { hasPermission, ResourceAction } from "./auth";
-import { validateHandle } from "./handled";
-import { validateName } from "./named";
+import { hasPermission, ResourceAction } from "@src/middleware/auth";
+import { validateHandle } from "@src/middleware/handled";
+import { validateName } from "@src/middleware/named";
 
 /**
  * POST /channel

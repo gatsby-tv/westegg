@@ -5,8 +5,8 @@ import {
   Unauthorized
 } from "@gatsby-tv/types";
 import { NextFunction, Request, Response } from "express";
-import { hasPermission, ResourceAction } from "./auth";
-import { validateHandle } from "./handled";
+import { hasPermission, ResourceAction } from "@src/middleware/auth";
+import { validateHandle } from "@src/middleware/handled";
 
 import { User } from "@src/entities/User";
 
