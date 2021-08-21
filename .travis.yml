@@ -37,6 +37,6 @@ jobs:
         # Push tags
         - make push
         # Publish types (if version bumped)
-        - cd package/types
+        - cd packages/types
         - make build
         - make push
