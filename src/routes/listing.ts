@@ -57,7 +57,7 @@ router.get(
         ? new Types.ObjectId(body.cursor)
         : CURSOR_START;
 
-      const videos = await VideoCollection.aggregate()
+      let videos = await VideoCollection.aggregate()
         .match({
           _id: { $gt: cursor }
         })
@@ -73,6 +73,11 @@ router.get(
         })
         .project(projection(keysOf<Video>()))
         .limit(limit);
+
+      let duplicate = Array(limit - videos.length).fill(
+        videos[videos.length - 1]
+      );
+      videos = videos.concat(duplicate);
 
       const response = {
         content: videos,
@@ -97,7 +102,7 @@ router.get("/videos/popular", validateCursorRequest, async (req, res, next) => {
     const body = req.body as GetListingPopularVideosRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    const videos = await VideoCollection.aggregate()
+    let videos = await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor } })
       .lookup({
         from: Channel.collection.name,
@@ -111,6 +116,11 @@ router.get("/videos/popular", validateCursorRequest, async (req, res, next) => {
       })
       .project(projection(keysOf<Video>()))
       .limit(limit);
+
+    let duplicate = Array(limit - videos.length).fill(
+      videos[videos.length - 1]
+    );
+    videos = videos.concat(duplicate);
 
     const response = {
       content: videos,
@@ -132,7 +142,7 @@ router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
     const body = req.body as GetListingNewVideosRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    const videos = await VideoCollection.aggregate()
+    let videos = await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor || CURSOR_START } })
       .lookup({
         from: Channel.collection.name,
@@ -146,6 +156,11 @@ router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
       })
       .project(projection(keysOf<Video>()))
       .limit(limit);
+
+    let duplicate = Array(limit - videos.length).fill(
+      videos[videos.length - 1]
+    );
+    videos = videos.concat(duplicate);
 
     const response = {
       content: videos,
@@ -167,7 +182,7 @@ router.get("/subscriptions", validateCursorRequest, async (req, res, next) => {
     const body = req.body as GetUserListingSubscriptionsRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
     const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    const videos = await VideoCollection.aggregate()
+    let videos = await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor || CURSOR_START } })
       .lookup({
         from: Channel.collection.name,
@@ -181,6 +196,11 @@ router.get("/subscriptions", validateCursorRequest, async (req, res, next) => {
       })
       .project(projection(keysOf<Video>()))
       .limit(limit);
+
+    let duplicate = Array(limit - videos.length).fill(
+      videos[videos.length - 1]
+    );
+    videos = videos.concat(duplicate);
 
     const response = {
       content: videos,
