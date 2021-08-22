@@ -1,6 +1,9 @@
 import {
+  BadRequest,
   DeleteVideoRequest,
   ErrorMessage,
+  GetVideoListingRelatedRequest,
+  GetVideoListingRelatedResponse,
   GetVideoRequest,
   GetVideoResponse,
   NotFound,
@@ -11,23 +14,23 @@ import {
   PutVideoRequestParams,
   PutVideoViewRequestParams,
   StatusCode,
-  Video,
-  BadRequest
+  Video
 } from "@gatsby-tv/types";
-import { Router } from "express";
-import { keys as keysOf } from "ts-transformer-keys";
-
 import { Channel } from "@src/entities/Channel";
 import { Video as VideoCollection } from "@src/entities/Video";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated } from "@src/middleware/auth";
+import { validateCursorRequest } from "@src/middleware/listing";
 import {
   validatePostVideo,
   validatePutVideo,
   validateVideoExists
 } from "@src/middleware/video";
+import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
 import { projection } from "@src/utilities";
+import { Router } from "express";
 import { Types } from "mongoose";
+import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
 
@@ -181,6 +184,54 @@ router.delete(
       await VideoCollection.findByIdAndRemove(request.id);
 
       res.sendStatus(StatusCode.NO_CONTENT);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /video/:id/listing/related
+ */
+router.get(
+  "/:id/listing/related",
+  validateCursorRequest,
+  async (req, res, next) => {
+    try {
+      const body = req.body as GetVideoListingRelatedRequest;
+      const limit = body.limit || DEFAULT_CURSOR_LIMIT;
+      const cursor = body.cursor
+        ? new Types.ObjectId(body.cursor)
+        : CURSOR_START;
+      let videos = await VideoCollection.aggregate()
+        .match({ _id: { $gt: cursor || CURSOR_START } })
+        .lookup({
+          from: Channel.collection.name,
+          localField: "channel",
+          foreignField: "_id",
+          as: "channel"
+        })
+        .unwind({
+          path: "$channel",
+          preserveNullAndEmptyArrays: true
+        })
+        .project(projection(keysOf<Video>()))
+        .limit(limit);
+
+      let duplicate = Array(limit - videos.length).fill(
+        videos[videos.length - 1]
+      );
+      videos = videos.concat(duplicate);
+
+      const response = {
+        content: videos,
+        cursor: videos[videos.length - 1]?._id,
+        limit: limit
+      };
+
+      res
+        .status(StatusCode.OK)
+        .json(response as GetVideoListingRelatedResponse);
     } catch (error) {
       next(error);
     }

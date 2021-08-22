@@ -423,7 +423,7 @@ export type GetVideoResponse = Response<Video>;
 /*
  * GET /video/:id/listing/related
  */
-export type GetVideoListingRelatedResponse = Response<Array<Browsable>>;
+export type GetVideoListingRelatedResponse = CursorResponse<Array<Browsable>>;
 
 /*
  * PUT /video/:id
