@@ -14,6 +14,7 @@ import {
 } from "@gatsby-tv/types";
 import { Channel } from "@src/entities/Channel";
 import { Video as VideoCollection } from "@src/entities/Video";
+import { validateCursorRequest } from "@src/middleware/listing";
 import { projection } from "@src/utilities";
 import { Router } from "express";
 import { Types } from "mongoose";
@@ -45,47 +46,53 @@ router.get("/featured/channels", async (req, res, next) => {
 /**
  * GET /listing/videos/recommended
  */
-router.get("/videos/recommended", async (req, res, next) => {
-  try {
-    const body = req.body as GetUserListingRecommendedRequest;
-    const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-    const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
+router.get(
+  "/videos/recommended",
+  validateCursorRequest,
+  async (req, res, next) => {
+    try {
+      const body = req.body as GetUserListingRecommendedRequest;
+      const limit = body.limit || DEFAULT_CURSOR_LIMIT;
+      const cursor = body.cursor
+        ? new Types.ObjectId(body.cursor)
+        : CURSOR_START;
 
-    const videos = await VideoCollection.aggregate()
-      .match({
-        _id: { $gt: cursor }
-      })
-      .lookup({
-        from: Channel.collection.name,
-        localField: "channel",
-        foreignField: "_id",
-        as: "channel"
-      })
-      .unwind({
-        path: "$channel",
-        preserveNullAndEmptyArrays: true
-      })
-      .project(projection(keysOf<Video>()))
-      .limit(limit);
+      const videos = await VideoCollection.aggregate()
+        .match({
+          _id: { $gt: cursor }
+        })
+        .lookup({
+          from: Channel.collection.name,
+          localField: "channel",
+          foreignField: "_id",
+          as: "channel"
+        })
+        .unwind({
+          path: "$channel",
+          preserveNullAndEmptyArrays: true
+        })
+        .project(projection(keysOf<Video>()))
+        .limit(limit);
 
-    const response = {
-      content: videos,
-      cursor: videos[videos.length - 1]?._id,
-      limit: limit
-    };
+      const response = {
+        content: videos,
+        cursor: videos[videos.length - 1]?._id,
+        limit: limit
+      };
 
-    res
-      .status(StatusCode.OK)
-      .json(response as GetUserListingRecommendedResponse);
-  } catch (error) {
-    next(error);
+      res
+        .status(StatusCode.OK)
+        .json(response as GetUserListingRecommendedResponse);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * GET /listing/videos/popular
  */
-router.get("/videos/popular", async (req, res, next) => {
+router.get("/videos/popular", validateCursorRequest, async (req, res, next) => {
   try {
     const body = req.body as GetListingPopularVideosRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
@@ -120,7 +127,7 @@ router.get("/videos/popular", async (req, res, next) => {
 /**
  * GET /listing/videos/new
  */
-router.get("/videos/new", async (req, res, next) => {
+router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
   try {
     const body = req.body as GetListingNewVideosRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;
@@ -155,7 +162,7 @@ router.get("/videos/new", async (req, res, next) => {
 /**
  * GET /listing/subscriptions
  */
-router.get("/subscriptions", async (req, res, next) => {
+router.get("/subscriptions", validateCursorRequest, async (req, res, next) => {
   try {
     const body = req.body as GetUserListingSubscriptionsRequest;
     const limit = body.limit || DEFAULT_CURSOR_LIMIT;

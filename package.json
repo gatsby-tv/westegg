@@ -1,6 +1,6 @@
 {
   "name": "westegg",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "The place where Gatsby lives.",
   "main": "dist/index.js",
   "license": "AGPL-3.0",
