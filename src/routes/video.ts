@@ -63,6 +63,10 @@ router.get("/:id", async (req, res, next) => {
         .project(projection(keysOf<Video>()))
     )[0] as Video;
 
+    await VideoCollection.findByIdAndUpdate(video._id, {
+      views: video.views + 1
+    });
+
     if (!video) {
       throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
     }
