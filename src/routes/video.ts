@@ -11,7 +11,8 @@ import {
   PutVideoRequestParams,
   PutVideoViewRequestParams,
   StatusCode,
-  Video
+  Video,
+  BadRequest
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { keys as keysOf } from "ts-transformer-keys";
@@ -35,12 +36,16 @@ const router = Router();
  */
 router.get("/:id", async (req, res, next) => {
   try {
-    const request = req.params as GetVideoRequest;
+    const params = req.params as GetVideoRequest;
+
+    if (!Types.ObjectId.isValid(params.id)) {
+      throw new BadRequest(ErrorMessage.INVALID_OBJECT_ID);
+    }
 
     const video = (
       await VideoCollection.aggregate()
         .match({
-          _id: { $eq: new Types.ObjectId(request.id) }
+          _id: { $eq: new Types.ObjectId(params.id) }
         })
         .lookup({
           from: Channel.collection.name,
@@ -104,9 +109,7 @@ router.post(
 
       res
         .status(StatusCode.CREATED)
-        .json(
-          pick(video.toJSON(), keysOf<PostVideoRequest>()) as PostVideoResponse
-        );
+        .json(pick(video.toJSON(), keysOf<Video>()) as PostVideoResponse);
     } catch (error) {
       next(error);
     }
