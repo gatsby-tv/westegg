@@ -343,7 +343,7 @@ router.put(
  * GET /user/:id/listing/recommended
  */
 router.get(
-  "/:id/videos/recommended",
+  "/:id/listing/recommended",
   validateCursorRequest,
   async (req, res, next) => {
     try {
@@ -394,7 +394,7 @@ router.get(
  * GET /user/:id/listing/subscriptions
  */
 router.get(
-  "/:id/subscriptions",
+  "/:id/listing/subscriptions",
   validateCursorRequest,
   async (req, res, next) => {
     try {
