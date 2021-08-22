@@ -8,7 +8,7 @@ build:
 	yarn format:check
 	yarn build
 
-publish:
+push:
 	@echo Published version: $(PUBLISHED_VERSION)
 	@echo Local version: $(APP_VERSION)
 # Check if package version is newer than current published
