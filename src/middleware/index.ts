@@ -7,20 +7,16 @@ export const isValidBody = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const body = req.body;
+  const body = req.body;
 
-    if (!body) {
+  if (!body) {
+    throw new BadRequest(ErrorMessage.BAD_REQUEST);
+  }
+  Object.keys(body).forEach((key) => {
+    if (!keys.includes(key)) {
       throw new BadRequest(ErrorMessage.BAD_REQUEST);
     }
-    Object.keys(body).forEach((key) => {
-      if (!keys.includes(key)) {
-        throw new BadRequest(ErrorMessage.BAD_REQUEST);
-      }
-    });
+  });
 
-    next();
-  } catch (error) {
-    next(error);
-  }
+  next();
 };

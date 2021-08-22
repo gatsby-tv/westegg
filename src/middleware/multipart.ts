@@ -23,68 +23,47 @@ export const upload = async (
   next: NextFunction,
   contentLength: number
 ) => {
-  try {
-    const busboy = new Busboy({ headers: req.headers });
-    let tmpFilePath: fs.PathLike;
-    let tmpFileMimeType: SupportedMimeType;
+  const busboy = new Busboy({ headers: req.headers });
+  let tmpFilePath: fs.PathLike;
+  let tmpFileMimeType: SupportedMimeType;
 
-    busboy.on(
-      "file",
-      (
-        fieldname,
-        file: NodeJS.ReadableStream,
-        filename,
-        encoding,
-        mimeType
-      ) => {
-        try {
-          let mimeTypes = Object.values(SupportedMimeType) as string[];
-          if (!mimeTypes.includes(mimeType)) {
-            throw new BadRequest(ErrorMessage.INVALID_FILE_TYPE);
-          }
-
-          if (
-            parseInt(req.headers["content-length"]!) >
-            contentLength * MiB_SIZE
-          ) {
-            throw new BadRequest(ErrorMessage.INVALID_FILE_SIZE);
-          }
-
-          // Save file to tmp dir
-          tmpFileMimeType = <SupportedMimeType>mimeType;
-          tmpFilePath = path.join(TMP_DIR, `${Date.now()}_${filename}`);
-          file.pipe(fs.createWriteStream(tmpFilePath));
-        } catch (error) {
-          next(error);
-        }
+  busboy.on(
+    "file",
+    (fieldname, file: NodeJS.ReadableStream, filename, encoding, mimeType) => {
+      let mimeTypes = Object.values(SupportedMimeType) as string[];
+      if (!mimeTypes.includes(mimeType)) {
+        throw new BadRequest(ErrorMessage.INVALID_FILE_TYPE);
       }
-    );
 
-    busboy.on("finish", async () => {
-      try {
-        // Pin tmp file to ipfs node/cluster
-        const file = await ipfs.add(globSource(tmpFilePath.toString()) as any);
-        await ipfs.pin.add(file.cid);
-        const ipfsContent: IPFSContent = {
-          hash: file.cid.toString(),
-          mimeType: tmpFileMimeType
-        };
-        req.ipfsContent = ipfsContent;
-
-        await fs.promises.rm(tmpFilePath);
-
-        // Pass ipfs content to endpoint
-        next();
-      } catch (error) {
-        next(error);
+      if (parseInt(req.headers["content-length"]!) > contentLength * MiB_SIZE) {
+        throw new BadRequest(ErrorMessage.INVALID_FILE_SIZE);
       }
-    });
 
-    // Transfer http multipart file to busboy over stream
-    req.pipe(busboy);
-  } catch (error) {
-    next(error);
-  }
+      // Save file to tmp dir
+      tmpFileMimeType = <SupportedMimeType>mimeType;
+      tmpFilePath = path.join(TMP_DIR, `${Date.now()}_${filename}`);
+      file.pipe(fs.createWriteStream(tmpFilePath));
+    }
+  );
+
+  busboy.on("finish", async () => {
+    // Pin tmp file to ipfs node/cluster
+    const file = await ipfs.add(globSource(tmpFilePath.toString()) as any);
+    await ipfs.pin.add(file.cid);
+    const ipfsContent: IPFSContent = {
+      hash: file.cid.toString(),
+      mimeType: tmpFileMimeType
+    };
+    req.ipfsContent = ipfsContent;
+
+    await fs.promises.rm(tmpFilePath);
+
+    // Pass ipfs content to endpoint
+    next();
+  });
+
+  // Transfer http multipart file to busboy over stream
+  req.pipe(busboy);
 };
 
 // TODO:

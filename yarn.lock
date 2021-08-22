@@ -2375,10 +2375,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"array-flatten@npm:1.1.1":
-  version: 1.1.1
-  resolution: "array-flatten@npm:1.1.1"
-  checksum: a9925bf3512d9dce202112965de90c222cd59a4fbfce68a0951d25d965cf44642931f40aac72309c41f12df19afa010ecadceb07cfff9ccc1621e99d89ab5f3b
+"array-flatten@npm:2.1.1":
+  version: 2.1.1
+  resolution: "array-flatten@npm:2.1.1"
+  checksum: 55f9dd74053815c7943cf80c5c653edc6763ca96f01f228da0fb2df5577f14dc9094452ab7335322faff5eecfc8e353d00eecdc634807e14f3db0cd0a194a59b
   languageName: node
   linkType: hard
 
@@ -3848,18 +3848,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.17.1":
-  version: 4.17.1
-  resolution: "express@npm:4.17.1"
+"express@npm:^5.0.0-alpha.8":
+  version: 5.0.0-alpha.8
+  resolution: "express@npm:5.0.0-alpha.8"
   dependencies:
     accepts: ~1.3.7
-    array-flatten: 1.1.1
+    array-flatten: 2.1.1
     body-parser: 1.19.0
     content-disposition: 0.5.3
     content-type: ~1.0.4
     cookie: 0.4.0
     cookie-signature: 1.0.6
-    debug: 2.6.9
+    debug: 3.1.0
     depd: ~1.1.2
     encodeurl: ~1.0.2
     escape-html: ~1.0.3
@@ -3870,10 +3870,11 @@ __metadata:
     methods: ~1.1.2
     on-finished: ~2.3.0
     parseurl: ~1.3.3
-    path-to-regexp: 0.1.7
+    path-is-absolute: 1.0.1
     proxy-addr: ~2.0.5
     qs: 6.7.0
     range-parser: ~1.2.1
+    router: 2.0.0-alpha.1
     safe-buffer: 5.1.2
     send: 0.17.1
     serve-static: 1.14.1
@@ -3882,7 +3883,7 @@ __metadata:
     type-is: ~1.6.18
     utils-merge: 1.0.1
     vary: ~1.1.2
-  checksum: d964e9e17af331ea6fa2f84999b063bc47189dd71b4a735df83f9126d3bb2b92e830f1cb1d7c2742530eb625e2689d7a9a9c71f0c3cc4dd6015c3cd32a01abd5
+  checksum: 653d569f6166deda0f29f2cbfad31593c9e059143df253d9f16bdce26c5d21c8cc9bcf28b1516c219c5cbbb0b5c3e45aeb470953b119b66dcee204aa7c228a62
   languageName: node
   linkType: hard
 
@@ -6480,7 +6481,7 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"parseurl@npm:~1.3.3":
+"parseurl@npm:~1.3.2, parseurl@npm:~1.3.3":
   version: 1.3.3
   resolution: "parseurl@npm:1.3.3"
   checksum: 407cee8e0a3a4c5cd472559bca8b6a45b82c124e9a4703302326e9ab60fc1081442ada4e02628efef1eb16197ddc7f8822f5a91fd7d7c86b51f530aedb17dfa2
@@ -6515,7 +6516,7 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"path-is-absolute@npm:^1.0.0":
+"path-is-absolute@npm:1.0.1, path-is-absolute@npm:^1.0.0":
   version: 1.0.1
   resolution: "path-is-absolute@npm:1.0.1"
   checksum: 060840f92cf8effa293bcc1bea81281bd7d363731d214cbe5c227df207c34cd727430f70c6037b5159c8a870b9157cba65e775446b0ab06fd5ecc7e54615a3b8
@@ -7079,6 +7080,21 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
+"router@npm:2.0.0-alpha.1":
+  version: 2.0.0-alpha.1
+  resolution: "router@npm:2.0.0-alpha.1"
+  dependencies:
+    array-flatten: 2.1.1
+    debug: 3.1.0
+    methods: ~1.1.2
+    parseurl: ~1.3.2
+    path-to-regexp: 0.1.7
+    setprototypeof: 1.1.0
+    utils-merge: 1.0.1
+  checksum: 45ba282114659f38198262a5521d62d9d105be3032680d103839ff3404d43e4922176ccc775532d61dfcf89a4f24133e585f7064e65d3a46fa2a3fe70e56d928
+  languageName: node
+  linkType: hard
+
 "run-parallel@npm:^1.1.9":
   version: 1.2.0
   resolution: "run-parallel@npm:1.2.0"
@@ -7254,6 +7270,13 @@ resolve@^2.0.0-next.3:
     is-plain-object: ^2.0.3
     split-string: ^3.0.1
   checksum: 09a4bc72c94641aeae950eb60dc2755943b863780fcc32e441eda964b64df5e3f50603d5ebdd33394ede722528bd55ed43aae26e9df469b4d32e2292b427b601
+  languageName: node
+  linkType: hard
+
+"setprototypeof@npm:1.1.0":
+  version: 1.1.0
+  resolution: "setprototypeof@npm:1.1.0"
+  checksum: 27cb44304d6c9e1a23bc6c706af4acaae1a7aa1054d4ec13c05f01a99fd4887109a83a8042b67ad90dbfcd100d43efc171ee036eb080667172079213242ca36e
   languageName: node
   linkType: hard
 
@@ -8288,7 +8311,7 @@ typescript@^4.3.5:
     dotenv: ^8.2.0
     dotenv-flow: ^3.2.0
     encoding: ^0.1.13
-    express: ^4.17.1
+    express: ^5.0.0-alpha.8
     ipfs-core-types: ^0.6.0
     ipfs-http-client: ^51.0.0
     jsonwebtoken: ^8.5.1

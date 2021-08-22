@@ -25,17 +25,13 @@ export const validateSignin = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const signin = req.body as PostAuthSignInRequest;
+  const signin = req.body as PostAuthSignInRequest;
 
-    // Validate email is proper format
-    if (!validator.isEmail(signin.email)) {
-      throw new BadRequest(ErrorMessage.INVALID_EMAIL);
-    }
-    next();
-  } catch (error) {
-    next(error);
+  // Validate email is proper format
+  if (!validator.isEmail(signin.email)) {
+    throw new BadRequest(ErrorMessage.INVALID_EMAIL);
   }
+  next();
 };
 
 export const validateSignup = async (
@@ -43,17 +39,13 @@ export const validateSignup = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const signup = req.body as PostUserCompleteSignupRequest;
+  const signup = req.body as PostUserCompleteSignupRequest;
 
-    // Validate handle
-    validateHandle(signup.handle);
+  // Validate handle
+  validateHandle(signup.handle);
 
-    // Validate display name
-    validateName(signup.name);
-  } catch (error) {
-    next(error);
-  }
+  // Validate display name
+  validateName(signup.name);
 
   next();
 };
@@ -63,49 +55,45 @@ export const isAuthenticated = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    // Checks for auth token header
-    if (!req.headers.authorization) {
-      throw new Unauthorized(ErrorMessage.NO_BEARER_TOKEN_SET);
-    }
-
-    if (!req.headers.authorization.startsWith(BEARER_PREFIX)) {
-      throw new Unauthorized(ErrorMessage.NO_BEARER_TOKEN_PREFIX);
-    }
-
-    const encodedToken = req.headers.authorization.replace(BEARER_PREFIX, "");
-
-    // Verify the token is authentic
-    // TODO: Promisify this and use the async overload
-    // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
-    let token = null;
-    try {
-      token = jwt.verify(
-        encodedToken,
-        process.env.JWT_SECRET!
-      ) as unknown as Token;
-    } catch (error) {
-      throw new Unauthorized(ErrorMessage.UNAUTHORIZED);
-    }
-
-    // Check if the token is expired by the invalid tokens collection
-    const invalid = await InvalidToken.findById(token._id);
-    // Convert JWT NumericDate to Date
-    // See: https://stackoverflow.com/questions/39926104/what-format-is-the-exp-expiration-time-claim-in-a-jwt
-    if (
-      invalid &&
-      invalid.expire > new Date(parseInt(token.iat) * MILLISECONDS_IN_SECONDS)
-    ) {
-      throw new Unauthorized(ErrorMessage.TOKEN_EXPIRED);
-    }
-
-    // Add the decoded token to the request
-    req.decodedToken = token;
-
-    next();
-  } catch (error) {
-    next(error);
+  // Checks for auth token header
+  if (!req.headers.authorization) {
+    throw new Unauthorized(ErrorMessage.NO_BEARER_TOKEN_SET);
   }
+
+  if (!req.headers.authorization.startsWith(BEARER_PREFIX)) {
+    throw new Unauthorized(ErrorMessage.NO_BEARER_TOKEN_PREFIX);
+  }
+
+  const encodedToken = req.headers.authorization.replace(BEARER_PREFIX, "");
+
+  // Verify the token is authentic
+  // TODO: Promisify this and use the async overload
+  // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
+  let token = null;
+  try {
+    token = jwt.verify(
+      encodedToken,
+      process.env.JWT_SECRET!
+    ) as unknown as Token;
+  } catch (error) {
+    throw new Unauthorized(ErrorMessage.UNAUTHORIZED);
+  }
+
+  // Check if the token is expired by the invalid tokens collection
+  const invalid = await InvalidToken.findById(token._id);
+  // Convert JWT NumericDate to Date
+  // See: https://stackoverflow.com/questions/39926104/what-format-is-the-exp-expiration-time-claim-in-a-jwt
+  if (
+    invalid &&
+    invalid.expire > new Date(parseInt(token.iat) * MILLISECONDS_IN_SECONDS)
+  ) {
+    throw new Unauthorized(ErrorMessage.TOKEN_EXPIRED);
+  }
+
+  // Add the decoded token to the request
+  req.decodedToken = token;
+
+  next();
 };
 
 export enum ResourceAction {

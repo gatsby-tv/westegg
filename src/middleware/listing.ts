@@ -7,15 +7,11 @@ export const validateCursorRequest = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const body = req.body as CursorRequest;
+  const body = req.body as CursorRequest;
 
-    if (body.cursor && !Types.ObjectId.isValid(body.cursor)) {
-      throw new BadRequest(ErrorMessage.INVALID_OBJECT_ID);
-    }
-
-    next();
-  } catch (error) {
-    next(error);
+  if (body.cursor && !Types.ObjectId.isValid(body.cursor)) {
+    throw new BadRequest(ErrorMessage.INVALID_OBJECT_ID);
   }
+
+  next();
 };
