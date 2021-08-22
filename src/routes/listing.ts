@@ -4,10 +4,6 @@ import {
   GetListingNewVideosResponse,
   GetListingPopularVideosRequest,
   GetListingPopularVideosResponse,
-  GetUserListingRecommendedRequest,
-  GetUserListingRecommendedResponse,
-  GetUserListingSubscriptionsRequest,
-  GetUserListingSubscriptionsResponse,
   IChannelAccount,
   StatusCode,
   Video
@@ -21,8 +17,8 @@ import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
-const DEFAULT_CURSOR_LIMIT = 24;
-const CURSOR_START = new Types.ObjectId("0".repeat(24));
+export const DEFAULT_CURSOR_LIMIT = 24;
+export const CURSOR_START = new Types.ObjectId("0".repeat(24));
 
 /**
  * GET /listing/featured/channels
@@ -42,57 +38,6 @@ router.get("/featured/channels", async (req, res, next) => {
     next(error);
   }
 });
-
-/**
- * GET /listing/videos/recommended
- */
-router.get(
-  "/videos/recommended",
-  validateCursorRequest,
-  async (req, res, next) => {
-    try {
-      const body = req.body as GetUserListingRecommendedRequest;
-      const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-      const cursor = body.cursor
-        ? new Types.ObjectId(body.cursor)
-        : CURSOR_START;
-
-      let videos = await VideoCollection.aggregate()
-        .match({
-          _id: { $gt: cursor }
-        })
-        .lookup({
-          from: Channel.collection.name,
-          localField: "channel",
-          foreignField: "_id",
-          as: "channel"
-        })
-        .unwind({
-          path: "$channel",
-          preserveNullAndEmptyArrays: true
-        })
-        .project(projection(keysOf<Video>()))
-        .limit(limit);
-
-      let duplicate = Array(limit - videos.length).fill(
-        videos[videos.length - 1]
-      );
-      videos = videos.concat(duplicate);
-
-      const response = {
-        content: videos,
-        cursor: videos[videos.length - 1]?._id,
-        limit: limit
-      };
-
-      res
-        .status(StatusCode.OK)
-        .json(response as GetUserListingRecommendedResponse);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 
 /**
  * GET /listing/videos/popular
@@ -169,48 +114,6 @@ router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
     };
 
     res.status(StatusCode.OK).json(response as GetListingNewVideosResponse);
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /listing/subscriptions
- */
-router.get("/subscriptions", validateCursorRequest, async (req, res, next) => {
-  try {
-    const body = req.body as GetUserListingSubscriptionsRequest;
-    const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-    const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    let videos = await VideoCollection.aggregate()
-      .match({ _id: { $gt: cursor || CURSOR_START } })
-      .lookup({
-        from: Channel.collection.name,
-        localField: "channel",
-        foreignField: "_id",
-        as: "channel"
-      })
-      .unwind({
-        path: "$channel",
-        preserveNullAndEmptyArrays: true
-      })
-      .project(projection(keysOf<Video>()))
-      .limit(limit);
-
-    let duplicate = Array(limit - videos.length).fill(
-      videos[videos.length - 1]
-    );
-    videos = videos.concat(duplicate);
-
-    const response = {
-      content: videos,
-      cursor: videos[videos.length - 1]?._id,
-      limit: limit
-    };
-
-    res
-      .status(StatusCode.OK)
-      .json(response as GetUserListingSubscriptionsResponse);
   } catch (error) {
     next(error);
   }

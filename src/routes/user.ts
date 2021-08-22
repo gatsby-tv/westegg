@@ -6,6 +6,10 @@ import {
   GetUserFeedsRequest,
   GetUserHandleExistsRequest,
   GetUserHandleExistsResponse,
+  GetUserListingRecommendedRequest,
+  GetUserListingRecommendedResponse,
+  GetUserListingSubscriptionsRequest,
+  GetUserListingSubscriptionsResponse,
   GetUserPromotionsRequest,
   NotFound,
   PostAuthCompleteSignUpResponse,
@@ -19,24 +23,28 @@ import {
   PutUserSubscriptionRequest,
   PutUserSubscriptionRequestParams,
   PutUserSubscriptionResponse,
-  StatusCode
+  StatusCode,
+  Video
 } from "@gatsby-tv/types";
-import { Router } from "express";
-import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
-import { keys as keysOf } from "ts-transformer-keys";
-
+import { Channel } from "@src/entities/Channel";
 import { PersistSignInKey } from "@src/entities/PersistSignInKey";
 import { SignInKey } from "@src/entities/SignInKey";
 import { User } from "@src/entities/User";
+import { Video as VideoCollection } from "@src/entities/Video";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated, validateSignup } from "@src/middleware/auth";
+import { validateCursorRequest } from "@src/middleware/listing";
 import { upload } from "@src/middleware/multipart";
 import {
   hasPermissionToPutUserRequest,
   validatePutUserRequest
 } from "@src/middleware/user";
+import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
+import { Router } from "express";
+import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
+import { keys as keysOf } from "ts-transformer-keys";
 
 const router = Router();
 
@@ -325,6 +333,105 @@ router.put(
       res
         .status(StatusCode.CREATED)
         .json(user.toJSON() as PutUserSubscriptionResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /user/:id/listing/videos/recommended
+ */
+router.get(
+  "/:id/listing/videos/recommended",
+  validateCursorRequest,
+  async (req, res, next) => {
+    try {
+      const body = req.body as GetUserListingRecommendedRequest;
+      const limit = body.limit || DEFAULT_CURSOR_LIMIT;
+      const cursor = body.cursor
+        ? new Types.ObjectId(body.cursor)
+        : CURSOR_START;
+
+      let videos = await VideoCollection.aggregate()
+        .match({
+          _id: { $gt: cursor }
+        })
+        .lookup({
+          from: Channel.collection.name,
+          localField: "channel",
+          foreignField: "_id",
+          as: "channel"
+        })
+        .unwind({
+          path: "$channel",
+          preserveNullAndEmptyArrays: true
+        })
+        .project(projection(keysOf<Video>()))
+        .limit(limit);
+
+      let duplicate = Array(limit - videos.length).fill(
+        videos[videos.length - 1]
+      );
+      videos = videos.concat(duplicate);
+
+      const response = {
+        content: videos,
+        cursor: videos[videos.length - 1]?._id,
+        limit: limit
+      };
+
+      res
+        .status(StatusCode.OK)
+        .json(response as GetUserListingRecommendedResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /user/:id/listing/subscriptions
+ */
+router.get(
+  "/:id/listing/subscriptions",
+  validateCursorRequest,
+  async (req, res, next) => {
+    try {
+      const body = req.body as GetUserListingSubscriptionsRequest;
+      const limit = body.limit || DEFAULT_CURSOR_LIMIT;
+      const cursor = body.cursor
+        ? new Types.ObjectId(body.cursor)
+        : CURSOR_START;
+      let videos = await VideoCollection.aggregate()
+        .match({ _id: { $gt: cursor || CURSOR_START } })
+        .lookup({
+          from: Channel.collection.name,
+          localField: "channel",
+          foreignField: "_id",
+          as: "channel"
+        })
+        .unwind({
+          path: "$channel",
+          preserveNullAndEmptyArrays: true
+        })
+        .project(projection(keysOf<Video>()))
+        .limit(limit);
+
+      let duplicate = Array(limit - videos.length).fill(
+        videos[videos.length - 1]
+      );
+      videos = videos.concat(duplicate);
+
+      const response = {
+        content: videos,
+        cursor: videos[videos.length - 1]?._id,
+        limit: limit
+      };
+
+      res
+        .status(StatusCode.OK)
+        .json(response as GetUserListingSubscriptionsResponse);
     } catch (error) {
       next(error);
     }
