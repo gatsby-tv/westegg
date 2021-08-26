@@ -329,10 +329,13 @@ router.get(
       .project(projection(keysOf<Video>()))
       .limit(limit);
 
-    let duplicate = Array(limit - videos.length).fill(
-      videos[videos.length - 1]
-    );
-    videos = videos.concat(duplicate);
+    let duplicate = Array(limit - videos.length)
+      .fill(null)
+      .map((item, index) => {
+        console.log(index);
+        return videos[index % videos.length];
+      });
+    videos = [...videos, ...duplicate];
 
     const response = {
       content: videos,
@@ -371,10 +374,13 @@ router.get(
       .project(projection(keysOf<Video>()))
       .limit(limit);
 
-    let duplicate = Array(limit - videos.length).fill(
-      videos[videos.length - 1]
-    );
-    videos = videos.concat(duplicate);
+    let duplicate = Array(limit - videos.length)
+      .fill(null)
+      .map((item, index) => {
+        console.log(index);
+        return videos[index % videos.length];
+      });
+    videos = [...videos, ...duplicate];
 
     const response = {
       content: videos,

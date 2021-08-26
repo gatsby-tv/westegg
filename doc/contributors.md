@@ -5,6 +5,7 @@
 Once you've been able to run westegg using the steps in the readme you'll want to setup VSCode to start making contributions. Your `.vscode/settings.xml` should look something like this:
 
 ```json
+{
   "search.exclude": {
     "**/.yarn": true,
     "**/.pnp.*": true
@@ -15,6 +16,8 @@ Once you've been able to run westegg using the steps in the readme you'll want t
   "typescript.preferences.importModuleSpecifier": "non-relative"
 }
 ```
+
+Restart VSCode after changing this file.
 
 The prettier VSCode extension should also be installed. You can set this as your default formatter by doing `CONTROL+SHIFT+P` and searching for format.
 
