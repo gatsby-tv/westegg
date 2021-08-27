@@ -59,7 +59,6 @@ router.get("/videos/popular", validateCursorRequest, async (req, res, next) => {
   let duplicate = Array(limit - videos.length)
     .fill(null)
     .map((item, index) => {
-      console.log(index);
       return videos[index % videos.length];
     });
   videos = [...videos, ...duplicate];
@@ -98,7 +97,6 @@ router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
   let duplicate = Array(limit - videos.length)
     .fill(null)
     .map((item, index) => {
-      console.log(index);
       return videos[index % videos.length];
     });
   videos = [...videos, ...duplicate];

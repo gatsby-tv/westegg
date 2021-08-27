@@ -332,7 +332,6 @@ router.get(
     let duplicate = Array(limit - videos.length)
       .fill(null)
       .map((item, index) => {
-        console.log(index);
         return videos[index % videos.length];
       });
     videos = [...videos, ...duplicate];
@@ -377,7 +376,6 @@ router.get(
     let duplicate = Array(limit - videos.length)
       .fill(null)
       .map((item, index) => {
-        console.log(index);
         return videos[index % videos.length];
       });
     videos = [...videos, ...duplicate];
