@@ -13,7 +13,7 @@ stages:
 
 branches:
   only:
-    - master
+    - main
 
 jobs:
   include:
@@ -28,7 +28,7 @@ jobs:
         - yarn run build
     # Build and publish docker tags
     - stage: publish
-      if: branch == master AND (NOT (type IN (pull_request)))
+      if: branch == main AND (NOT (type IN (pull_request)))
       before_script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       script:
