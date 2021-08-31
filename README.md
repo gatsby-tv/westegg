@@ -15,6 +15,6 @@ _Note: If you're testing the frontend with this repo, exclude it from starting w
 
 1. Install NodeJS 12.8
 2. Install dependencies `yarn install`
-3. Run the server `yarn start`
+3. Run the server `yarn start:dev`
 
 To get started with setting up a dev environment, read through the [contributors doc](./doc/contributors.md) to learn more.
