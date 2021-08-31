@@ -94,7 +94,6 @@ router.post(
     }
 
     // Create and save the video
-    // TODO: Include optional fields
     const video = new VideoCollection({
       content: request.content,
       title: request.title,

@@ -39,7 +39,6 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   banned: { type: Boolean, default: false },
   playlists: { type: [Schema.Types.ObjectId], ref: PlaylistRef, default: [] },
   shows: { type: [Schema.Types.ObjectId], ref: ShowRef, default: [] },
-  // TODO:
   poster: {},
   banner: {},
   management: {},

@@ -32,17 +32,13 @@ export const validatePostVideo = async (
   }
 
   // Check if the user making the request is an owner
-  // TODO: Better permission checking here
   if (
     !channel.owners.map((id) => id.toString()).includes(req.decodedToken!._id)
   ) {
     throw new Unauthorized(ErrorMessage.USER_FORBIDDEN_TO_PERFORM_ACTION);
   }
 
-  // TODO: Validate ipfs video/thumbnail hash are correct format
-
   // Check that the video hash doesn't already exist
-  // TODO: Handle content with multiple hashes
   const video = await Video.findOne({ content: request.content });
   if (video) {
     throw new BadRequest(ErrorMessage.VIDEO_ALREADY_EXISTS);
@@ -86,14 +82,11 @@ export const validatePutVideo = async (
   }
 
   // Check if the user making the request is an owner
-  // TODO: Better permission checking here
   if (
     !channel.owners.map((id) => id.toString()).includes(req.decodedToken!._id)
   ) {
     throw new Unauthorized(ErrorMessage.USER_FORBIDDEN_TO_PERFORM_ACTION);
   }
-
-  // TODO: Validate ipfs video/thumbnail hash are correct format
 
   if (request.title) {
     if (

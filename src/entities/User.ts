@@ -47,7 +47,6 @@ const UserSchemaFields: Record<keyof Omit<IUser, "_id">, any> = {
   history: { type: [Schema.Types.ObjectId], ref: VideoRef, default: [] },
   banned: { type: Boolean, default: false },
   trusted: { type: Boolean, default: false },
-  // TODO:
   banner: {},
   promotions: {},
   settings: {},

@@ -24,7 +24,6 @@ const VideoSchemaFields: Record<keyof Omit<IBasicVideo, "_id">, any> = {
   explicit: { type: Boolean, default: false },
   contributors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
   sponsors: { type: [Schema.Types.ObjectId], ref: UserRef, default: [] },
-  // TODO:
   promotions: {},
   contributions: { type: Schema.Types.Mixed, default: {} },
   next: {},
