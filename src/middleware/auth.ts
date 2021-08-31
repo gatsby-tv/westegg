@@ -67,7 +67,6 @@ export const isAuthenticated = async (
   const encodedToken = req.headers.authorization.replace(BEARER_PREFIX, "");
 
   // Verify the token is authentic
-  // TODO: Promisify this and use the async overload
   // https://stackoverflow.com/questions/37833355/how-to-specify-which-overloaded-function-i-want-in-typescript
   let token = null;
   try {
@@ -105,7 +104,6 @@ export enum ResourceAction {
 
 type Resource = IUser | IChannel | IVideo;
 
-// TODO: Move these to types/utilities and use better props for this?
 function isUser(resource: Resource): resource is IUser {
   return (resource as IUser).channels !== undefined;
 }
@@ -146,9 +144,6 @@ export function hasPermission(
         return true;
       }
     }
-    // TODO:
-  } else if (isVideo(resource)) {
-    // TODO:
   }
 
   return false;

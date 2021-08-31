@@ -3,14 +3,12 @@ import {
   ErrorMessage,
   GetUserAccountRequest,
   GetUserAccountResponse,
-  GetUserFeedsRequest,
   GetUserHandleExistsRequest,
   GetUserHandleExistsResponse,
   GetUserListingRecommendedRequest,
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsRequest,
   GetUserListingSubscriptionsResponse,
-  GetUserPromotionsRequest,
   NotFound,
   PostAuthCompleteSignUpResponse,
   PostUserCompleteSignupRequest,
@@ -151,31 +149,6 @@ router.get("/:handle/exists", async (req, res, next) => {
   res.status(StatusCode.OK).json(user.toJSON() as GetUserHandleExistsResponse);
 });
 
-/**
- * GET /user/:id/feeds TODO: Should this be private?
- */
-router.get("/:id/feeds", async (req, res, next) => {
-  const params = req.params as GetUserFeedsRequest;
-  const user = await User.findById(params.id);
-  if (!user) {
-    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
-  }
-  // TODO: Should this be a combination of subscriptions and followed users? (as GetUserFeedsResponse)
-  res.status(StatusCode.OK).json([user.subscriptions, user.following]);
-});
-/**
- * GET /user/:id/promotions TODO: Should this be private?
- */
-router.get("/:id/promotions", async (req, res, next) => {
-  const params = req.params as GetUserPromotionsRequest;
-  const user = await User.findById(params.id);
-  if (!user) {
-    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
-  }
-  // TODO: as GetUserPromotionsResponse
-  res.status(StatusCode.OK).json(user.promotions);
-});
-
 /*
  * PUT /user/:id
  */
@@ -230,8 +203,6 @@ router.put(
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
-    // TODO: Unpin the old avatar (not case where two users have same exact avatar hash?)
-
     // Get the file uploaded and add to the user
     user.avatar = req.ipfsContent!;
     user.save();
@@ -261,7 +232,6 @@ router.put(
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
-    // TODO: Unpin the old banner (not in case where two users have the same banner)
     user.banner = req.ipfsContent!;
     user.save();
 
@@ -291,7 +261,6 @@ router.put(
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
-    // TODO: Prevent subscription to the same channel twice (set)
     user.subscriptions.push(body.subscription);
     user.save();
 

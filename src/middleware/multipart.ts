@@ -65,6 +65,3 @@ export const upload = async (
   // Transfer http multipart file to busboy over stream
   req.pipe(busboy);
 };
-
-// TODO:
-export const remove = async () => {};

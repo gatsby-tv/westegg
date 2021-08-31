@@ -85,7 +85,6 @@ export type PostAuthInvalidateAllPreviousTokensRequest = {};
  * POST /user
  *
  * Request to finish creating a new user from the specified handle and display name. Requires a signin key from a magic link (sent by email).
- * TODO: In addition, the request allows for an avatar to be submitted via multipart/form-data.
  */
 export type PostUserCompleteSignupRequestParams = {};
 export type PostUserCompleteSignupRequest = Pick<

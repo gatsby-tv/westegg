@@ -155,15 +155,7 @@ router.get("/:id/content", async (req, res, next) => {
     throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
   }
 
-  // Get all channel content from FKs stored on channel (build a mongo query for each content item)
-  // TODO: Videos
-  const videos = (
-    await Video.find().where("_id").in(channel.videos).exec()
-  ).map((entity) => entity as IVideo);
-  // TODO: Shows
-  // TODO: Playlists
-
-  // TODO: Unimplemented, return empty for now
+  // Unimplemented, return empty for now
   let response = {
     _id: channel._id,
     videos: [],
@@ -232,7 +224,6 @@ router.put(
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
 
-    // TODO: Unpin the old avatar unless used by another channel
     channel.avatar = req.ipfsContent!;
     channel.save();
 
@@ -262,7 +253,6 @@ router.put(
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
 
-    // TODO: Unpin the old banner unless used by another channel
     channel.banner = req.ipfsContent!;
     channel.save();
 
@@ -292,7 +282,6 @@ router.put(
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
 
-    // TODO: Unpin the old poster unless used by another channel
     channel.poster = req.ipfsContent!;
     channel.save();
 

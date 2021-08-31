@@ -40,7 +40,6 @@ export const hasPermissionToPutChannelRequest = async (
   res: Response,
   next: NextFunction
 ) => {
-  // TODO: params as generic put request for channel
   // Get the user performing the action
   const actor = await User.findById(req.decodedToken!._id);
 
