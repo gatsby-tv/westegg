@@ -1,13 +1,9 @@
-import "@src/environment";
-
-import express, { NextFunction, Request, Response } from "express";
 import {
   ErrorResponse,
   InternalError,
   StatusCode,
   WestEggError
 } from "@gatsby-tv/types";
-
 import db from "@src/db";
 import logger from "@src/logger";
 import auth from "@src/routes/auth";
@@ -15,6 +11,9 @@ import channel from "@src/routes/channel";
 import listing from "@src/routes/listing";
 import user from "@src/routes/user";
 import video from "@src/routes/video";
+import express, { NextFunction, Request, Response } from "express";
+import expressWinston from "express-winston";
+import winston from "winston";
 
 const router = express.Router();
 const app = express();
@@ -36,6 +35,20 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+// Log all requests using winston middleware
+app.use(
+  expressWinston.logger({
+    transports: [new winston.transports.Console()],
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.printf((info) => `${info.timestamp} ${info.message}`)
+    ),
+    meta: true,
+    expressFormat: true,
+    colorize: true
+  })
+);
 
 // Add routes to app
 router.use("/auth", auth);

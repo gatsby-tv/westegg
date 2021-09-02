@@ -2875,7 +2875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^2.0.0":
+"chalk@npm:^2.0.0, chalk@npm:^2.4.2":
   version: 2.4.2
   resolution: "chalk@npm:2.4.2"
   dependencies:
@@ -3845,6 +3845,18 @@ __metadata:
     snapdragon: ^0.8.1
     to-regex: ^3.0.1
   checksum: 1781d422e7edfa20009e2abda673cadb040a6037f0bd30fcd7357304f4f0c284afd420d7622722ca4a016f39b6d091841ab57b401c1f7e2e5131ac65b9f14fa1
+  languageName: node
+  linkType: hard
+
+"express-winston@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "express-winston@npm:4.2.0"
+  dependencies:
+    chalk: ^2.4.2
+    lodash: ^4.17.21
+  peerDependencies:
+    winston: ">=3.x <4"
+  checksum: 029529107f0bb72363c87d83d8c05a997bcbb4f8431d47dd2ab7f61fa165a56747c1e2e3c8621cbacb0190798a9b5cb9975506dcdfd6e27036fab1d8d193ec09
   languageName: node
   linkType: hard
 
@@ -8302,6 +8314,7 @@ typescript@^4.3.5:
     dotenv-flow: ^3.2.0
     encoding: ^0.1.13
     express: ^5.0.0-alpha.8
+    express-winston: ^4.2.0
     ipfs-core-types: ^0.6.0
     ipfs-http-client: ^51.0.0
     jsonwebtoken: ^8.5.1
