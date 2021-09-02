@@ -5,7 +5,6 @@ import {
   WestEggError
 } from "@gatsby-tv/types";
 import db from "@src/db";
-import "@src/environment";
 import logger from "@src/logger";
 import auth from "@src/routes/auth";
 import channel from "@src/routes/channel";
