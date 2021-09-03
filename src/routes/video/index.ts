@@ -66,10 +66,6 @@ router.get("/:id", async (req, res, next) => {
     throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
   }
 
-  await VideoCollection.findByIdAndUpdate(video._id, {
-    views: video.views + 1
-  });
-
   res.status(StatusCode.OK).json(video as GetVideoResponse);
 });
 
