@@ -133,25 +133,20 @@ router.put(
 /*
  * PUT /video/:id/view
  */
-router.put(
-  "/:id/view",
-  isAuthenticated,
-  validateVideoExists,
-  async (req, res, next) => {
-    const params = req.params as PutVideoViewRequestParams;
+router.put("/:id/view", validateVideoExists, async (req, res, next) => {
+  const params = req.params as PutVideoViewRequestParams;
 
-    const video = await VideoCollection.findById(params.id);
+  const video = await VideoCollection.findById(params.id);
 
-    if (!video) {
-      throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
-    }
-
-    video.views += 1;
-    video.save();
-
-    res.sendStatus(StatusCode.CREATED);
+  if (!video) {
+    throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
   }
-);
+
+  video.views += 1;
+  video.save();
+
+  res.sendStatus(StatusCode.CREATED);
+});
 
 /*
  * DELETE /video/:id
