@@ -9,6 +9,7 @@ services:
       - gatsby
     env_file:
       - .env
+      - .env.docker
 
   westegg:
     build: .

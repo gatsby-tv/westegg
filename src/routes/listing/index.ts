@@ -2,7 +2,9 @@ import {
   GetListingFeaturedChannelsResponse,
   GetListingNewVideosRequest,
   GetListingNewVideosResponse,
+  GetListingNewVideosRequestQuery,
   GetListingPopularVideosRequest,
+  GetListingPopularVideosRequestQuery,
   GetListingPopularVideosResponse,
   IChannelAccount,
   StatusCode,
@@ -12,9 +14,10 @@ import { Channel } from "@src/entities/Channel";
 import { Video as VideoCollection } from "@src/entities/Video";
 import { validateCursorRequest } from "@src/middleware/listing";
 import { projection } from "@src/utilities";
-import { Router } from "express";
+import { Router, Request } from "express";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
+import * as Express from "express-serve-static-core";
 
 const router = Router();
 export const DEFAULT_CURSOR_LIMIT = 24;
@@ -37,77 +40,119 @@ router.get("/featured/channels", async (req, res, next) => {
 /**
  * GET /listing/videos/popular
  */
-router.get("/videos/popular", validateCursorRequest, async (req, res, next) => {
-  const body = req.body as GetListingPopularVideosRequest;
-  const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-  const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-  let videos = await VideoCollection.aggregate()
-    .match({ _id: { $gt: cursor } })
-    .lookup({
-      from: Channel.collection.name,
-      localField: "channel",
-      foreignField: "_id",
-      as: "channel"
-    })
-    .unwind({
-      path: "$channel",
-      preserveNullAndEmptyArrays: true
-    })
-    .project(projection(keysOf<Video>()))
-    .limit(limit);
+interface GetListingPopularVideosRequestParams
+  extends Record<keyof GetListingPopularVideosRequest, string>,
+    Express.ParamsDictionary {}
+interface GetListingPopularVideosRequestQueryParams
+  extends Record<keyof GetListingPopularVideosRequestQuery, string>,
+    Express.Query {}
+router.get(
+  "/videos/popular",
+  validateCursorRequest,
+  async (
+    req: Request<
+      GetListingPopularVideosRequestParams,
+      GetListingPopularVideosResponse,
+      {},
+      GetListingPopularVideosRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    let videos = (await VideoCollection.aggregate()
+      .match({ _id: { $gt: cursor } })
+      .lookup({
+        from: Channel.collection.name,
+        localField: "channel",
+        foreignField: "_id",
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Video>()))
+      .limit(limit)) as Video[];
 
-  let duplicate = Array(limit - videos.length)
-    .fill(null)
-    .map((item, index) => {
-      return videos[index % videos.length];
-    });
-  videos = [...videos, ...duplicate];
+    let duplicate = Array(limit - videos.length)
+      .fill(null)
+      .map((item, index) => {
+        return videos[index % videos.length];
+      });
+    videos = [...videos, ...duplicate];
 
-  const response = {
-    content: videos,
-    cursor: videos[videos.length - 1]?._id,
-    limit: limit
-  };
+    const response = {
+      content: videos,
+      cursor: videos[videos.length - 1]?._id,
+      limit: limit
+    };
 
-  res.status(StatusCode.OK).json(response as GetListingPopularVideosResponse);
-});
+    res.status(StatusCode.OK).json(response);
+  }
+);
 
 /**
  * GET /listing/videos/new
  */
-router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
-  const body = req.body as GetListingNewVideosRequest;
-  const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-  const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-  let videos = await VideoCollection.aggregate()
-    .match({ _id: { $gt: cursor || CURSOR_START } })
-    .lookup({
-      from: Channel.collection.name,
-      localField: "channel",
-      foreignField: "_id",
-      as: "channel"
-    })
-    .unwind({
-      path: "$channel",
-      preserveNullAndEmptyArrays: true
-    })
-    .project(projection(keysOf<Video>()))
-    .limit(limit);
+interface GetListingNewVideosRequestParams
+  extends Record<keyof GetListingNewVideosRequest, string>,
+    Express.ParamsDictionary {}
+interface GetListingNewVideosRequestQueryParams
+  extends Record<keyof GetListingNewVideosRequestQuery, string>,
+    Express.Query {}
+router.get(
+  "/videos/new",
+  validateCursorRequest,
+  async (
+    req: Request<
+      GetListingNewVideosRequestParams,
+      GetListingNewVideosResponse,
+      {},
+      GetListingNewVideosRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    let videos = (await VideoCollection.aggregate()
+      .match({ _id: { $gt: cursor || CURSOR_START } })
+      .lookup({
+        from: Channel.collection.name,
+        localField: "channel",
+        foreignField: "_id",
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Video>()))
+      .limit(limit)) as Video[];
 
-  let duplicate = Array(limit - videos.length)
-    .fill(null)
-    .map((item, index) => {
-      return videos[index % videos.length];
-    });
-  videos = [...videos, ...duplicate];
+    let duplicate = Array(limit - videos.length)
+      .fill(null)
+      .map((item, index) => {
+        return videos[index % videos.length];
+      });
+    videos = [...videos, ...duplicate];
 
-  const response = {
-    content: videos,
-    cursor: videos[videos.length - 1]?._id,
-    limit: limit
-  };
+    const response = {
+      content: videos,
+      cursor: videos[videos.length - 1]?._id,
+      limit: limit
+    };
 
-  res.status(StatusCode.OK).json(response as GetListingNewVideosResponse);
-});
+    res.status(StatusCode.OK).json(response);
+  }
+);
 
 export default router;

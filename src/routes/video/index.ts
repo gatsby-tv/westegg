@@ -3,6 +3,7 @@ import {
   DeleteVideoRequest,
   ErrorMessage,
   GetVideoListingRelatedRequest,
+  GetVideoListingRelatedRequestQuery,
   GetVideoListingRelatedResponse,
   GetVideoRequest,
   GetVideoResponse,
@@ -28,9 +29,10 @@ import {
 } from "@src/middleware/video";
 import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
 import { projection } from "@src/utilities";
-import { Router } from "express";
+import { Router, Request } from "express";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
+import * as Express from "express-serve-static-core";
 
 const router = Router();
 
@@ -167,14 +169,31 @@ router.delete(
 /**
  * GET /video/:id/listing/related
  */
+interface GetVideoListingRelatedRequestParams
+  extends Record<keyof GetVideoListingRelatedRequest, string>,
+    Express.ParamsDictionary {}
+interface GetVideoListingRelatedRequestQueryParams
+  extends Record<keyof GetVideoListingRelatedRequestQuery, string>,
+    Express.Query {}
 router.get(
   "/:id/listing/related",
   validateCursorRequest,
-  async (req, res, next) => {
-    const body = req.body as GetVideoListingRelatedRequest;
-    const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-    const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    let videos = await VideoCollection.aggregate()
+  async (
+    req: Request<
+      GetVideoListingRelatedRequestParams,
+      GetVideoListingRelatedResponse,
+      {},
+      GetVideoListingRelatedRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    let videos = (await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor || CURSOR_START } })
       .lookup({
         from: Channel.collection.name,
@@ -187,7 +206,7 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit);
+      .limit(limit)) as Video[];
 
     let duplicate = Array(limit - videos.length)
       .fill(null)
@@ -202,7 +221,7 @@ router.get(
       limit: limit
     };
 
-    res.status(StatusCode.OK).json(response as GetVideoListingRelatedResponse);
+    res.status(StatusCode.OK).json(response);
   }
 );
 

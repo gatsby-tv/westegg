@@ -6,8 +6,10 @@ import {
   GetUserHandleExistsRequest,
   GetUserHandleExistsResponse,
   GetUserListingRecommendedRequest,
+  GetUserListingRecommendedRequestQuery,
   GetUserListingRecommendedResponse,
   GetUserListingSubscriptionsRequest,
+  GetUserListingSubscriptionsRequestQuery,
   GetUserListingSubscriptionsResponse,
   NotFound,
   PostAuthCompleteSignUpResponse,
@@ -39,10 +41,11 @@ import {
 } from "@src/middleware/user";
 import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { Router } from "express";
+import { Router, Request } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
+import * as Express from "express-serve-static-core";
 
 const router = Router();
 
@@ -273,15 +276,32 @@ router.put(
 /**
  * GET /user/:id/listing/recommended
  */
+interface GetUserListingRecommendedRequestParams
+  extends Record<keyof GetUserListingRecommendedRequest, string>,
+    Express.ParamsDictionary {}
+interface GetUserListingRecommendedRequestQueryParams
+  extends Record<keyof GetUserListingRecommendedRequestQuery, string>,
+    Express.Query {}
 router.get(
   "/:id/listing/recommended",
   validateCursorRequest,
-  async (req, res, next) => {
-    const body = req.body as GetUserListingRecommendedRequest;
-    const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-    const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
+  async (
+    req: Request<
+      GetUserListingRecommendedRequestParams,
+      GetUserListingRecommendedResponse,
+      {},
+      GetUserListingRecommendedRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
 
-    let videos = await VideoCollection.aggregate()
+    let videos = (await VideoCollection.aggregate()
       .match({
         _id: { $gt: cursor }
       })
@@ -296,7 +316,7 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit);
+      .limit(limit)) as Video[];
 
     let duplicate = Array(limit - videos.length)
       .fill(null)
@@ -311,23 +331,38 @@ router.get(
       limit: limit
     };
 
-    res
-      .status(StatusCode.OK)
-      .json(response as GetUserListingRecommendedResponse);
+    res.status(StatusCode.OK).json(response);
   }
 );
 
 /**
  * GET /user/:id/listing/subscriptions
  */
+interface GetUserListingSubscriptionsRequestParams
+  extends Record<keyof GetUserListingSubscriptionsRequest, string>,
+    Express.ParamsDictionary {}
+interface GetUserListingSubscriptionsRequestQueryParams
+  extends Record<keyof GetUserListingSubscriptionsRequestQuery, string>,
+    Express.Query {}
 router.get(
   "/:id/listing/subscriptions",
   validateCursorRequest,
-  async (req, res, next) => {
-    const body = req.body as GetUserListingSubscriptionsRequest;
-    const limit = body.limit || DEFAULT_CURSOR_LIMIT;
-    const cursor = body.cursor ? new Types.ObjectId(body.cursor) : CURSOR_START;
-    let videos = await VideoCollection.aggregate()
+  async (
+    req: Request<
+      GetUserListingSubscriptionsRequestParams,
+      GetUserListingSubscriptionsResponse,
+      {},
+      GetUserListingSubscriptionsRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    let videos = (await VideoCollection.aggregate()
       .match({ _id: { $gt: cursor || CURSOR_START } })
       .lookup({
         from: Channel.collection.name,
@@ -340,7 +375,7 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit);
+      .limit(limit)) as Video[];
 
     let duplicate = Array(limit - videos.length)
       .fill(null)
@@ -355,9 +390,7 @@ router.get(
       limit: limit
     };
 
-    res
-      .status(StatusCode.OK)
-      .json(response as GetUserListingSubscriptionsResponse);
+    res.status(StatusCode.OK).json(response);
   }
 );
 
