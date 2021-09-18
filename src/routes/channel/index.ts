@@ -7,7 +7,15 @@ import {
   GetChannelContentResponse,
   GetChannelHandleExistsRequest,
   GetChannelHandleExistsResponse,
-  IVideo,
+  GetChannelVideosRequest,
+  GetChannelVideosRequestQuery,
+  GetChannelVideosResponse,
+  GetChannelPlaylistsRequest,
+  GetChannelPlaylistsRequestQuery,
+  GetChannelPlaylistsResponse,
+  GetChannelShowsRequest,
+  GetChannelShowsRequestQuery,
+  GetChannelShowsResponse,
   NotFound,
   pick,
   PostChannelRequest,
@@ -21,7 +29,8 @@ import {
   PutChannelHandleResponse,
   PutChannelPosterRequestParams,
   PutChannelPosterResponse,
-  StatusCode
+  StatusCode,
+  Video
 } from "@gatsby-tv/types";
 import { Router } from "express";
 import { Types } from "mongoose";
@@ -29,7 +38,7 @@ import { keys as keysOf } from "ts-transformer-keys";
 
 import { Channel } from "@src/entities/Channel";
 import { User } from "@src/entities/User";
-import { Video } from "@src/entities/Video";
+import { Video as VideoCollection } from "@src/entities/Video";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated } from "@src/middleware/auth";
 import {
@@ -39,6 +48,9 @@ import {
 } from "@src/middleware/channel";
 import { upload } from "@src/middleware/multipart";
 import { isMongoDuplicateKeyError, projection } from "@src/utilities";
+import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
+import * as Express from "express-serve-static-core";
+import { Request } from "express";
 
 const router = Router();
 
@@ -165,6 +177,136 @@ router.get("/:id/content", async (req, res, next) => {
 
   res.status(StatusCode.OK).json(response);
 });
+
+/**
+ * Get /channel/:id/videos
+ */
+interface GetChannelVideosRequestParams
+  extends Record<keyof GetChannelVideosRequest, string>,
+    Express.ParamsDictionary {}
+interface GetChannelVideosRequestQueryParams
+  extends Record<keyof GetChannelVideosRequestQuery, string>,
+    Express.Query {}
+router.get(
+  "/:id/videos",
+  async (
+    req: Request<
+      GetChannelVideosRequestParams,
+      GetChannelVideosResponse,
+      {},
+      GetChannelVideosRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const params = req.params;
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    if (!limit) {
+      throw new BadRequest(ErrorMessage.BAD_REQUEST);
+    }
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    let videos = (await VideoCollection.aggregate()
+      .match({
+        _id: { $gt: cursor || CURSOR_START },
+        channel: Types.ObjectId(params.id)
+      })
+      .lookup({
+        from: Channel.collection.name,
+        localField: "channel",
+        foreignField: "_id",
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Video>()))
+      .limit(limit)) as Video[];
+
+    const response = {
+      content: videos,
+      cursor: videos[videos.length - 1]?._id,
+      limit: limit
+    };
+
+    res.status(StatusCode.OK).json(response);
+  }
+);
+
+/**
+ * GET /channel/:id/playlists
+ */
+interface GetChannelPlaylistsRequestParams
+  extends Record<keyof GetChannelPlaylistsRequest, string>,
+    Express.ParamsDictionary {}
+interface GetChannelPlaylistsRequestQueryParams
+  extends Record<keyof GetChannelPlaylistsRequestQuery, string>,
+    Express.Query {}
+router.get(
+  "/:id/playlists",
+  async (
+    req: Request<
+      GetChannelPlaylistsRequestParams,
+      GetChannelPlaylistsResponse,
+      {},
+      GetChannelPlaylistsRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    // Return empty, not yet implemented
+    const response = {
+      content: [],
+      cursor: cursor.toString(),
+      limit: limit
+    };
+    res.status(StatusCode.OK).json(response);
+  }
+);
+
+/**
+ * GET /channel/:id/shows
+ */
+interface GetChannelShowsRequestParams
+  extends Record<keyof GetChannelShowsRequest, string>,
+    Express.ParamsDictionary {}
+interface GetChannelShowsRequestQueryParams
+  extends Record<keyof GetChannelShowsRequestQuery, string>,
+    Express.Query {}
+router.get(
+  "/:id/shows",
+  async (
+    req: Request<
+      GetChannelShowsRequestParams,
+      GetChannelShowsResponse,
+      {},
+      GetChannelShowsRequestQueryParams
+    >,
+    res,
+    next
+  ) => {
+    const query = req.query;
+    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
+    const cursor: Types.ObjectId = query.cursor
+      ? new Types.ObjectId(query.cursor)
+      : CURSOR_START;
+    // Return empty, not yet implemented
+    const response = {
+      content: [],
+      cursor: cursor.toString(),
+      limit: limit
+    };
+    res.status(StatusCode.OK).json(response);
+  }
+);
 
 /**
  * PUT /channel/:id/handle

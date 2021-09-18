@@ -144,12 +144,14 @@ export type GetUserPromotionsRequest = {
 /*
  * GET /user/:id/listing/recommended
  */
-export type GetUserListingRecommendedRequest = { id: UserID } & CursorRequest;
+export type GetUserListingRecommendedRequest = { id: UserID };
+export type GetUserListingRecommendedRequestQuery = CursorRequest;
 
 /*
  * GET /user/:id/listing/subscriptions
  */
-export type GetUserListingSubscriptionsRequest = { id: UserID } & CursorRequest;
+export type GetUserListingSubscriptionsRequest = { id: UserID };
+export type GetUserListingSubscriptionsRequestQuery = CursorRequest;
 
 /*
  * PUT /user/:id
@@ -341,6 +343,24 @@ export type GetChannelPrivateRequest = {};
 export type GetChannelContentRequest = { id: ChannelID };
 
 /*
+ * GET /channel/:id/videos
+ */
+export type GetChannelVideosRequest = { id: ChannelID };
+export type GetChannelVideosRequestQuery = CursorRequest;
+
+/*
+ * GET /channel/:id/playlists
+ */
+export type GetChannelPlaylistsRequest = { id: ChannelID };
+export type GetChannelPlaylistsRequestQuery = CursorRequest;
+
+/*
+ * GET /channel/:id/shows
+ */
+export type GetChannelShowsRequest = { id: ChannelID };
+export type GetChannelShowsRequestQuery = CursorRequest;
+
+/*
  * PUT /channel/:id
  */
 export type PutChannelRequest = Partial<
@@ -500,7 +520,8 @@ export type GetVideoRequest = { id: string };
 /*
  * GET /video/:id/listing/related
  */
-export type GetVideoListingRelatedRequest = CursorRequest;
+export type GetVideoListingRelatedRequest = {};
+export type GetVideoListingRelatedRequestQuery = CursorRequest;
 
 /*
  * PUT /video/:id
@@ -636,9 +657,11 @@ export type GetListingFeaturedChannelsRequest = {};
 /*
  * GET /listing/videos/popular
  */
-export type GetListingPopularVideosRequest = CursorRequest;
+export type GetListingPopularVideosRequest = {};
+export type GetListingPopularVideosRequestQuery = CursorRequest;
 
 /*
  * GET /listing/videos/new
  */
-export type GetListingNewVideosRequest = CursorRequest;
+export type GetListingNewVideosRequest = {};
+export type GetListingNewVideosRequestQuery = CursorRequest;

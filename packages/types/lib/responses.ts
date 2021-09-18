@@ -287,6 +287,21 @@ export type GetChannelPrivateResponse = Response<ChannelPrivateInfo>;
 export type GetChannelContentResponse = Response<ChannelContent>;
 
 /*
+ * GET /channel/:id/videos
+ */
+export type GetChannelVideosResponse = CursorResponse<Array<Video>>;
+
+/*
+ * GET /channel/:id/playlists
+ */
+export type GetChannelPlaylistsResponse = CursorResponse<Array<Playlist>>;
+
+/*
+ * GET /channel/:id/shows
+ */
+export type GetChannelShowsResponse = CursorResponse<Array<Show>>;
+
+/*
  * PUT /channel/:id
  */
 export type PutChannelResponse = Response;
