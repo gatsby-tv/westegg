@@ -1,5 +1,6 @@
 import { IChannel } from "@gatsby-tv/types";
 import { DEFAULT_AVATAR } from "@src/entities/Base";
+import IPFSContent from "@src/entities/IPFSContent";
 import {
   ChannelRef,
   PlaylistRef,
@@ -18,10 +19,7 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   // Optional
   subscribers: { type: Number, default: 0 },
   avatar: {
-    type: {
-      hash: String,
-      mimeType: String
-    },
+    type: IPFSContent,
     default: DEFAULT_AVATAR
   },
   verified: { type: Boolean, default: false },
@@ -39,8 +37,12 @@ const ChannelSchemaFields: Record<keyof Omit<IChannel, "_id">, any> = {
   banned: { type: Boolean, default: false },
   playlists: { type: [Schema.Types.ObjectId], ref: PlaylistRef, default: [] },
   shows: { type: [Schema.Types.ObjectId], ref: ShowRef, default: [] },
-  poster: {},
-  banner: {},
+  poster: {
+    type: IPFSContent
+  },
+  banner: {
+    type: IPFSContent
+  },
   management: {},
   settings: {},
   invitations: {},
