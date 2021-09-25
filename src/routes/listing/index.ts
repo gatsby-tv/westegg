@@ -27,10 +27,17 @@ export const CURSOR_START = new Types.ObjectId("0".repeat(24));
  * GET /listing/featured/channels
  */
 router.get("/featured/channels", async (req, res, next) => {
-  const channels = await Channel.find(
+  let channels = await Channel.find(
     {},
     projection(keysOf<Omit<IChannelAccount, "_id">>())
   ).limit(DEFAULT_CURSOR_LIMIT);
+
+  let duplicate = Array(DEFAULT_CURSOR_LIMIT - channels.length)
+    .fill(null)
+    .map((item, index) => {
+      return channels[index % channels.length];
+    });
+  channels = [...channels, ...duplicate];
 
   res
     .status(StatusCode.OK)
