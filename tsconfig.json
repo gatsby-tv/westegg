@@ -9,6 +9,9 @@
     "paths": {
       "@src/*": [
         "*"
+      ],
+      "@gatsby-tv/types": [
+        "../packages/types"
       ]
     },
     "strict": true,
