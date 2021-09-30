@@ -21,6 +21,8 @@ Restart VSCode after changing this file.
 
 The prettier VSCode extension should also be installed. You can set this as your default formatter by doing `CONTROL+SHIFT+P` and searching for format.
 
+VScode will ask you to confirm the `yarn` and `typescript` versions when first loading the sdk paths, confirm this to get intellisense on westegg code.
+
 ## Branches, commits, and PRs
 
 All branches, commits, and PRs made to westegg should follow the format below.
@@ -38,7 +40,8 @@ Example commit name:
 `bugfix: Fix connect retryWrite deprecated function param (#82)`
 
 The types of issues can range between:
-```
+
+```txt
 bugfix - Bug fixed
 feature - New feature implemented
 bump - Package version bump
