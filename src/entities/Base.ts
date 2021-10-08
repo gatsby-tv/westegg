@@ -1,6 +1,6 @@
 import { IPFSContent } from "@gatsby-tv/types";
 
 export const DEFAULT_AVATAR: IPFSContent = {
-  hash: "QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE",
-  mimeType: "image/jpeg"
+  hash: "QmZ5T19pqDG6JQ4imLwntZWgADPSMxf8E1aE3BpgGsg4G7",
+  mimeType: "image/png"
 };
