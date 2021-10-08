@@ -208,16 +208,26 @@ router.get(
       .project(projection(keysOf<Video>()))
       .limit(limit)) as Video[];
 
+    // Start pre-alpha demo code block
     let duplicate = Array(limit - videos.length)
       .fill(null)
       .map((item, index) => {
         return videos[index % videos.length];
       });
+
+    const END_COLLECTION: Types.ObjectId = (
+      await VideoCollection.findOne({}).sort({ $natural: -1 })
+    )?._id;
+
+    // Wrap content as single request will have all that's in pre-alpha
+    const nextCursor = CURSOR_START.toString();
+
     videos = [...videos, ...duplicate];
+    // End pre-alpha demo code block
 
     const response = {
       content: videos,
-      cursor: videos[videos.length - 1]?._id,
+      cursor: nextCursor,
       limit: limit
     };
 
