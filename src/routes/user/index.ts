@@ -1,6 +1,7 @@
 import {
   BadRequest,
   ErrorMessage,
+  GetChannelAccountRequest,
   GetUserAccountRequest,
   GetUserAccountResponse,
   GetUserHandleExistsRequest,
@@ -264,8 +265,19 @@ router.put(
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
+    const channel = await Channel.findById(
+      body.subscription,
+      projection(keysOf<GetChannelAccountRequest>())
+    );
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
+
     user.subscriptions.push(body.subscription);
     user.save();
+
+    channel.subscribers += 1;
+    channel.save();
 
     res
       .status(StatusCode.CREATED)
