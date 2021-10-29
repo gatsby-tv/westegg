@@ -22,7 +22,7 @@ import logger from "@src/logger";
 import mail from "@src/mail";
 import { isValidBody } from "@src/middleware";
 import { isAuthenticated, validateSignin } from "@src/middleware/auth";
-import { randomString } from "@src/utilities";
+import { randomString } from "@src/util";
 
 const router = Router();
 

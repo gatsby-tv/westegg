@@ -8,14 +8,7 @@ import {
   GetChannelHandleExistsRequest,
   GetChannelHandleExistsResponse,
   GetChannelVideosRequest,
-  GetChannelVideosRequestQuery,
   GetChannelVideosResponse,
-  GetChannelPlaylistsRequest,
-  GetChannelPlaylistsRequestQuery,
-  GetChannelPlaylistsResponse,
-  GetChannelShowsRequest,
-  GetChannelShowsRequestQuery,
-  GetChannelShowsResponse,
   NotFound,
   pick,
   PostChannelRequest,
@@ -35,7 +28,6 @@ import {
 import { Router } from "express";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
-
 import { Channel } from "@src/entities/Channel";
 import { User } from "@src/entities/User";
 import { Video as VideoCollection } from "@src/entities/Video";
@@ -47,10 +39,11 @@ import {
   validatePutChannelHandleRequest
 } from "@src/middleware/channel";
 import { upload } from "@src/middleware/multipart";
-import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
+import { isMongoDuplicateKeyError, projection } from "@src/util";
 import * as Express from "express-serve-static-core";
 import { Request } from "express";
+import { preAlphaFillListing } from "@src/util/cursor";
+import { validateCursorRequest } from "@src/middleware/listing";
 
 const router = Router();
 
@@ -184,33 +177,23 @@ router.get("/:id/content", async (req, res, next) => {
 interface GetChannelVideosRequestParams
   extends Record<keyof GetChannelVideosRequest, string>,
     Express.ParamsDictionary {}
-interface GetChannelVideosRequestQueryParams
-  extends Record<keyof GetChannelVideosRequestQuery, string>,
-    Express.Query {}
 router.get(
   "/:id/videos",
+  validateCursorRequest,
   async (
     req: Request<
       GetChannelVideosRequestParams,
       GetChannelVideosResponse,
       {},
-      GetChannelVideosRequestQueryParams
+      {}
     >,
     res,
     next
   ) => {
     const params = req.params;
-    const query = req.query;
-    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
-    if (!limit) {
-      throw new BadRequest(ErrorMessage.BAD_REQUEST);
-    }
-    const cursor: Types.ObjectId = query.cursor
-      ? new Types.ObjectId(query.cursor)
-      : CURSOR_START;
     let videos = (await VideoCollection.aggregate()
       .match({
-        _id: { $gt: cursor || CURSOR_START },
+        _id: { $gt: req.cursor },
         channel: Types.ObjectId(params.id)
       })
       .lookup({
@@ -224,25 +207,14 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit)) as Video[];
+      .limit(req.limit)) as Video[];
 
-    // Start pre-alpha demo code block
-    let duplicate = Array(limit - videos.length)
-      .fill(null)
-      .map((item, index) => {
-        return videos[index % videos.length];
-      });
-
-    // Wrap content as single request will have all that's in pre-alpha
-    const nextCursor = CURSOR_START.toString();
-
-    videos = [...videos, ...duplicate];
-    // End pre-alpha demo code block
+    const listing = preAlphaFillListing<Video>(videos, req.limit);
 
     const response = {
-      content: videos,
-      cursor: nextCursor,
-      limit: limit
+      content: listing.content,
+      cursor: listing.next,
+      limit: req.limit
     };
 
     res.status(StatusCode.OK).json(response);
@@ -252,74 +224,28 @@ router.get(
 /**
  * GET /channel/:id/playlists
  */
-interface GetChannelPlaylistsRequestParams
-  extends Record<keyof GetChannelPlaylistsRequest, string>,
-    Express.ParamsDictionary {}
-interface GetChannelPlaylistsRequestQueryParams
-  extends Record<keyof GetChannelPlaylistsRequestQuery, string>,
-    Express.Query {}
-router.get(
-  "/:id/playlists",
-  async (
-    req: Request<
-      GetChannelPlaylistsRequestParams,
-      GetChannelPlaylistsResponse,
-      {},
-      GetChannelPlaylistsRequestQueryParams
-    >,
-    res,
-    next
-  ) => {
-    const query = req.query;
-    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
-    const cursor: Types.ObjectId = query.cursor
-      ? new Types.ObjectId(query.cursor)
-      : CURSOR_START;
-    // Return empty, not yet implemented
-    const response = {
-      content: [],
-      cursor: cursor.toString(),
-      limit: limit
-    };
-    res.status(StatusCode.OK).json(response);
-  }
-);
+router.get("/:id/playlists", validateCursorRequest, async (req, res, next) => {
+  // Return empty, not yet implemented
+  const response = {
+    content: [],
+    cursor: req.cursor.toString(),
+    limit: req.limit
+  };
+  res.status(StatusCode.OK).json(response);
+});
 
 /**
  * GET /channel/:id/shows
  */
-interface GetChannelShowsRequestParams
-  extends Record<keyof GetChannelShowsRequest, string>,
-    Express.ParamsDictionary {}
-interface GetChannelShowsRequestQueryParams
-  extends Record<keyof GetChannelShowsRequestQuery, string>,
-    Express.Query {}
-router.get(
-  "/:id/shows",
-  async (
-    req: Request<
-      GetChannelShowsRequestParams,
-      GetChannelShowsResponse,
-      {},
-      GetChannelShowsRequestQueryParams
-    >,
-    res,
-    next
-  ) => {
-    const query = req.query;
-    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
-    const cursor: Types.ObjectId = query.cursor
-      ? new Types.ObjectId(query.cursor)
-      : CURSOR_START;
-    // Return empty, not yet implemented
-    const response = {
-      content: [],
-      cursor: cursor.toString(),
-      limit: limit
-    };
-    res.status(StatusCode.OK).json(response);
-  }
-);
+router.get("/:id/shows", validateCursorRequest, async (req, res, next) => {
+  // Return empty, not yet implemented
+  const response = {
+    content: [],
+    cursor: req.cursor.toString(),
+    limit: req.limit
+  };
+  res.status(StatusCode.OK).json(response);
+});
 
 /**
  * PUT /channel/:id/handle

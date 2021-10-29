@@ -2,9 +2,6 @@ import {
   BadRequest,
   DeleteVideoRequest,
   ErrorMessage,
-  GetVideoListingRelatedRequest,
-  GetVideoListingRelatedRequestQuery,
-  GetVideoListingRelatedResponse,
   GetVideoRequest,
   GetVideoResponse,
   NotFound,
@@ -27,12 +24,11 @@ import {
   validatePutVideo,
   validateVideoExists
 } from "@src/middleware/video";
-import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
-import { projection } from "@src/utilities";
-import { Router, Request } from "express";
+import { projection } from "@src/util";
+import { Router } from "express";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
-import * as Express from "express-serve-static-core";
+import { preAlphaFillListing } from "@src/util/cursor";
 
 const router = Router();
 
@@ -169,32 +165,12 @@ router.delete(
 /**
  * GET /video/:id/listing/related
  */
-interface GetVideoListingRelatedRequestParams
-  extends Record<keyof GetVideoListingRelatedRequest, string>,
-    Express.ParamsDictionary {}
-interface GetVideoListingRelatedRequestQueryParams
-  extends Record<keyof GetVideoListingRelatedRequestQuery, string>,
-    Express.Query {}
 router.get(
   "/:id/listing/related",
   validateCursorRequest,
-  async (
-    req: Request<
-      GetVideoListingRelatedRequestParams,
-      GetVideoListingRelatedResponse,
-      {},
-      GetVideoListingRelatedRequestQueryParams
-    >,
-    res,
-    next
-  ) => {
-    const query = req.query;
-    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
-    const cursor: Types.ObjectId = query.cursor
-      ? new Types.ObjectId(query.cursor)
-      : CURSOR_START;
+  async (req, res, next) => {
     let videos = (await VideoCollection.aggregate()
-      .match({ _id: { $gt: cursor || CURSOR_START } })
+      .match({ _id: { $gt: req.cursor } })
       .lookup({
         from: Channel.collection.name,
         localField: "channel",
@@ -206,29 +182,14 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit)) as Video[];
+      .limit(req.limit)) as Video[];
 
-    // Start pre-alpha demo code block
-    let duplicate = Array(limit - videos.length)
-      .fill(null)
-      .map((item, index) => {
-        return videos[index % videos.length];
-      });
-
-    const END_COLLECTION: Types.ObjectId = (
-      await VideoCollection.findOne({}).sort({ $natural: -1 })
-    )?._id;
-
-    // Wrap content as single request will have all that's in pre-alpha
-    const nextCursor = CURSOR_START.toString();
-
-    videos = [...videos, ...duplicate];
-    // End pre-alpha demo code block
+    const listing = preAlphaFillListing<Video>(videos, req.limit);
 
     const response = {
-      content: videos,
-      cursor: nextCursor,
-      limit: limit
+      content: listing.content,
+      cursor: listing.next,
+      limit: req.limit
     };
 
     res.status(StatusCode.OK).json(response);
