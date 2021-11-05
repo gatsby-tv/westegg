@@ -265,6 +265,10 @@ router.put(
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
+    if (user.subscriptions.includes(body.subscription)) {
+      throw new BadRequest(ErrorMessage.SUBSCRIPTION_ALREADY_EXISTS);
+    }
+
     const channel = await Channel.findById(
       body.subscription,
       projection(keysOf<GetChannelAccountRequest>())
@@ -276,7 +280,11 @@ router.put(
     user.subscriptions.push(body.subscription);
     user.save();
 
-    channel.subscribers += 1;
+    if (!channel.subscribers) {
+      channel.subscribers = 1;
+    } else {
+      channel.subscribers++;
+    }
     channel.save();
 
     res
@@ -375,13 +383,24 @@ router.get(
     res,
     next
   ) => {
+    const user = await User.findById(
+      req.params.id,
+      projection(keysOf<PutUserSubscriptionResponse>())
+    );
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
     const query = req.query;
     const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
     const cursor: Types.ObjectId = query.cursor
       ? new Types.ObjectId(query.cursor)
       : CURSOR_START;
     let videos = (await VideoCollection.aggregate()
-      .match({ _id: { $gt: cursor || CURSOR_START } })
+      .match({
+        _id: { $gt: cursor || CURSOR_START },
+        channel: { $in: user.subscriptions }
+      })
       .lookup({
         from: Channel.collection.name,
         localField: "channel",
