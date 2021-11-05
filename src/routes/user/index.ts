@@ -272,11 +272,7 @@ router.put(
     user.subscriptions.push(body.subscription);
     user.save();
 
-    if (!channel.subscribers) {
-      channel.subscribers = 1;
-    } else {
-      channel.subscribers += 1;
-    }
+    channel.subscribers += 1;
     channel.save();
 
     res
