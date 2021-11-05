@@ -5,6 +5,7 @@ import {
   GetUserAccountResponse,
   GetUserHandleExistsRequest,
   GetUserHandleExistsResponse,
+  GetUserChannelsRequestParams,
   NotFound,
   PostAuthCompleteSignUpResponse,
   PostUserCompleteSignupRequest,
@@ -335,5 +336,23 @@ router.get(
     res.status(StatusCode.OK).json(response);
   }
 );
+
+/**
+ * GET /user/:id/channels
+ */
+router.get("/:id/channels", isAuthenticated, async (req, res, next) => {
+  const params = req.params as GetUserChannelsRequestParams;
+
+  const user = await User.findById(params.id);
+  if (!user) {
+    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+  }
+
+  const channels = await Channel.find({
+    _id: { $in: user.channels }
+  });
+
+  res.status(StatusCode.OK).json(channels);
+});
 
 export default router;

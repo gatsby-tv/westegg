@@ -153,6 +153,11 @@ export type GetUserListingRecommendedRequestQuery = CursorRequest;
 export type GetUserListingSubscriptionsRequest = { id: UserID };
 export type GetUserListingSubscriptionsRequestQuery = CursorRequest;
 
+/**
+ * GET /user/:id/channels
+ */
+export type GetUserChannelsRequestParams = { id: UserID };
+
 /*
  * PUT /user/:id
  */
