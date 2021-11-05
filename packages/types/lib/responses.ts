@@ -112,6 +112,11 @@ export type GetUserListingRecommendedResponse = Cursor<Browsable>;
 export type GetUserListingSubscriptionsResponse = Cursor<BrowsableVideo>;
 
 /*
+ * GET /user/:id/channels
+ */
+export type GetUserChannelsResponse = Array<Channel>;
+
+/*
  * PUT /user/:id
  */
 export type PutUserResponse = {};
