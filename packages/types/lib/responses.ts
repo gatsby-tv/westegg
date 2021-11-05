@@ -250,7 +250,7 @@ export type DeleteUserAdminInviteResponse = Response;
 /*
  * DELETE /user/:id/moderator/invite
  */
-export type PutUserModeratorInviteResponse = Response;
+export type DeleteUserModeratorInviteResponse = Response;
 
 //
 // Channel Responses

@@ -1,5 +1,8 @@
 import {
   BadRequest,
+  DeleteUserSubscriptionResponse,
+  DeleteUserSubscriptionRequest,
+  DeleteUserSubscriptionRequestParams,
   ErrorMessage,
   GetChannelAccountRequest,
   GetUserAccountRequest,
@@ -269,10 +272,7 @@ router.put(
       throw new BadRequest(ErrorMessage.SUBSCRIPTION_ALREADY_EXISTS);
     }
 
-    const channel = await Channel.findById(
-      body.subscription,
-      projection(keysOf<GetChannelAccountRequest>())
-    );
+    const channel = await Channel.findById(body.subscription);
     if (!channel) {
       throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
     }
@@ -283,7 +283,7 @@ router.put(
     if (!channel.subscribers) {
       channel.subscribers = 1;
     } else {
-      channel.subscribers++;
+      channel.subscribers += 1;
     }
     channel.save();
 
@@ -434,6 +434,51 @@ router.get(
     };
 
     res.status(StatusCode.OK).json(response);
+  }
+);
+
+/**
+ * DELETE /user/:id/subscription
+ */
+router.delete(
+  "/:id/subscription",
+  isAuthenticated,
+  (req, res, next) => {
+    isValidBody(keysOf<DeleteUserSubscriptionRequest>(), req, res, next);
+  },
+  hasPermissionToPutUserRequest,
+  async (req, res, next) => {
+    const body = req.body as DeleteUserSubscriptionRequest;
+    const params = req.params as DeleteUserSubscriptionRequestParams;
+
+    const user = await User.findById(
+      params.id,
+      projection(keysOf<DeleteUserSubscriptionResponse>())
+    );
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
+    if (!user.subscriptions.includes(body.channel)) {
+      throw new BadRequest(ErrorMessage.BAD_REQUEST);
+    }
+
+    const channel = await Channel.findById(body.channel);
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
+
+    user.subscriptions = user.subscriptions.filter((subscription: string) => {
+      return subscription.toString() !== body.channel;
+    });
+    user.save();
+
+    channel.subscribers -= 1;
+    channel.save();
+
+    res
+      .status(StatusCode.OK)
+      .json(user.toJSON() as DeleteUserSubscriptionResponse);
   }
 );
 
