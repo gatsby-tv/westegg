@@ -421,4 +421,22 @@ router.get("/:id/channels", isAuthenticated, async (req, res, next) => {
   res.status(StatusCode.OK).json(channels);
 });
 
+/**
+ * GET /user/:id/subscriptions
+ */
+router.get("/:id/subscriptions", isAuthenticated, async (req, res, next) => {
+  const params = req.params as GetUserChannelsRequestParams;
+
+  const user = await User.findById(params.id);
+  if (!user) {
+    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+  }
+
+  const channels = await Channel.find({
+    _id: { $in: user.subscriptions }
+  });
+
+  res.status(StatusCode.OK).json(channels);
+});
+
 export default router;
