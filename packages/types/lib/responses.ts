@@ -1,4 +1,3 @@
-import { WestEggError } from "@lib/errors";
 import { ObjectID } from "@lib/shared";
 import {
   Browsable,
@@ -19,22 +18,11 @@ import {
   Video
 } from "@lib/types";
 
-//
-// Generic Responses
-// --------------------------------------------------
-export type ErrorResponse = {
-  error: WestEggError;
-};
-
-export type Response<T = {}> = T | ErrorResponse;
-
 export type Cursor<T = {}> = {
-  content: T;
+  content: Array<T>;
   cursor: ObjectID | undefined;
   limit: number;
 };
-
-export type CursorResponse<T = {}> = Cursor<T> | ErrorResponse;
 
 //
 // Authentication Responses
@@ -45,29 +33,29 @@ export type CursorResponse<T = {}> = Cursor<T> | ErrorResponse;
  *
  * This will come back as 200 OK no matter what (barring no internal errors), as to not indicate if the email the magic link was sent to exists or not.
  */
-export type PostAuthSignInResponse = Response;
+export type PostAuthSignInResponse = { key?: string };
 
 /*
  * GET /auth/signin/:key
  */
-export type GetAuthSignInKeyResponse = Response<{ token: EncodedToken }>;
+export type GetAuthSignInKeyResponse = { token: EncodedToken };
 
 /*
  * POST /auth/signin/:key/persist
  *
  * This response will always give a 200 OK even if the signin key doesn't exist as to not let the client know if a signin key exists or not.
  */
-export type PostAuthPersistSignInKeyResponse = Response;
+export type PostAuthPersistSignInKeyResponse = {};
 
 /*
  * GET /auth/token/refresh
  */
-export type GetAuthTokenRefreshResponse = Response<{ token: EncodedToken }>;
+export type GetAuthTokenRefreshResponse = { token: EncodedToken };
 
 /*
  * POST /auth/token/invalidate
  */
-export type PostAuthInvalidateAllPreviousTokensResponse = Response;
+export type PostAuthInvalidateAllPreviousTokensResponse = {};
 
 //
 // User Responses
@@ -76,176 +64,177 @@ export type PostAuthInvalidateAllPreviousTokensResponse = Response;
 /*
  * POST /user
  */
-export type PostAuthCompleteSignUpResponse = Response<{ token: EncodedToken }>;
+export type PostAuthCompleteSignUpResponse = { token: EncodedToken };
 
 /*
  * GET /user/{:id,:handle}
  */
-export type GetUserAccountResponse = Response<User>;
+export type GetUserAccountResponse = User;
 
 /*
  * GET /user/:handle/exists
  */
-export type GetUserHandleExistsResponse = Response<User>;
+export type GetUserHandleExistsResponse = User;
 
 /*
  * GET /user/:id/public
  */
-export type GetUserPublicResponse = Response<UserPublicInfo>;
+export type GetUserPublicResponse = UserPublicInfo;
 
 /*
  * GET /user/:id/private
  */
-export type GetUserPrivateResponse = Response<UserPrivateInfo>;
+export type GetUserPrivateResponse = UserPrivateInfo;
 
 /*
  * GET /user/:id/feeds
  */
-export type GetUserFeedsResponse = Response<UserContentFeeds>;
+export type GetUserFeedsResponse = UserContentFeeds;
 
 /*
  * GET /user/:id/history
  */
-export type GetUserHistoryResponse = Response<UserHistory>;
+export type GetUserHistoryResponse = UserHistory;
 
 /*
  * GET /user/:id/promotions
  */
-export type GetUserPromotionsResponse = Response<UserPromotions>;
+export type GetUserPromotionsResponse = UserPromotions;
 
 /*
  * GET /user/:id/listing/recommended
  */
-export type GetUserListingRecommendedResponse = CursorResponse<
-  Array<Browsable>
->;
+export type GetUserListingRecommendedResponse = Cursor<Browsable>;
 
 /*
  * GET /user/:id/listing/subscriptions
  */
-export type GetUserListingSubscriptionsResponse = CursorResponse<
-  Array<BrowsableVideo>
->;
+export type GetUserListingSubscriptionsResponse = Cursor<BrowsableVideo>;
+
+/*
+ * GET /user/:id/channels
+ */
+export type GetUserChannelsResponse = Array<Channel>;
 
 /*
  * PUT /user/:id
  */
-export type PutUserResponse = Response;
+export type PutUserResponse = {};
 
 /*
  * PUT /user/:id/avatar
  */
-export type PutUserAvatarResponse = Response<User>;
+export type PutUserAvatarResponse = User;
 
 /*
  * PUT /user/:id/banner
  */
-export type PutUserBannerResponse = Response<User>;
+export type PutUserBannerResponse = User;
 
 /*
  * PUT /user/:id/subscription
  */
-export type PutUserSubscriptionResponse = Response<User>;
+export type PutUserSubscriptionResponse = User;
 
 /*
  * PUT /user/:id/follow
  */
-export type PutUserFollowResponse = Response;
+export type PutUserFollowResponse = {};
 
 /*
  * PUT /user/:id/history
  */
-export type PutUserHistoryResponse = Response;
+export type PutUserHistoryResponse = {};
 
 /*
  * PUT /user/:id/promotion
  */
-export type PutUserPromotionResponse = Response;
+export type PutUserPromotionResponse = {};
 
 /*
  * PUT /user/:id/settings
  */
-export type PutUserSettingsResponse = Response;
+export type PutUserSettingsResponse = {};
 
 /*
  * PUT /user/:id/owner/accept
  */
-export type PutUserOwnerAcceptResponse = Response;
+export type PutUserOwnerAcceptResponse = {};
 
 /*
  * PUT /user/:id/collaboration/accept
  */
-export type PutUserCollaborationAcceptResponse = Response;
+export type PutUserCollaborationAcceptResponse = {};
 
 /*
  * PUT /user/:id/admin/accept
  */
-export type PutUserAdminAcceptResponse = Response;
+export type PutUserAdminAcceptResponse = {};
 
 /*
  * PUT /user/:id/moderator/accept
  */
-export type PutUserModeratorAcceptResponse = Response;
+export type PutUserModeratorAcceptResponse = {};
 
 /*
  * DELETE /user/:id
  */
-export type DeleteUserResponse = Response;
+export type DeleteUserResponse = {};
 
 /*
  * DELETE /user/:id/subscription
  */
-export type DeleteUserSubscriptionResponse = Response;
+export type DeleteUserSubscriptionResponse = {};
 
 /*
  * DELETE /user/:id/follow
  */
-export type DeleteUserFollowResponse = Response;
+export type DeleteUserFollowResponse = {};
 
 /*
  * DELETE /user/:id/history
  */
-export type DeleteUserHistoryResponse = Response;
+export type DeleteUserHistoryResponse = {};
 
 /*
  * DELETE /user/:id/history/all
  */
-export type DeleteUserEntireHistoryResponse = Response;
+export type DeleteUserEntireHistoryResponse = {};
 
 /*
  * DELETE /user/:id/promotion
  */
-export type DeleteUserPromotionResponse = Response;
+export type DeleteUserPromotionResponse = {};
 
 /*
  * DELETE /user/:id/collaboration
  */
-export type DeleteUserCollaborationResponse = Response;
+export type DeleteUserCollaborationResponse = {};
 
 /*
  * DELETE /user/:id/admin
  */
-export type DeleteUserAdminResponse = Response;
+export type DeleteUserAdminResponse = {};
 
 /*
  * DELETE /user/:id/moderator
  */
-export type DeleteUserModeratorResponse = Response;
+export type DeleteUserModeratorResponse = {};
 
 /*
  * DELETE /user/:id/owner/invite
  */
-export type DeleteUserOwnerInviteResponse = Response;
+export type DeleteUserOwnerInviteResponse = {};
 
 /*
  * DELETE /user/:id/collaboration/invite
  */
-export type DeleteUserCollaborationInviteResponse = Response;
+export type DeleteUserCollaborationInviteResponse = {};
 
 /*
  * DELETE /user/:id/admin/invite
  */
-export type DeleteUserAdminInviteResponse = Response;
+export type DeleteUserAdminInviteResponse = {};
 
 /*
  * DELETE /user/:id/moderator/invite
@@ -259,167 +248,167 @@ export type DeleteUserModeratorInviteResponse = Response;
 /*
  * POST /channel
  */
-export type PostChannelResponse = Response<Channel>;
+export type PostChannelResponse = Channel;
 
 /*
  * GET /channel/{:id,:handle}
  */
-export type GetChannelAccountResponse = Response<Channel>;
+export type GetChannelAccountResponse = Channel;
 
 /*
  * GET /channel/:handle/exists
  */
-export type GetChannelHandleExistsResponse = Response<Channel>;
+export type GetChannelHandleExistsResponse = Channel;
 
 /*
  * GET /channel/:id/public
  */
-export type GetChannelPublicResponse = Response<ChannelPublicInfo>;
+export type GetChannelPublicResponse = ChannelPublicInfo;
 
 /*
  * GET /channel/:id/private
  */
-export type GetChannelPrivateResponse = Response<ChannelPrivateInfo>;
+export type GetChannelPrivateResponse = ChannelPrivateInfo;
 
 /*
  * GET /channel/:id/content
  */
-export type GetChannelContentResponse = Response<ChannelContent>;
+export type GetChannelContentResponse = ChannelContent;
 
 /*
  * GET /channel/:id/videos
  */
-export type GetChannelVideosResponse = CursorResponse<Array<Video>>;
+export type GetChannelVideosResponse = Cursor<Video>;
 
 /*
  * GET /channel/:id/playlists
  */
-export type GetChannelPlaylistsResponse = CursorResponse<Array<Playlist>>;
+export type GetChannelPlaylistsResponse = Cursor<Playlist>;
 
 /*
  * GET /channel/:id/shows
  */
-export type GetChannelShowsResponse = CursorResponse<Array<Show>>;
+export type GetChannelShowsResponse = Cursor<Show>;
 
 /*
  * PUT /channel/:id
  */
-export type PutChannelResponse = Response;
+export type PutChannelResponse = {};
 
 /*
  * PUT /channel/:id/handle
  */
-export type PutChannelHandleResponse = Response;
+export type PutChannelHandleResponse = {};
 
 /*
  * PUT /channel/:id/avatar
  */
-export type PutChannelAvatarResponse = Response<Channel>;
+export type PutChannelAvatarResponse = Channel;
 
 /*
  * PUT /channel/:id/banner
  */
-export type PutChannelBannerResponse = Response<Channel>;
+export type PutChannelBannerResponse = Channel;
 
 /*
  * PUT /channel/:id/poster
  */
-export type PutChannelPosterResponse = Response<Channel>;
+export type PutChannelPosterResponse = Channel;
 
 /*
  * PUT /channel/:id/owner/invite
  */
-export type PutChannelOwnerInviteResponse = Response;
+export type PutChannelOwnerInviteResponse = {};
 
 /*
  * PUT /channel/:id/collaborator/invite
  */
-export type PutChannelCollaboratorInviteResponse = Response;
+export type PutChannelCollaboratorInviteResponse = {};
 
 /*
  * PUT /channel/:id/contributor/invite
  */
-export type PutChannelContributorInviteResponse = Response;
+export type PutChannelContributorInviteResponse = {};
 
 /*
  * PUT /channel/:id/contributor/roles
  */
-export type PutChannelContributorRolesResponse = Response;
+export type PutChannelContributorRolesResponse = {};
 
 /*
  * PUT /channel/:id/admin/invite
  */
-export type PutChannelAdminInviteResponse = Response;
+export type PutChannelAdminInviteResponse = {};
 
 /*
  * PUT /channel/:id/admin/settings
  */
-export type PutChannelAdminSettingsResponse = Response;
+export type PutChannelAdminSettingsResponse = {};
 
 /*
  * PUT /channel/:id/moderator/invite
  */
-export type PutChannelModeratorInviteResponse = Response;
+export type PutChannelModeratorInviteResponse = {};
 
 /*
  * PUT /channel/:id/moderator/settings
  */
-export type PutChannelModeratorSettingsResponse = Response;
+export type PutChannelModeratorSettingsResponse = {};
 
 /*
  * DELETE /channel/:id
  */
-export type DeleteChannelResponse = Response;
+export type DeleteChannelResponse = {};
 
 /*
  * DELETE /channel/:id/owner
  */
-export type DeleteChannelOwnerResponse = Response;
+export type DeleteChannelOwnerResponse = {};
 
 /*
  * DELETE /channel/:id/collaborator
  */
-export type DeleteChannelCollaboratorResponse = Response;
+export type DeleteChannelCollaboratorResponse = {};
 
 /*
  * DELETE /channel/:id/contributor
  */
-export type DeleteChannelContributorResponse = Response;
+export type DeleteChannelContributorResponse = {};
 
 /*
  * DELETE /channel/:id/admin
  */
-export type DeleteChannelAdminResponse = Response;
+export type DeleteChannelAdminResponse = {};
 
 /*
  * DELETE /channel/:id/moderator
  */
-export type DeleteChannelModeratorResponse = Response;
+export type DeleteChannelModeratorResponse = {};
 
 /*
  * DELETE /channel/:id/owner/invite
  */
-export type DeleteChannelOwnerInviteResponse = Response;
+export type DeleteChannelOwnerInviteResponse = {};
 
 /*
  * DELETE /channel/:id/collaborator/invite
  */
-export type DeleteChannelCollaboratorInviteResponse = Response;
+export type DeleteChannelCollaboratorInviteResponse = {};
 
 /*
  * DELETE /channel/:id/contributor/invite
  */
-export type DeleteChannelContributorInviteResponse = Response;
+export type DeleteChannelContributorInviteResponse = {};
 
 /*
  * DELETE /channel/:id/admin/invite
  */
-export type DeleteChannelAdminInviteResponse = Response;
+export type DeleteChannelAdminInviteResponse = {};
 
 /*
  * DELETE /channel/:id/moderator/invite
  */
-export type DeleteChannelModeratorInviteResponse = Response;
+export type DeleteChannelModeratorInviteResponse = {};
 
 //
 // Video Responses
@@ -428,42 +417,42 @@ export type DeleteChannelModeratorInviteResponse = Response;
 /*
  * POST /video
  */
-export type PostVideoResponse = Response<Video>;
+export type PostVideoResponse = Video;
 
 /*
  * GET /video/:id
  */
-export type GetVideoResponse = Response<Video>;
+export type GetVideoResponse = Video;
 
 /*
  * GET /video/:id/listing/related
  */
-export type GetVideoListingRelatedResponse = CursorResponse<Array<Browsable>>;
+export type GetVideoListingRelatedResponse = Cursor<Browsable>;
 
 /*
  * PUT /video/:id
  */
-export type PutVideoResponse = Response<Video>;
+export type PutVideoResponse = Video;
 
 /*
  * PUT /video/:id/view
  */
-export type PutVideoViewResponse = Response;
+export type PutVideoViewResponse = {};
 
 /*
  * PUT /video/:id/content
  */
-export type PutVideoContentResponse = Response;
+export type PutVideoContentResponse = {};
 
 /*
  * PUT /video/:id/report
  */
-export type PutVideoReportResponse = Response;
+export type PutVideoReportResponse = {};
 
 /*
  * DELETE /video/:id
  */
-export type DeleteVideoResponse = Response;
+export type DeleteVideoResponse = {};
 
 //
 // Show Responses
@@ -472,37 +461,37 @@ export type DeleteVideoResponse = Response;
 /*
  * POST /show
  */
-export type PostShowResponse = Response;
+export type PostShowResponse = {};
 
 /*
  * POST /show/:id/episode
  */
-export type PostShowEpisodeResponse = Response;
+export type PostShowEpisodeResponse = {};
 
 /*
  * GET /show/:id
  */
-export type GetShowResponse = Response<Show>;
+export type GetShowResponse = Show;
 
 /*
  * PUT /show/:id
  */
-export type PutShowResponse = Response;
+export type PutShowResponse = {};
 
 /*
  * PUT /show/:id/episode
  */
-export type PutShowEpisodeResponse = Response;
+export type PutShowEpisodeResponse = {};
 
 /*
  * PUT /show/:id/content
  */
-export type PutShowContentResponse = Response;
+export type PutShowContentResponse = {};
 
 /*
  * DELETE /show/:id
  */
-export type DeleteShowResponse = Response;
+export type DeleteShowResponse = {};
 
 //
 // Playlist Responses
@@ -511,27 +500,27 @@ export type DeleteShowResponse = Response;
 /*
  * POST /playlist
  */
-export type PostPlaylistResponse = Response;
+export type PostPlaylistResponse = {};
 
 /*
  * GET /playlist/:id
  */
-export type GetPlaylistResponse = Response<Playlist>;
+export type GetPlaylistResponse = Playlist;
 
 /*
  * PUT /playlist/:id
  */
-export type PutPlaylistResponse = Response;
+export type PutPlaylistResponse = {};
 
 /*
  * DELETE /playlist/:id
  */
-export type DeletePlaylistResponse = Response;
+export type DeletePlaylistResponse = {};
 
 /*
  * DELETE /playlist/:id/video
  */
-export type DeletePlaylistVideoResponse = Response;
+export type DeletePlaylistVideoResponse = {};
 
 //
 // Listing Responses
@@ -540,14 +529,14 @@ export type DeletePlaylistVideoResponse = Response;
 /*
  * GET /listing/featured/channels
  */
-export type GetListingFeaturedChannelsResponse = Response<Array<Channel>>;
+export type GetListingFeaturedChannelsResponse = Array<Channel>;
 
 /*
  * GET /listing/videos/popular
  */
-export type GetListingPopularVideosResponse = CursorResponse<Array<Browsable>>;
+export type GetListingPopularVideosResponse = Cursor<Browsable>;
 
 /*
  * GET /listing/videos/new
  */
-export type GetListingNewVideosResponse = CursorResponse<Array<Browsable>>;
+export type GetListingNewVideosResponse = Cursor<Browsable>;

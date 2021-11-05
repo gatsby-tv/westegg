@@ -1,4 +1,5 @@
 import { IPFSContent, Token } from "@gatsby-tv/types";
+import { Types } from "mongoose";
 
 declare global {
   declare namespace NodeJS {
@@ -12,6 +13,8 @@ declare global {
     interface Request {
       decodedToken?: Token;
       ipfsContent?: IPFSContent;
+      cursor: Types.ObjectId;
+      limit: number;
     }
   }
 }

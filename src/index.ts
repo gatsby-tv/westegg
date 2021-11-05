@@ -1,10 +1,5 @@
 import "@src/environment";
-import {
-  ErrorResponse,
-  InternalError,
-  StatusCode,
-  WestEggError
-} from "@gatsby-tv/types";
+import { InternalError, StatusCode, WestEggError } from "@gatsby-tv/types";
 import db from "@src/db";
 import logger from "@src/logger";
 import auth from "@src/routes/auth";
@@ -76,15 +71,13 @@ app.use(
 
     // Check if error is specific with response code
     if (error instanceof WestEggError) {
-      return res.status(error.statusCode).json({ error } as ErrorResponse);
+      return res.status(error.status).json(error);
     }
 
     // If not, log and send generic internal error
     else {
       logger.error(error);
-      return res.status(StatusCode.INTERNAL_ERROR).json({
-        error: new InternalError()
-      } as ErrorResponse);
+      return res.status(StatusCode.INTERNAL_ERROR).json(new InternalError());
     }
   }
 );

@@ -9,12 +9,8 @@ import {
   GetUserAccountResponse,
   GetUserHandleExistsRequest,
   GetUserHandleExistsResponse,
-  GetUserListingRecommendedRequest,
-  GetUserListingRecommendedRequestQuery,
-  GetUserListingRecommendedResponse,
+  GetUserChannelsRequestParams,
   GetUserListingSubscriptionsRequest,
-  GetUserListingSubscriptionsRequestQuery,
-  GetUserListingSubscriptionsResponse,
   NotFound,
   PostAuthCompleteSignUpResponse,
   PostUserCompleteSignupRequest,
@@ -43,13 +39,12 @@ import {
   hasPermissionToPutUserRequest,
   validatePutUserRequest
 } from "@src/middleware/user";
-import { CURSOR_START, DEFAULT_CURSOR_LIMIT } from "@src/routes/listing";
-import { isMongoDuplicateKeyError, projection } from "@src/utilities";
-import { Router, Request } from "express";
+import { isMongoDuplicateKeyError, projection } from "@src/util";
+import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
-import * as Express from "express-serve-static-core";
+import { preAlphaFillListing } from "@src/util/cursor";
 
 const router = Router();
 
@@ -260,10 +255,7 @@ router.put(
     const body = req.body as PutUserSubscriptionRequest;
     const params = req.params as PutUserSubscriptionRequestParams;
 
-    const user = await User.findById(
-      params.id,
-      projection(keysOf<PutUserSubscriptionResponse>())
-    );
+    const user = await User.findById(params.id);
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
@@ -296,34 +288,13 @@ router.put(
 /**
  * GET /user/:id/listing/recommended
  */
-interface GetUserListingRecommendedRequestParams
-  extends Record<keyof GetUserListingRecommendedRequest, string>,
-    Express.ParamsDictionary {}
-interface GetUserListingRecommendedRequestQueryParams
-  extends Record<keyof GetUserListingRecommendedRequestQuery, string>,
-    Express.Query {}
 router.get(
   "/:id/listing/recommended",
   validateCursorRequest,
-  async (
-    req: Request<
-      GetUserListingRecommendedRequestParams,
-      GetUserListingRecommendedResponse,
-      {},
-      GetUserListingRecommendedRequestQueryParams
-    >,
-    res,
-    next
-  ) => {
-    const query = req.query;
-    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
-    const cursor: Types.ObjectId = query.cursor
-      ? new Types.ObjectId(query.cursor)
-      : CURSOR_START;
-
+  async (req, res, next) => {
     let videos = (await VideoCollection.aggregate()
       .match({
-        _id: { $gt: cursor }
+        _id: { $gt: req.cursor }
       })
       .lookup({
         from: Channel.collection.name,
@@ -336,25 +307,14 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit)) as Video[];
+      .limit(req.limit)) as Video[];
 
-    // Start pre-alpha demo code block
-    let duplicate = Array(limit - videos.length)
-      .fill(null)
-      .map((item, index) => {
-        return videos[index % videos.length];
-      });
-
-    // Wrap content as single request will have all that's in pre-alpha
-    const nextCursor = CURSOR_START.toString();
-
-    videos = [...videos, ...duplicate];
-    // End pre-alpha demo code block
+    const listing = preAlphaFillListing<Video>(videos, req.limit);
 
     const response = {
-      content: videos,
-      cursor: nextCursor,
-      limit: limit
+      content: listing.content,
+      cursor: listing.next,
+      limit: req.limit
     };
 
     res.status(StatusCode.OK).json(response);
@@ -364,43 +324,18 @@ router.get(
 /**
  * GET /user/:id/listing/subscriptions
  */
-interface GetUserListingSubscriptionsRequestParams
-  extends Record<keyof GetUserListingSubscriptionsRequest, string>,
-    Express.ParamsDictionary {}
-interface GetUserListingSubscriptionsRequestQueryParams
-  extends Record<keyof GetUserListingSubscriptionsRequestQuery, string>,
-    Express.Query {}
 router.get(
   "/:id/listing/subscriptions",
   validateCursorRequest,
-  async (
-    req: Request<
-      GetUserListingSubscriptionsRequestParams,
-      GetUserListingSubscriptionsResponse,
-      {},
-      GetUserListingSubscriptionsRequestQueryParams
-    >,
-    res,
-    next
-  ) => {
-    const user = await User.findById(
-      req.params.id,
-      projection(keysOf<PutUserSubscriptionResponse>())
-    );
+  async (req, res, next) => {
+    const params = req.params as GetUserListingSubscriptionsRequest;
+    const user = await User.findById(params.id);
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
-    const query = req.query;
-    const limit: number = Number(query.limit || DEFAULT_CURSOR_LIMIT);
-    const cursor: Types.ObjectId = query.cursor
-      ? new Types.ObjectId(query.cursor)
-      : CURSOR_START;
     let videos = (await VideoCollection.aggregate()
-      .match({
-        _id: { $gt: cursor || CURSOR_START },
-        channel: { $in: user.subscriptions }
-      })
+      .match({ _id: { $gt: req.cursor }, channel: { $in: user.subscriptions } })
       .lookup({
         from: Channel.collection.name,
         localField: "channel",
@@ -412,25 +347,14 @@ router.get(
         preserveNullAndEmptyArrays: true
       })
       .project(projection(keysOf<Video>()))
-      .limit(limit)) as Video[];
+      .limit(req.limit)) as Video[];
 
-    // Start pre-alpha demo code block
-    let duplicate = Array(limit - videos.length)
-      .fill(null)
-      .map((item, index) => {
-        return videos[index % videos.length];
-      });
-
-    // Wrap content as single request will have all that's in pre-alpha
-    const nextCursor = CURSOR_START.toString();
-
-    videos = [...videos, ...duplicate];
-    // End pre-alpha demo code block
+    const listing = preAlphaFillListing<Video>(videos, req.limit);
 
     const response = {
-      content: videos,
-      cursor: nextCursor,
-      limit: limit
+      content: listing.content,
+      cursor: listing.next,
+      limit: req.limit
     };
 
     res.status(StatusCode.OK).json(response);
@@ -451,10 +375,7 @@ router.delete(
     const body = req.body as DeleteUserSubscriptionRequest;
     const params = req.params as DeleteUserSubscriptionRequestParams;
 
-    const user = await User.findById(
-      params.id,
-      projection(keysOf<DeleteUserSubscriptionResponse>())
-    );
+    const user = await User.findById(params.id);
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
@@ -481,5 +402,23 @@ router.delete(
       .json(user.toJSON() as DeleteUserSubscriptionResponse);
   }
 );
+
+/**
+ * GET /user/:id/channels
+ */
+router.get("/:id/channels", isAuthenticated, async (req, res, next) => {
+  const params = req.params as GetUserChannelsRequestParams;
+
+  const user = await User.findById(params.id);
+  if (!user) {
+    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+  }
+
+  const channels = await Channel.find({
+    _id: { $in: user.channels }
+  });
+
+  res.status(StatusCode.OK).json(channels);
+});
 
 export default router;

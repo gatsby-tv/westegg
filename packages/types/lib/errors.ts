@@ -1,15 +1,15 @@
 export class WestEggError extends Error {
-  statusCode: StatusCode;
+  status: StatusCode;
   message: ErrorMessage;
 
-  constructor(statusCode: StatusCode, message: ErrorMessage) {
+  constructor(status: StatusCode, message: ErrorMessage) {
     super();
     this.message = message;
-    this.statusCode = statusCode;
+    this.status = status;
   }
 
   public toString = (): string => {
-    return `${this.statusCode}: ${this.message}`;
+    return `${this.status}: ${this.message}`;
   };
 }
 
