@@ -560,6 +560,31 @@ export type DeleteVideoRequest = {
 };
 
 //
+// Video Tag Requests
+// --------------------------------------------------
+
+/*
+ * GET /video/:id/tags
+ */
+export type GetTagsRequest = { id: VideoID };
+
+/*
+ * POST /video/:id/tags
+ */
+export type PostTagsRequestParams = { id: VideoID };
+export type PostTagsRequest = {
+  tags: string[];
+};
+
+/*
+ * DELETE /video/:id/tags
+ */
+export type DeleteTagsRequestParams = { id: VideoID };
+export type DeleteTagsRequest = {
+  tags: string[];
+};
+
+//
 // Show Requests
 // --------------------------------------------------
 

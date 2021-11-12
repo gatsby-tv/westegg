@@ -16,6 +16,7 @@
     },
     "strict": true,
     "moduleResolution": "node",
+    "downlevelIteration": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,

@@ -450,6 +450,25 @@ export type PutVideoReportResponse = {};
 export type DeleteVideoResponse = {};
 
 //
+// Video Tag Responses
+// --------------------------------------------------
+
+/*
+ * GET /video/:id/tags
+ */
+export type GetTagsResponse = string[];
+
+/*
+ * POST /video/:id/tags
+ */
+export type PostTagsResponse = {};
+
+/*
+ * DELETE /video/:id/tags
+ */
+export type DeleteTagsResponse = string[];
+
+//
 // Show Responses
 // --------------------------------------------------
 
