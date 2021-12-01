@@ -13,7 +13,7 @@ _Note: If you're testing the frontend with this repo, exclude it from starting w
 
 ## Run development build (just westegg api server)
 
-1. Install NodeJS 12.8
+1. Install NodeJS 16.13
 2. Install dependencies `yarn install`
 3. Run the server `yarn start:dev`
 
