@@ -7,6 +7,7 @@ import channel from "@src/routes/channel";
 import listing from "@src/routes/listing";
 import user from "@src/routes/user";
 import video from "@src/routes/video";
+import tags from "@src/routes/video/tags";
 import express, { NextFunction, Request, Response } from "express";
 import expressWinston from "express-winston";
 import winston from "winston";
@@ -51,6 +52,7 @@ router.use("/auth", auth);
 router.use("/user", user);
 router.use("/channel", channel);
 router.use("/video", video);
+router.use("/video", tags);
 router.use("/listing", listing);
 
 // Set API version
