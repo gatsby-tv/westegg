@@ -1,11 +1,16 @@
 import {
   BadRequest,
+  DeleteUserSubscriptionResponse,
+  DeleteUserSubscriptionRequest,
+  DeleteUserSubscriptionRequestParams,
   ErrorMessage,
+  GetChannelAccountRequest,
   GetUserAccountRequest,
   GetUserAccountResponse,
   GetUserHandleExistsRequest,
   GetUserHandleExistsResponse,
   GetUserChannelsRequestParams,
+  GetUserListingSubscriptionsRequest,
   NotFound,
   PostAuthCompleteSignUpResponse,
   PostUserCompleteSignupRequest,
@@ -250,16 +255,25 @@ router.put(
     const body = req.body as PutUserSubscriptionRequest;
     const params = req.params as PutUserSubscriptionRequestParams;
 
-    const user = await User.findById(
-      params.id,
-      projection(keysOf<PutUserSubscriptionResponse>())
-    );
+    const user = await User.findById(params.id);
     if (!user) {
       throw new NotFound(ErrorMessage.USER_NOT_FOUND);
     }
 
+    if (user.subscriptions.includes(body.subscription)) {
+      throw new BadRequest(ErrorMessage.SUBSCRIPTION_ALREADY_EXISTS);
+    }
+
+    const channel = await Channel.findById(body.subscription);
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
+
     user.subscriptions.push(body.subscription);
     user.save();
+
+    channel.subscribers += 1;
+    channel.save();
 
     res
       .status(StatusCode.CREATED)
@@ -310,8 +324,14 @@ router.get(
   "/:id/listing/subscriptions",
   validateCursorRequest,
   async (req, res, next) => {
+    const params = req.params as GetUserListingSubscriptionsRequest;
+    const user = await User.findById(params.id);
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
     let videos = (await VideoCollection.aggregate()
-      .match({ _id: { $gt: req.cursor } })
+      .match({ _id: { $gt: req.cursor }, channel: { $in: user.subscriptions } })
       .lookup({
         from: Channel.collection.name,
         localField: "channel",
@@ -338,6 +358,48 @@ router.get(
 );
 
 /**
+ * DELETE /user/:id/subscription
+ */
+router.delete(
+  "/:id/subscription",
+  isAuthenticated,
+  (req, res, next) => {
+    isValidBody(keysOf<DeleteUserSubscriptionRequest>(), req, res, next);
+  },
+  hasPermissionToPutUserRequest,
+  async (req, res, next) => {
+    const body = req.body as DeleteUserSubscriptionRequest;
+    const params = req.params as DeleteUserSubscriptionRequestParams;
+
+    const user = await User.findById(params.id);
+    if (!user) {
+      throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+    }
+
+    if (!user.subscriptions.includes(body.channel)) {
+      throw new BadRequest(ErrorMessage.BAD_REQUEST);
+    }
+
+    const channel = await Channel.findById(body.channel);
+    if (!channel) {
+      throw new NotFound(ErrorMessage.CHANNEL_NOT_FOUND);
+    }
+
+    user.subscriptions = user.subscriptions.filter((subscription: string) => {
+      return subscription.toString() !== body.channel;
+    });
+    user.save();
+
+    channel.subscribers -= 1;
+    channel.save();
+
+    res
+      .status(StatusCode.OK)
+      .json(user.toJSON() as DeleteUserSubscriptionResponse);
+  }
+);
+
+/**
  * GET /user/:id/channels
  */
 router.get("/:id/channels", isAuthenticated, async (req, res, next) => {
@@ -350,6 +412,24 @@ router.get("/:id/channels", isAuthenticated, async (req, res, next) => {
 
   const channels = await Channel.find({
     _id: { $in: user.channels }
+  });
+
+  res.status(StatusCode.OK).json(channels);
+});
+
+/**
+ * GET /user/:id/subscriptions
+ */
+router.get("/:id/subscriptions", isAuthenticated, async (req, res, next) => {
+  const params = req.params as GetUserChannelsRequestParams;
+
+  const user = await User.findById(params.id);
+  if (!user) {
+    throw new NotFound(ErrorMessage.USER_NOT_FOUND);
+  }
+
+  const channels = await Channel.find({
+    _id: { $in: user.subscriptions }
   });
 
   res.status(StatusCode.OK).json(channels);
