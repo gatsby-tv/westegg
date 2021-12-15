@@ -11,6 +11,7 @@ import {
   StatusCode
 } from "@gatsby-tv/types";
 import { Video as VideoCollection } from "@src/entities/Video";
+import { validateTag } from "@src/middleware/tags";
 import { Router } from "express";
 import { Types } from "mongoose";
 
@@ -45,6 +46,8 @@ router.post("/:id/tags", async (req, res, next) => {
   if (!video) {
     throw new NotFound(ErrorMessage.VIDEO_NOT_FOUND);
   }
+
+  body.tags.forEach((tag) => validateTag(tag));
 
   video.tags = [...new Set([...video.tags, ...body.tags])];
   video.save();
