@@ -691,6 +691,14 @@ export type GetListingPopularVideosRequest = {};
 export type GetListingPopularVideosRequestQuery = CursorRequest;
 
 /*
+ * GET /listing/videos/tags
+ */
+export type GetListingVideosWithTagsRequest = {};
+export type GetListingVideosWithTagsRequestQuery = {
+  tags: string[];
+} & CursorRequest;
+
+/*
  * GET /listing/videos/new
  */
 export type GetListingNewVideosRequest = {};
