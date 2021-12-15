@@ -556,6 +556,11 @@ export type GetListingFeaturedChannelsResponse = Array<Channel>;
 export type GetListingPopularVideosResponse = Cursor<Browsable>;
 
 /*
+ * GET /listing/videos/tags
+ */
+export type GetListingVideosWithTagsResponse = Cursor<Browsable>;
+
+/*
  * GET /listing/videos/new
  */
 export type GetListingNewVideosResponse = Cursor<Browsable>;

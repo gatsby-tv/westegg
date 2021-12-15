@@ -1,5 +1,6 @@
 import {
   GetListingFeaturedChannelsResponse,
+  GetListingVideosWithTagsRequestQuery,
   IChannelAccount,
   StatusCode,
   Video
@@ -8,7 +9,8 @@ import { Channel } from "@src/entities/Channel";
 import { Video as VideoCollection } from "@src/entities/Video";
 import { validateCursorRequest } from "@src/middleware/listing";
 import { projection } from "@src/util";
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
+import * as Express from "express-serve-static-core";
 import { keys as keysOf } from "ts-transformer-keys";
 import { preAlphaFillListing } from "@src/util/cursor";
 
@@ -91,5 +93,46 @@ router.get("/videos/new", validateCursorRequest, async (req, res, next) => {
 
   res.status(StatusCode.OK).json(response);
 });
+
+/**
+ * GET /listing/videos/tags
+ */
+interface GetListingVideosWithTagsRequestQueryParams
+  extends Record<keyof GetListingVideosWithTagsRequestQuery, string>,
+    Express.Query {}
+router.get(
+  "/videos/tags",
+  validateCursorRequest,
+  async (
+    req: Request<{}, {}, {}, GetListingVideosWithTagsRequestQueryParams>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    let videos = (await VideoCollection.aggregate()
+      .match({ tags: { $in: [req.query.tags] } })
+      .lookup({
+        from: Channel.collection.name,
+        localField: "channel",
+        foreignField: "_id",
+        as: "channel"
+      })
+      .unwind({
+        path: "$channel",
+        preserveNullAndEmptyArrays: true
+      })
+      .project(projection(keysOf<Video>()))
+      .limit(req.limit)) as Video[];
+
+    const listing = preAlphaFillListing<Video>(videos, req.limit);
+
+    const response = {
+      content: listing.content,
+      cursor: listing.next,
+      limit: req.limit
+    };
+
+    res.status(StatusCode.OK).json(response);
+  }
+);
 
 export default router;
