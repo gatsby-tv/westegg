@@ -454,6 +454,11 @@ export type PutVideoReportResponse = {};
  */
 export type DeleteVideoResponse = {};
 
+/*
+ * GET /video/search
+ */
+export type GetVideoSearchResponse = Video[];
+
 //
 // Video Tag Responses
 // --------------------------------------------------

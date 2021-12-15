@@ -564,6 +564,14 @@ export type DeleteVideoRequest = {
   id: VideoID;
 };
 
+/*
+ * GET /video/search
+ */
+export type GetVideoSearchRequest = {};
+export type GetVideoSearchRequestQuery = {
+  query: string;
+} & CursorRequest;
+
 //
 // Video Tag Requests
 // --------------------------------------------------
