@@ -454,11 +454,6 @@ export type PutVideoReportResponse = {};
  */
 export type DeleteVideoResponse = {};
 
-/*
- * GET /video/search
- */
-export type GetVideoSearchResponse = Video[];
-
 //
 // Video Tag Responses
 // --------------------------------------------------
@@ -477,6 +472,15 @@ export type PostTagsResponse = {};
  * DELETE /video/:id/tags
  */
 export type DeleteTagsResponse = string[];
+
+//
+// Search Responses
+// --------------------------------------------------
+
+/*
+ * GET /search
+ */
+export type GetVideoSearchResponse = Video[];
 
 //
 // Show Responses
