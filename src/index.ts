@@ -8,6 +8,7 @@ import listing from "@src/routes/listing";
 import user from "@src/routes/user";
 import video from "@src/routes/video";
 import tags from "@src/routes/video/tags";
+import search from "@src/routes/search";
 import express, { NextFunction, Request, Response } from "express";
 import expressWinston from "express-winston";
 import winston from "winston";
@@ -54,6 +55,7 @@ router.use("/channel", channel);
 router.use("/video", video);
 router.use("/video", tags);
 router.use("/listing", listing);
+router.use("/search", search);
 
 // Set API version
 app.use("/v1", router);

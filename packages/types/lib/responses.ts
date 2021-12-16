@@ -474,6 +474,15 @@ export type PostTagsResponse = {};
 export type DeleteTagsResponse = string[];
 
 //
+// Search Responses
+// --------------------------------------------------
+
+/*
+ * GET /search
+ */
+export type GetVideoSearchResponse = Video[];
+
+//
 // Show Responses
 // --------------------------------------------------
 

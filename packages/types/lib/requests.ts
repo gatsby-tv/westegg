@@ -590,6 +590,18 @@ export type DeleteTagsRequest = {
 };
 
 //
+// Search Requests
+// --------------------------------------------------
+
+/*
+ * GET /search
+ */
+export type GetVideoSearchRequest = {};
+export type GetVideoSearchRequestQuery = {
+  query: string;
+} & CursorRequest;
+
+//
 // Show Requests
 // --------------------------------------------------
 
