@@ -14,6 +14,7 @@ import { Types } from "mongoose";
 import { keys as keysOf } from "ts-transformer-keys";
 import { CURSOR_START, preAlphaFillListing } from "@src/util/cursor";
 import { GetListingVideosWithTagsRequestQuery } from "@gatsby-tv/types";
+import { escapeQueryRegExp } from "@src/middleware";
 
 const router = Router();
 
@@ -26,11 +27,13 @@ interface GetVideoSearchRequestQueryParams
 router.get(
   "/",
   validateCursorRequest,
+  escapeQueryRegExp,
   async (
     req: Request<{}, {}, {}, GetVideoSearchRequestQueryParams>,
     res: Response,
     next: NextFunction
   ) => {
+    console.log(req.query.query);
     const videos = (await VideoCollection.aggregate()
       .match({
         title: { $regex: RegExp(req.query.query as string) } // TODO: Needs to be sanitized

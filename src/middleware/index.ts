@@ -20,3 +20,17 @@ export const isValidBody = async (
 
   next();
 };
+
+export const escapeQueryRegExp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const query = req.query.query as string;
+  req.query.query = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+
+  console.log(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  console.log(req.query);
+
+  next();
+};
