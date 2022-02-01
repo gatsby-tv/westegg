@@ -33,10 +33,10 @@ router.get(
     res: Response,
     next: NextFunction
   ) => {
-    console.log(req.query.query);
+    const searchQuery = req.searchQuery;
     const videos = (await VideoCollection.aggregate()
       .match({
-        title: { $regex: RegExp(req.query.query as string) } // TODO: Needs to be sanitized
+        title: { $regex: RegExp(searchQuery as string) }
       })
       .lookup({
         from: Channel.collection.name,

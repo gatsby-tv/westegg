@@ -27,10 +27,7 @@ export const escapeQueryRegExp = async (
   next: NextFunction
 ) => {
   const query = req.query.query as string;
-  req.query.query = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-
-  console.log(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  console.log(req.query);
+  req.searchQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 
   next();
 };

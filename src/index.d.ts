@@ -13,6 +13,7 @@ declare global {
     interface Request {
       decodedToken?: Token;
       ipfsContent?: IPFSContent;
+      searchQuery?: string;
       cursor: Types.ObjectId;
       limit: number;
     }
